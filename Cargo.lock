@@ -65,6 +65,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "endf-parser-compiled"
+version = "0.1.0"
+dependencies = [
+ "endf-parser",
+]
+
+[[package]]
 name = "endf-parser-py"
 version = "0.1.0"
 dependencies = [

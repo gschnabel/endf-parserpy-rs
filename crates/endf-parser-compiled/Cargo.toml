@@ -1,0 +1,7 @@
+[package]
+name = "endf-parser-compiled"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+endf-parser = { path = "../endf-parser" }

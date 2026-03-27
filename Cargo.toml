@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/endf-parser",
+    "crates/endf-parser-compiled",
     "crates/endf-parser-py",
 ]
 resolver = "2"

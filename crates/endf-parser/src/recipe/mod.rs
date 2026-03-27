@@ -1,5 +1,6 @@
 pub mod ast;
 pub mod catalogue;
+pub mod compiler;
 
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
