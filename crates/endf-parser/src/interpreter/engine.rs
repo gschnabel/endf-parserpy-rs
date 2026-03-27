@@ -7,6 +7,7 @@ use crate::value::EndfValue;
 
 use super::control_flow::{self, ExprEvaluator};
 use super::expressions;
+use super::fast_path;
 use super::mappings;
 use super::scope;
 use super::state::{InterpreterState, RwMode};
@@ -208,6 +209,67 @@ impl Engine {
                 stop,
                 body,
             } => {
+                // Try fast path for read mode only.
+                if state.rwmode == RwMode::Read && !state.in_lookahead() {
+                    if let Some(pattern) = fast_path::detect_fast_pattern(body) {
+                        // Evaluate loop bounds
+                        let evaluator = Evaluator {
+                            opts: &self.parse_opts,
+                        };
+                        let scope_chain = state.scope_chain();
+                        let start_val = evaluator.eval_expr_known(
+                            start,
+                            &scope_chain,
+                            &state.loop_vars,
+                            &state.abbreviations,
+                        )?;
+                        let stop_val = evaluator.eval_expr_known(
+                            stop,
+                            &scope_chain,
+                            &state.loop_vars,
+                            &state.abbreviations,
+                        )?;
+                        drop(scope_chain);
+                        let start_i = start_val as i64;
+                        let stop_i = stop_val as i64;
+
+                        return match &pattern {
+                            fast_path::FastPattern::Tab1Loop {
+                                field_maps,
+                                x_var,
+                                y_var,
+                                table_name,
+                            } => fast_path::execute_fast_tab1_loop(
+                                field_maps,
+                                x_var,
+                                y_var,
+                                table_name,
+                                var,
+                                start_i,
+                                stop_i,
+                                state,
+                                &self.read_opts,
+                                &self.parse_opts,
+                            ),
+                            fast_path::FastPattern::ListLoop {
+                                field_maps,
+                                body_vars,
+                                list_name,
+                            } => fast_path::execute_fast_list_loop(
+                                field_maps,
+                                body_vars,
+                                list_name,
+                                var,
+                                start_i,
+                                stop_i,
+                                state,
+                                &self.read_opts,
+                                &self.parse_opts,
+                            ),
+                        };
+                    }
+                }
+
                 let evaluator = Evaluator {
                     opts: &self.parse_opts,
                 };

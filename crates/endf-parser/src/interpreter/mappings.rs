@@ -132,6 +132,199 @@ fn get_simple_variable(expr: &Expr) -> Option<&ExtVarName> {
 }
 
 // ---------------------------------------------------------------------------
+// Core: fast-path for simple field mappings (read mode)
+// ---------------------------------------------------------------------------
+
+/// Try to map fields using a fast single-pass approach.
+/// Returns Ok(true) if all fields were handled, Ok(false) if the fast path
+/// is not applicable (caller should fall back to the general approach).
+fn try_fast_map_fields(
+    exprs: &[Expr],
+    field_values: &[f64],
+    _field_names: &[&str],
+    state: &mut InterpreterState,
+    parse_opts: &ParseOpts,
+) -> EndfResult<bool> {
+    // First pass: classify all fields. If any are too complex, bail out.
+    enum FieldAction {
+        /// Set a scalar variable
+        SetScalar(String),
+        /// Set an indexed variable (indices are IndexSource)
+        SetIndexed(String, Vec<FastIndexSrc>),
+        /// Validate against a constant
+        ValidateConst(f64, bool),  // (expected, is_desired)
+    }
+
+    enum FastIndexSrc {
+        LoopVar(String),
+        Constant(i64),
+    }
+
+    let mut actions: Vec<FieldAction> = Vec::with_capacity(exprs.len());
+
+    for expr in exprs {
+        match expr {
+            Expr::Variable(v) if v.indices.is_empty() => {
+                actions.push(FieldAction::SetScalar(v.name.clone()));
+            }
+            Expr::Variable(v) => {
+                // Check all indices are simple (loop var or constant)
+                let mut idx_srcs = Vec::with_capacity(v.indices.len());
+                for idx in &v.indices {
+                    match idx {
+                        Expr::Variable(iv) if iv.indices.is_empty() => {
+                            // Check it's a loop var
+                            if state.loop_vars.contains_key(&iv.name) {
+                                idx_srcs.push(FastIndexSrc::LoopVar(iv.name.clone()));
+                            } else {
+                                return Ok(false); // Not a loop var, could be a datadic var
+                            }
+                        }
+                        Expr::Number(n) => {
+                            idx_srcs.push(FastIndexSrc::Constant(*n as i64));
+                        }
+                        _ => return Ok(false), // Complex index expression
+                    }
+                }
+                actions.push(FieldAction::SetIndexed(v.name.clone(), idx_srcs));
+            }
+            Expr::InconsistentVar(v) if v.indices.is_empty() => {
+                actions.push(FieldAction::SetScalar(v.name.clone()));
+            }
+            Expr::Number(n) => {
+                actions.push(FieldAction::ValidateConst(*n, false));
+            }
+            Expr::DesiredNumber(n) => {
+                actions.push(FieldAction::ValidateConst(*n, true));
+            }
+            _ => return Ok(false), // Complex expression, can't fast-path
+        }
+    }
+
+    // All fields are simple. Now resolve indices (needs loop_vars),
+    // then apply mutations.
+    struct ResolvedAction {
+        kind: ResolvedKind,
+    }
+    enum ResolvedKind {
+        SetScalar(String, EndfValue),
+        SetIndexed(String, Vec<i64>, EndfValue),
+        // Validation already done, nothing to apply
+    }
+
+    let mut resolved: Vec<ResolvedAction> = Vec::new();
+
+    for (action, &value) in actions.iter().zip(field_values.iter()) {
+        match action {
+            FieldAction::SetScalar(name) => {
+                let val = f64_to_endf_value(value);
+                resolved.push(ResolvedAction {
+                    kind: ResolvedKind::SetScalar(name.clone(), val),
+                });
+            }
+            FieldAction::SetIndexed(name, idx_srcs) => {
+                let val = f64_to_endf_value(value);
+                let mut indices = Vec::with_capacity(idx_srcs.len());
+                for src in idx_srcs {
+                    match src {
+                        FastIndexSrc::LoopVar(lv) => {
+                            indices.push(*state.loop_vars.get(lv.as_str()).unwrap());
+                        }
+                        FastIndexSrc::Constant(c) => {
+                            indices.push(*c);
+                        }
+                    }
+                }
+                resolved.push(ResolvedAction {
+                    kind: ResolvedKind::SetIndexed(name.clone(), indices, val),
+                });
+            }
+            FieldAction::ValidateConst(expected, is_desired) => {
+                if *expected != value {
+                    if *expected == 0.0 && parse_opts.ignore_zero_mismatch {
+                        // tolerated
+                    } else if *is_desired && parse_opts.ignore_number_mismatch {
+                        // tolerated
+                    } else if state.in_lookahead() {
+                        // During lookahead, mismatches are expected
+                    } else {
+                        return Err(EndfError::NumberMismatch {
+                            expected: *expected,
+                            got: value,
+                            field: "fast_map".to_string(),
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    // Apply all mutations
+    let scope = state.current_scope_mut();
+    for r in resolved {
+        match r.kind {
+            ResolvedKind::SetScalar(name, val) => {
+                scope.insert(name.as_str(), val);
+            }
+            ResolvedKind::SetIndexed(name, indices, val) => {
+                // Use the set_indexed_value from expressions module
+                // Inline a simplified version here
+                if !scope.contains_key(name.as_str()) {
+                    let container = match parse_opts.array_type {
+                        crate::options::ArrayType::Dict => EndfValue::new_dict(),
+                        crate::options::ArrayType::List => EndfValue::new_list(),
+                    };
+                    scope.insert(name.as_str(), container);
+                }
+                let mut current = scope.get_mut(name.as_str()).unwrap();
+                let n_idx = indices.len();
+                for (j, &idx) in indices.iter().enumerate() {
+                    let is_last = j == n_idx - 1;
+                    match current {
+                        EndfValue::Dict(ref mut d) => {
+                            let key = EndfKey::Int(idx);
+                            if is_last {
+                                d.insert(key, val);
+                                break;
+                            }
+                            if !d.contains_key(&key) {
+                                let container = match parse_opts.array_type {
+                                    crate::options::ArrayType::Dict => EndfValue::new_dict(),
+                                    crate::options::ArrayType::List => EndfValue::new_list(),
+                                };
+                                d.insert(key.clone(), container);
+                            }
+                            current = d.get_mut(&key).unwrap();
+                        }
+                        EndfValue::List(ref mut l) => {
+                            let uidx = idx as usize;
+                            while l.len() <= uidx {
+                                l.push(None);
+                            }
+                            if is_last {
+                                l[uidx] = Some(val);
+                                break;
+                            }
+                            if l[uidx].is_none() {
+                                let container = match parse_opts.array_type {
+                                    crate::options::ArrayType::Dict => EndfValue::new_dict(),
+                                    crate::options::ArrayType::List => EndfValue::new_list(),
+                                };
+                                l[uidx] = Some(container);
+                            }
+                            current = l[uidx].as_mut().unwrap();
+                        }
+                        _ => return Ok(false), // unexpected type
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(true)
+}
+
+// ---------------------------------------------------------------------------
 // Core: map fields to data dictionary (read mode)
 // ---------------------------------------------------------------------------
 
@@ -150,6 +343,12 @@ fn map_fields_to_datadic(
     let n = exprs.len();
     debug_assert_eq!(n, field_values.len());
     debug_assert_eq!(n, field_names.len());
+
+    // Fast path: if all fields are simple (scalars, constants, or indexed vars
+    // with simple loop-var indices), bypass the expensive multi-pass evaluation.
+    if try_fast_map_fields(exprs, field_values, field_names, state, parse_opts)? {
+        return Ok(());
+    }
 
     // Track which fields have been successfully processed.
     let mut done = vec![false; n];
@@ -357,8 +556,38 @@ fn find_int_in_scope(scope_chain: &[&EndfValue], name: &str) -> Option<i64> {
 // Helper: get remaining lines as &str slice for multi-line reading
 // ---------------------------------------------------------------------------
 
-fn remaining_lines(state: &InterpreterState) -> Vec<&str> {
-    state.lines[state.ofs..].iter().map(|s| s.as_str()).collect()
+/// Build remaining lines for a TAB1 record: read the header to determine
+/// how many body lines are needed, then allocate just enough.
+fn remaining_lines_for_tab1<'a>(state: &'a InterpreterState, read_opts: &ReadOpts) -> EndfResult<Vec<&'a str>> {
+    // Read header to get NR and NP
+    let (cont, _ctrl) = read_cont(&state.lines[state.ofs], read_opts)?;
+    let nr = cont.n1 as usize;
+    let np = cont.n2 as usize;
+    // 1 header + ceil(2*NR/6) + ceil(2*NP/6) body lines
+    let body_lines = ((2 * nr + 5) / 6) + ((2 * np + 5) / 6);
+    let total = 1 + body_lines;
+    let end = (state.ofs + total).min(state.lines.len());
+    Ok(state.lines[state.ofs..end].iter().map(|s| s.as_str()).collect())
+}
+
+/// Build remaining lines for a TAB2 record.
+fn remaining_lines_for_tab2<'a>(state: &'a InterpreterState, read_opts: &ReadOpts) -> EndfResult<Vec<&'a str>> {
+    let (cont, _ctrl) = read_cont(&state.lines[state.ofs], read_opts)?;
+    let nr = cont.n1 as usize;
+    let body_lines = (2 * nr + 5) / 6;
+    let total = 1 + body_lines;
+    let end = (state.ofs + total).min(state.lines.len());
+    Ok(state.lines[state.ofs..end].iter().map(|s| s.as_str()).collect())
+}
+
+/// Build remaining lines for a LIST record.
+fn remaining_lines_for_list<'a>(state: &'a InterpreterState, read_opts: &ReadOpts) -> EndfResult<Vec<&'a str>> {
+    let (cont, _ctrl) = read_cont(&state.lines[state.ofs], read_opts)?;
+    let npl = cont.n1 as usize;
+    let body_lines = if npl == 0 { 0 } else { (npl + 5) / 6 };
+    let total = 1 + body_lines;
+    let end = (state.ofs + total).min(state.lines.len());
+    Ok(state.lines[state.ofs..end].iter().map(|s| s.as_str()).collect())
 }
 
 // ---------------------------------------------------------------------------
@@ -546,7 +775,7 @@ pub fn map_tab1(
 ) -> EndfResult<()> {
     if is_read(state) {
         // Read header + body.
-        let lines_ref = remaining_lines(state);
+        let lines_ref = remaining_lines_for_tab1(state, read_opts)?;
         let (cont, body, _ctrl, new_ofs) = read_tab1(&lines_ref, 0, read_opts)?;
         let lines_consumed = new_ofs;
         state.ofs += lines_consumed;
@@ -661,7 +890,7 @@ pub fn map_tab2(
     write_opts: &WriteOpts,
 ) -> EndfResult<()> {
     if is_read(state) {
-        let lines_ref = remaining_lines(state);
+        let lines_ref = remaining_lines_for_tab2(state, read_opts)?;
         let (cont, body, _ctrl, new_ofs) = read_tab2(&lines_ref, 0, read_opts)?;
         let lines_consumed = new_ofs;
         state.ofs += lines_consumed;
@@ -767,7 +996,7 @@ pub fn map_list(
 ) -> EndfResult<()> {
     if is_read(state) {
         // Read the full LIST record (header + body values).
-        let lines_ref = remaining_lines(state);
+        let lines_ref = remaining_lines_for_list(state, read_opts)?;
         let (cont, vals, _ctrl, new_ofs) = read_list(&lines_ref, 0, read_opts)?;
         let lines_consumed = new_ofs;
         state.ofs += lines_consumed;
