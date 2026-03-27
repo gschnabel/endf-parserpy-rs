@@ -7,7 +7,7 @@ use crate::records::*;
 use crate::value::{EndfKey, EndfValue};
 
 use super::expressions::{
-    eval_expr, eval_expr_known, eval_index, resolve_field, set_var_value, RwMode,
+    eval_expr, eval_expr_known, eval_index, resolve_field, set_var_value, ExprResult, RwMode,
 };
 use super::state::InterpreterState;
 
@@ -156,108 +156,119 @@ fn map_fields_to_datadic(
     let mut last_unbound_err: Option<EndfError> = None;
 
     // Up to 3 passes to resolve dependencies between fields in the same record.
+    // Optimization: compute scope_chain once per pass (not once per field).
+    // We separate evaluation (immutable borrow) from mutation to satisfy
+    // the borrow checker. All expressions are evaluated first with the
+    // precomputed scope chain, then mutations are applied.
     for _pass in 0..3 {
         let mut progress = false;
+
+        // Phase 1: Evaluate all pending expressions with a single scope_chain.
+        // We store Ok results and propagate fatal errors immediately.
+        // SeveralUnboundVariables is stored as None (retry on next pass).
+        let mut eval_results: Vec<Option<ExprResult>> = vec![None; n];
+        {
+            let scope_chain = state.scope_chain();
+            for i in 0..n {
+                if done[i] {
+                    continue;
+                }
+                match eval_expr(
+                    &exprs[i],
+                    &scope_chain,
+                    &state.loop_vars,
+                    &state.abbreviations,
+                    parse_opts,
+                ) {
+                    Ok(r) => {
+                        eval_results[i] = Some(r);
+                    }
+                    Err(EndfError::SeveralUnboundVariables) => {
+                        last_unbound_err = Some(EndfError::SeveralUnboundVariables);
+                        // eval_results[i] stays None — will retry on next pass.
+                    }
+                    Err(e) => return Err(e),
+                }
+            }
+        } // scope_chain dropped here, releasing immutable borrows
+
+        // Phase 2: Process results and apply mutations.
         for i in 0..n {
             if done[i] {
                 continue;
             }
-            let scope_chain = state.scope_chain();
-            let result = eval_expr(
-                &exprs[i],
-                &scope_chain,
-                &state.loop_vars,
-                &state.abbreviations,
-                parse_opts,
-            );
+            let r = match eval_results[i].take() {
+                Some(r) => r,
+                None => continue, // SeveralUnboundVariables — skip for now
+            };
 
-            match result {
-                Ok(ref r) if r.is_known() => {
-                    // Expression is fully determined.
-                    //
-                    // If the expression is a simple variable reference (e.g., AWR)
-                    // that resolved as "known" because the variable was already set
-                    // by a prior record, we reassign it with the new field value.
-                    // This matches Python's look_up=False behavior where existing
-                    // datadic variables are not looked up during field mapping, so
-                    // they enter the "solve for unknown" branch and get overwritten.
-                    if is_simple_variable(&exprs[i]) {
-                        let new_value = f64_to_endf_value(field_values[i]);
-                        let var = get_simple_variable(&exprs[i]).unwrap();
-                        let var_name = var.name.clone();
-                        let var_indices = var.indices.clone();
-                        eval_and_set_var(&var_name, &var_indices, new_value, state, parse_opts)?;
-                    } else {
-                        // Expression is a literal or computed constant — validate.
-                        let expected = r.value;
-                        let actual = field_values[i];
-                        if !values_match(expected, actual, parse_opts) {
-                            let is_desired = contains_desired_number(&exprs[i]);
-                            let is_inconsistent = contains_inconsistent_var(&exprs[i]);
+            if r.is_known() {
+                // Expression is fully determined.
+                //
+                // If the expression is a simple variable reference (e.g., AWR)
+                // that resolved as "known" because the variable was already set
+                // by a prior record, we reassign it with the new field value.
+                // This matches Python's look_up=False behavior where existing
+                // datadic variables are not looked up during field mapping, so
+                // they enter the "solve for unknown" branch and get overwritten.
+                if is_simple_variable(&exprs[i]) {
+                    let new_value = f64_to_endf_value(field_values[i]);
+                    let var = get_simple_variable(&exprs[i]).unwrap();
+                    let var_name = var.name.clone();
+                    let var_indices = var.indices.clone();
+                    eval_and_set_var(&var_name, &var_indices, new_value, state, parse_opts)?;
+                } else {
+                    // Expression is a literal or computed constant — validate.
+                    let expected = r.value;
+                    let actual = field_values[i];
+                    if !values_match(expected, actual, parse_opts) {
+                        let is_desired = contains_desired_number(&exprs[i]);
+                        let is_inconsistent = contains_inconsistent_var(&exprs[i]);
 
-                            if expected == 0.0 && parse_opts.ignore_zero_mismatch {
-                                // Tolerated zero mismatch -- proceed.
-                            } else if is_desired && parse_opts.ignore_number_mismatch {
-                                // Tolerated desired-number mismatch -- proceed.
-                            } else if is_inconsistent && parse_opts.ignore_varspec_mismatch {
-                                // Tolerated inconsistent-var mismatch -- proceed.
-                            } else if state.in_lookahead() {
-                                // During lookahead, mismatches are expected.
-                            } else {
-                                return Err(EndfError::NumberMismatch {
-                                    expected,
-                                    got: actual,
-                                    field: field_names[i].to_string(),
-                                });
-                            }
+                        if expected == 0.0 && parse_opts.ignore_zero_mismatch {
+                            // Tolerated zero mismatch -- proceed.
+                        } else if is_desired && parse_opts.ignore_number_mismatch {
+                            // Tolerated desired-number mismatch -- proceed.
+                        } else if is_inconsistent && parse_opts.ignore_varspec_mismatch {
+                            // Tolerated inconsistent-var mismatch -- proceed.
+                        } else if state.in_lookahead() {
+                            // During lookahead, mismatches are expected.
+                        } else {
+                            return Err(EndfError::NumberMismatch {
+                                expected,
+                                got: actual,
+                                field: field_names[i].to_string(),
+                            });
                         }
                     }
-                    done[i] = true;
-                    progress = true;
                 }
-                Ok(ref r) => {
-                    // Expression has one unknown -- solve for it.
-                    let solved = resolve_field(r, field_values[i], RwMode::Read)?;
-                    if let Some(ref var) = r.unbound_var {
-                        let var_name = var.name.clone();
-                        let var_indices = var.indices.clone();
-                        let new_value = f64_to_endf_value(solved);
+                done[i] = true;
+                progress = true;
+            } else {
+                // Expression has one unknown -- solve for it.
+                let solved = resolve_field(&r, field_values[i], RwMode::Read)?;
+                if let Some(ref var) = r.unbound_var {
+                    let var_name = var.name.clone();
+                    let var_indices = var.indices.clone();
+                    let new_value = f64_to_endf_value(solved);
 
-                        // Check if the variable already has a value in datadic.
-                        let scope_chain = state.scope_chain();
-                        let existing = super::expressions::get_var_value(
-                            &var_name,
-                            &var_indices,
-                            &scope_chain,
-                            &state.loop_vars,
-                            &state.abbreviations,
-                            parse_opts,
-                        );
-                        drop(scope_chain);
+                    // Match Python behavior: simply overwrite the variable
+                    // with the new value. The Python endf_mapping_core.py
+                    // never checks for existing values when solving for
+                    // unknowns — it just assigns. This is important because
+                    // variables like AWR can appear in multiple records
+                    // (HEAD and CONT) with legitimately different values.
 
-                        // Match Python behavior: simply overwrite the variable
-                        // with the new value. The Python endf_mapping_core.py
-                        // never checks for existing values when solving for
-                        // unknowns — it just assigns. This is important because
-                        // variables like AWR can appear in multiple records
-                        // (HEAD and CONT) with legitimately different values.
-
-                        eval_and_set_var(
-                            &var_name,
-                            &var_indices,
-                            new_value,
-                            state,
-                            parse_opts,
-                        )?;
-                    }
-                    done[i] = true;
-                    progress = true;
+                    eval_and_set_var(
+                        &var_name,
+                        &var_indices,
+                        new_value,
+                        state,
+                        parse_opts,
+                    )?;
                 }
-                Err(EndfError::SeveralUnboundVariables) => {
-                    last_unbound_err = Some(EndfError::SeveralUnboundVariables);
-                    // Will retry on next pass.
-                }
-                Err(e) => return Err(e),
+                done[i] = true;
+                progress = true;
             }
         }
 
@@ -885,22 +896,25 @@ fn process_list_items_read(
                 start,
                 stop,
             } => {
-                let scope_chain = state.scope_chain();
-                let start_val = eval_expr_known(
-                    start,
-                    &scope_chain,
-                    &state.loop_vars,
-                    &state.abbreviations,
-                    parse_opts,
-                )? as i64;
-                let scope_chain = state.scope_chain();
-                let stop_val = eval_expr_known(
-                    stop,
-                    &scope_chain,
-                    &state.loop_vars,
-                    &state.abbreviations,
-                    parse_opts,
-                )? as i64;
+                // Compute scope_chain once for both start and stop evaluation.
+                let (start_val, stop_val) = {
+                    let scope_chain = state.scope_chain();
+                    let sv = eval_expr_known(
+                        start,
+                        &scope_chain,
+                        &state.loop_vars,
+                        &state.abbreviations,
+                        parse_opts,
+                    )? as i64;
+                    let ev = eval_expr_known(
+                        stop,
+                        &scope_chain,
+                        &state.loop_vars,
+                        &state.abbreviations,
+                        parse_opts,
+                    )? as i64;
+                    (sv, ev)
+                };
 
                 for i in start_val..=stop_val {
                     state.loop_vars.insert(var.clone(), i);
@@ -944,22 +958,25 @@ fn process_list_items_write(
                 start,
                 stop,
             } => {
-                let scope_chain = state.scope_chain();
-                let start_val = eval_expr_known(
-                    start,
-                    &scope_chain,
-                    &state.loop_vars,
-                    &state.abbreviations,
-                    parse_opts,
-                )? as i64;
-                let scope_chain = state.scope_chain();
-                let stop_val = eval_expr_known(
-                    stop,
-                    &scope_chain,
-                    &state.loop_vars,
-                    &state.abbreviations,
-                    parse_opts,
-                )? as i64;
+                // Compute scope_chain once for both start and stop evaluation.
+                let (start_val, stop_val) = {
+                    let scope_chain = state.scope_chain();
+                    let sv = eval_expr_known(
+                        start,
+                        &scope_chain,
+                        &state.loop_vars,
+                        &state.abbreviations,
+                        parse_opts,
+                    )? as i64;
+                    let ev = eval_expr_known(
+                        stop,
+                        &scope_chain,
+                        &state.loop_vars,
+                        &state.abbreviations,
+                        parse_opts,
+                    )? as i64;
+                    (sv, ev)
+                };
 
                 for i in start_val..=stop_val {
                     state.loop_vars.insert(var.clone(), i);
@@ -1077,7 +1094,7 @@ pub fn map_intg(
             )?;
         }
     } else {
-        // Evaluate II, JJ.
+        // Evaluate II, JJ and get KIJ with a single scope_chain.
         let scope_chain = state.scope_chain();
         let ii = eval_expr_known(
             &fields[0],
@@ -1086,7 +1103,6 @@ pub fn map_intg(
             &state.abbreviations,
             parse_opts,
         )? as i64;
-        let scope_chain = state.scope_chain();
         let jj = eval_expr_known(
             &fields[1],
             &scope_chain,
@@ -1097,7 +1113,6 @@ pub fn map_intg(
 
         // Get KIJ array from datadic.
         let kij = if let Expr::Variable(ref var) = fields[2] {
-            let scope_chain = state.scope_chain();
             let val = super::expressions::get_var_value(
                 &var.name,
                 &var.indices,
