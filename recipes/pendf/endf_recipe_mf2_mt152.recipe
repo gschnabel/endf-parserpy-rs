@@ -1,0 +1,11 @@
+
+[MAT, 2,152/ ZA, AWR, LSSF, 0, 0, INTUNR]HEAD
+ NW := NSIGZ+NUNR*(1+5*NSIGZ)
+[MAT, 2, 152/ TEMZ, 0, 5, NSIGZ, NW, NUNR /
+    {SIGZ[j]}{j=1 to NSIGZ},
+    {EUNR[i], {STOT[i,j]}{j=1 to NSIGZ},
+              {SELAS[i,j]}{j=1 to NSIGZ},
+              {SFIS[i,j]}{j=1 to NSIGZ},
+              {SCAP[i,j]}{j=1 to NSIGZ},
+              {STRN[i,j]}{j=1 to NSIGZ}}{i=1 to NUNR} ] LIST
+SEND

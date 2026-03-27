@@ -1,0 +1,7 @@
+[MAT, 9, MT/ ZA, AWR, LIS, 0, NS, 0]HEAD
+for k=1 to NS:
+    (subsection[k])
+        [MAT, 9, MT/ QM, QI, IZAP, LFS, NR, NP/ E / Y]TAB1
+    (/subsection[k])
+endfor
+SEND

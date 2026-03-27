@@ -1,0 +1,7 @@
+[MAT, 1,456/ ZA, AWR, 0, LNU, 0, 0] HEAD
+if LNU==2:
+    [MAT, 1,456/ 0.0, 0.0, 0, 0, NR, NP/ Eint / nubar_p ]TAB1
+elif LNU==1:
+    [MAT, 1,456/ 0.0, 0.0, 0, 0, 1, 0/ nubar_p ]LIST
+endif
+SEND

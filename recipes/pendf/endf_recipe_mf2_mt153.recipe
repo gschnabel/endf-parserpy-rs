@@ -1,0 +1,11 @@
+
+[MAT, 2,153/ ZA, AWR, IINEL, IABSO, INTUNR, NBIN]HEAD
+ NW := (1+6*NBIN)*NUNR
+[MAT, 2,153/ TEMZ, 0, LSSF, 0, NW, NUNR /
+    {EUNR[i], {PROB[i,j]}{j=1 to NBIN},
+              {TOTL[i,j]}{j=1 to NBIN},
+              {ELAS[i,j]}{j=1 to NBIN},
+              {FISS[i,j]}{j=1 to NBIN},
+              {CAPT[i,j]}{j=1 to NBIN},
+              {HEAT[i,j]}{j=1 to NBIN}}{i=1 to NUNR} ] LIST
+SEND

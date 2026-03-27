@@ -1,0 +1,14 @@
+[package]
+name = "endf-parser-py"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[lib]
+name = "endf_parser_py"
+crate-type = ["cdylib"]
+
+[dependencies]
+endf-parser = { path = "../endf-parser" }
+indexmap = "2"
+pyo3 = { version = "0.22", features = ["extension-module"] }

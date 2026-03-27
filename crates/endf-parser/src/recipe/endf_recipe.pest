@@ -1,0 +1,250 @@
+// =============================================================
+// Pest PEG grammar for ENDF recipe files.
+// Faithful translation of the Lark EBNF grammar used by
+// endf-parserpy, with left-recursive rules rewritten as
+// iterative/repetitive rules for PEG compatibility.
+// =============================================================
+
+// --------------- whitespace handling -------------------------
+// Lark's `%ignore " "` skips spaces between tokens but NOT
+// newlines (newlines are significant).  In pest the built-in
+// WHITESPACE rule is implicitly inserted between tokens of
+// non-atomic rules.
+WHITESPACE = _{ " " }
+
+// --------------- newline ------------------------------------
+NEWLINE = { "\r\n" | "\n" }
+
+// --------------- top-level rule -----------------------------
+endf_recipe = { SOI ~ (code_token | NEWLINE)* ~ EOI }
+
+code_token = {
+      endf_line
+    | for_loop
+    | repeat_loop
+    | if_clause
+    | section
+    | abbreviation
+    | comment_block
+}
+
+endf_line = {
+    ( list_line
+    | head_or_cont_line
+    | tab1_line
+    | tab2_line
+    | text_line
+    | dir_line
+    | intg_line
+    | send_line
+    | stop_line
+    ) ~ NEWLINE
+}
+
+// --------------- section (namespace) ------------------------
+section      = { section_head ~ section_body ~ section_tail }
+section_head = { "(" ~ extvarname ~ ")" ~ NEWLINE }
+section_body = { (code_token | NEWLINE)* }
+section_tail = { "(/" ~ extvarname ~ ")" ~ NEWLINE }
+
+// --------------- control numbers ----------------------------
+ctrl_spec = { MAT_SPEC ~ "," ~ MF_SPEC ~ "," ~ MT_SPEC }
+MAT_SPEC  = @{ "MAT" | INT }
+MF_SPEC   = @{ "MF" | INT }
+MT_SPEC   = @{ "MT" | INT }
+
+// =============================================================
+// Record fields
+// =============================================================
+//
+// CRITICAL DESIGN NOTE — the "/" ambiguity
+// -----------------------------------------
+// In ENDF recipes "/" is used both as the division operator and
+// as a structural separator in record brackets:
+//
+//   [MAT,MF,MT / field1,...,field6 / tab-def ] TAB1
+//
+// The Lark grammar resolves this with context-free (Earley)
+// parsing.  PEG greedily matches, so an `expr` with "/"
+// division would swallow the structural separator.
+//
+// Solution:
+//   - Fields 1-5 use `expr` (full division allowed).  Division
+//     expressions in these fields always end before a comma.
+//   - Field 6 uses `record_expr` (no bare "/", but division
+//     inside parenthesized sub-expressions is fine via
+//     bracketexpr, which delegates to `expr`).  This prevents
+//     the 6th field from consuming the structural "/" that
+//     follows.
+//
+// This matches all known ENDF recipes: division in fields 1-5
+// is always terminated by "," and never reaches the structural
+// "/".  In field 6, any needed division is always parenthesized
+// (e.g. (1+(NCH-1)/6)).
+// =============================================================
+
+record_fields = {
+    expr ~ "," ~ expr ~ ","
+  ~ expr ~ "," ~ expr ~ ","
+  ~ expr ~ "," ~ record_expr
+}
+
+// --------------- comment block ------------------------------
+comment_block = { COMMENT }
+COMMENT       = @{ (" "* ~ "#" ~ (!NEWLINE ~ ANY)* ~ NEWLINE)+ }
+
+// --------------- stop instruction ---------------------------
+stop_line            = { "stop" ~ "(" ~ escaped_stop_message? ~ ")" }
+escaped_stop_message = { "\"" ~ STOP_MESSAGE ~ "\"" }
+STOP_MESSAGE         = @{ (!("\"") ~ ANY)+ }
+
+// --------------- abbreviation -------------------------------
+abbreviation = { VARNAME ~ ":=" ~ expr ~ NEWLINE }
+
+// --------------- TEXT record --------------------------------
+text_line       = { "[" ~ ctrl_spec ~ "/" ~ text_fields ~ "]" ~ "TEXT" }
+text_fields     = { textplaceholder ~ NEWLINE? ~ ("," ~ NEWLINE? ~ textplaceholder ~ NEWLINE?)* }
+textplaceholder = { extvarname? ~ ("{" ~ TEXTLENGTH+ ~ "}")? }
+TEXTLENGTH      = @{ ASCII_DIGIT+ }
+
+// --------------- HEAD / CONT record -------------------------
+head_or_cont_line = { "[" ~ ctrl_spec ~ "/" ~ record_fields ~ "]" ~ CONT_SUBTYPE }
+CONT_SUBTYPE      = @{ "CONT" | "HEAD" }
+
+// --------------- DIR record ---------------------------------
+dir_line   = { "[" ~ ctrl_spec ~ "/" ~ "blank" ~ "," ~ "blank" ~ "," ~ dir_fields ~ "]" ~ "DIR" }
+dir_fields = { expr ~ "," ~ expr ~ "," ~ expr ~ "," ~ expr }
+
+// --------------- INTG record --------------------------------
+intg_line   = { "[" ~ ctrl_spec ~ "/" ~ intg_fields ~ "{" ~ ndigit_expr ~ "}" ~ "]" ~ "INTG" }
+intg_fields = { expr ~ "," ~ expr ~ "," ~ expr }
+ndigit_expr = { expr }
+
+// --------------- TAB1 record --------------------------------
+tab1_line   = { "[" ~ ctrl_spec ~ "/" ~ tab1_fields ~ "]" ~ "TAB1" ~ ("(" ~ table_name ~ ")")? }
+tab1_fields = { record_fields ~ "/" ~ tab1_def }
+tab1_def    = { extvarname ~ "/" ~ extvarname }
+table_name  = { extvarname }
+
+// --------------- TAB2 record --------------------------------
+tab2_line   = { "[" ~ ctrl_spec ~ "/" ~ tab2_fields ~ "]" ~ "TAB2" ~ ("(" ~ table_name ~ ")")? }
+tab2_fields = { record_fields ~ "/" ~ tab2_def }
+tab2_def    = { extvarname }
+
+// --------------- LIST record --------------------------------
+list_line = { "[" ~ ctrl_spec ~ "/" ~ record_fields ~ "/" ~ list_body ~ "]" ~ "LIST" ~ ("(" ~ list_name ~ ")")? }
+list_body = { (list_loop | LINEPADDING | list_expr | "," | NEWLINE)* }
+list_name = { extvarname }
+
+LINEPADDING = { "PADLINE" }
+
+// --------------- LIST loop ----------------------------------
+list_loop     = { "{" ~ list_body ~ "}" ~ "{" ~ list_for_head ~ "}" }
+list_for_head = { VARNAME ~ "=" ~ for_start ~ "to" ~ for_stop }
+
+// --------------- SEND record --------------------------------
+send_line = { "SEND" }
+
+// --------------- FOR loop -----------------------------------
+for_loop = { for_head ~ for_body ~ "endfor" ~ NEWLINE }
+for_head = { "for" ~ VARNAME ~ "=" ~ for_start ~ "to" ~ for_stop ~ ":" }
+for_body = { (code_token | NEWLINE)* }
+
+for_start = { expr }
+for_stop  = { expr }
+
+// --------------- REPEAT .. UNTIL loop -----------------------
+repeat_loop      = { repeat_head ~ repeat_body ~ repeat_tail ~ NEWLINE }
+repeat_head      = { "repeat" ~ ("[" ~ repeat_varassign ~ "]")? ~ ":" }
+repeat_varassign = { VARNAME ~ "=" ~ expr }
+repeat_body      = { (code_token | NEWLINE)* }
+repeat_tail      = { "until" ~ if_head }
+
+// --------------- IF statement -------------------------------
+if_clause      = { if_statement ~ elif_statement* ~ else_statement? ~ "endif" }
+if_statement   = { "if" ~ if_head ~ lookahead_option? ~ ":" ~ if_body }
+elif_statement = { "elif" ~ if_head ~ lookahead_option? ~ ":" ~ if_body }
+else_statement = { "else:" ~ if_body }
+
+lookahead_option = { "[" ~ "lookahead" ~ "=" ~ expr ~ "]" }
+if_head          = { disjunction }
+if_condition     = { expr ~ IF_RELATION ~ expr }
+IF_RELATION      = @{ ">=" | "<=" | "!=" | "==" | ">" | "<" }
+if_body          = { (code_token | NEWLINE)* }
+
+// --------------- boolean logic (iterative, no left-recursion)
+disjunction = { conjunction ~ ("or" ~ conjunction)* }
+conjunction = { comparison ~ ("and" ~ comparison)* }
+comparison  = { if_condition | "(" ~ disjunction ~ ")" }
+
+// =============================================================
+// Arithmetic expressions
+// =============================================================
+//
+// Rewritten from left-recursive form to iterative PEG form.
+//
+// Three expression variants with different "/" (division) policies:
+//
+//   expr         — full expression; "/" allowed as division.
+//                  Used outside record brackets: abbreviations,
+//                  for-start/stop, if-conditions, bracketexpr, etc.
+//
+//   record_expr  — like expr but "/" is NOT a division operator
+//                  at the top level.  Division inside parenthesized
+//                  sub-expressions is fine (bracketexpr -> expr).
+//                  Used for the 6th field of record_fields.
+//
+//   list_expr    — same restriction as record_expr.
+//                  Used for individual expressions in list_body.
+// =============================================================
+
+// --- full expression (unrestricted "/") ---------------------
+expr    = { addpart ~ ((add_op | sub_op) ~ addpart)* }
+addpart = { mulpart ~ ((mul_op | div_op | mod_op) ~ mulpart)* }
+
+// --- record/list expression (no top-level "/") --------------
+record_expr    = { record_addpart ~ ((add_op | sub_op) ~ record_addpart)* }
+record_addpart = { mulpart ~ ((mul_op | mod_op) ~ mulpart)* }
+
+list_expr    = { list_addpart ~ ((add_op | sub_op) ~ list_addpart)* }
+list_addpart = { mulpart ~ ((mul_op | mod_op) ~ mulpart)* }
+
+add_op = { "+" }
+sub_op = { "-" }
+mul_op = { "*" }
+div_op = { "/" }
+mod_op = { "%" }
+
+mulpart = {
+      minusexpr
+    | DESIRED_NUMBER
+    | NUMBER
+    | inconsistent_varspec
+    | extvarname
+    | bracketexpr
+}
+
+minusexpr   = { "-" ~ mulpart }
+bracketexpr = { "(" ~ expr ~ ")" }
+
+// --------------- variable names (with optional indices) ------
+extvarname = { VARNAME ~ ("[" ~ indexquant ~ ("," ~ indexquant)* ~ "]")? }
+VARNAME    = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
+indexquant = { expr }
+
+// --------------- NUMBER -------------------------------------
+// Matches integers and floating-point numbers.
+// Must be atomic so that whitespace is not consumed inside.
+NUMBER = @{ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? }
+
+// --------------- DESIRED_NUMBER -----------------------------
+// A number immediately followed by "?" — the "?" must be
+// directly adjacent (no intervening whitespace), hence atomic.
+DESIRED_NUMBER = @{ NUMBER ~ "?" }
+
+// --------------- inconsistent variable spec -----------------
+// extvarname immediately followed by "?".
+inconsistent_varspec = { extvarname ~ "?" }
+
+// --------------- INT (for ctrl_spec) ------------------------
+INT = @{ ASCII_DIGIT+ }
