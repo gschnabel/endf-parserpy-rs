@@ -373,7 +373,8 @@ pub fn read_tab1(
     ofs: usize,
     opts: &ReadOpts,
 ) -> EndfResult<(ContRecord, Tab1Body, CtrlRecord, usize)> {
-    let (cont, ctrl) = read_cont(lines[ofs], opts)?;
+    let line = lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?;
+    let (cont, ctrl) = read_cont(line, opts)?;
     let nr = cont.n1 as usize;
     let np = cont.n2 as usize;
     let (body, new_ofs) = read_tab1_body(lines, ofs + 1, nr, np, opts)?;
@@ -417,7 +418,8 @@ pub fn read_tab2(
     ofs: usize,
     opts: &ReadOpts,
 ) -> EndfResult<(ContRecord, Tab2Body, CtrlRecord, usize)> {
-    let (cont, ctrl) = read_cont(lines[ofs], opts)?;
+    let line = lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?;
+    let (cont, ctrl) = read_cont(line, opts)?;
     let nr = cont.n1 as usize;
     let (body, new_ofs) = read_tab2_body(lines, ofs + 1, nr, opts)?;
     Ok((cont, body, ctrl, new_ofs))
@@ -433,7 +435,8 @@ pub fn read_list(
     ofs: usize,
     opts: &ReadOpts,
 ) -> EndfResult<(ContRecord, Vec<f64>, CtrlRecord, usize)> {
-    let (cont, ctrl) = read_cont(lines[ofs], opts)?;
+    let line = lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?;
+    let (cont, ctrl) = read_cont(line, opts)?;
     let npl = cont.n1 as usize;
     if npl == 0 {
         return Ok((cont, Vec::new(), ctrl, ofs + 1));

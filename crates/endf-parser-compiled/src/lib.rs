@@ -49,7 +49,7 @@ pub fn parse_mf0_mt0(
 
     // TEXT record
     {
-        let (text_rec, _ctrl) = records::read_text(&lines[ofs], read_opts)?;
+        let (text_rec, _ctrl) = records::read_text(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         result.insert("TAPEDESCR", EndfValue::Str(text_rec.text.clone()));
     }
@@ -107,7 +107,7 @@ pub fn parse_mf1_mt451(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -124,7 +124,7 @@ pub fn parse_mf1_mt451(
     }
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_elis = cont.c1;
         result.insert("ELIS", f64_to_endf_value(var_elis));
@@ -140,7 +140,7 @@ pub fn parse_mf1_mt451(
     }
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_awi = cont.c1;
         result.insert("AWI", f64_to_endf_value(var_awi));
@@ -156,7 +156,7 @@ pub fn parse_mf1_mt451(
     }
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_temp = cont.c1;
         result.insert("TEMP", f64_to_endf_value(var_temp));
@@ -171,7 +171,7 @@ pub fn parse_mf1_mt451(
     }
     // TEXT record
     {
-        let (text_rec, _ctrl) = records::read_text(&lines[ofs], read_opts)?;
+        let (text_rec, _ctrl) = records::read_text(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         result.insert("ZSYMAM", EndfValue::Str(text_rec.text[0..11].to_string()));
         result.insert("ALAB", EndfValue::Str(text_rec.text[11..22].to_string()));
@@ -180,7 +180,7 @@ pub fn parse_mf1_mt451(
     }
     // TEXT record
     {
-        let (text_rec, _ctrl) = records::read_text(&lines[ofs], read_opts)?;
+        let (text_rec, _ctrl) = records::read_text(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         result.insert("REF", EndfValue::Str(text_rec.text[1..22].to_string()));
         result.insert("DDATE", EndfValue::Str(text_rec.text[22..32].to_string()));
@@ -191,7 +191,7 @@ pub fn parse_mf1_mt451(
         var_i = var_i_loop_ as f64;
         // TEXT record
         {
-            let (text_rec, _ctrl) = records::read_text(&lines[ofs], read_opts)?;
+            let (text_rec, _ctrl) = records::read_text(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
             ofs += 1;
             result.insert("HSUB", EndfValue::Str(text_rec.text.clone()));
         }
@@ -200,7 +200,7 @@ pub fn parse_mf1_mt451(
         var_i = var_i_loop_ as f64;
         // TEXT record
         {
-            let (text_rec, _ctrl) = records::read_text(&lines[ofs], read_opts)?;
+            let (text_rec, _ctrl) = records::read_text(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
             ofs += 1;
             result.insert("DESCRIPTION", EndfValue::Str(text_rec.text.clone()));
         }
@@ -209,7 +209,7 @@ pub fn parse_mf1_mt451(
         var_i = var_i_loop_ as f64;
         // DIR record
         {
-            let (dir_rec, _ctrl) = records::read_dir(&lines[ofs], read_opts)?;
+            let (dir_rec, _ctrl) = records::read_dir(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
             ofs += 1;
             // TODO: complex DIR field expression for l1
             // TODO: complex DIR field expression for l2
@@ -247,7 +247,7 @@ pub fn parse_mf1_mt452(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -277,10 +277,11 @@ pub fn parse_mf1_mt452(
             let mut vi: usize = 0;
             for var_k_loop_ in (1_f64 as i64)..=(var_nc as f64 as i64) {
                 var_k = var_k_loop_ as f64;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("C") {
                     result.insert("C", EndfValue::new_dict());
                 }
-                result.get_mut("C").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("C").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
             }
         }
@@ -339,7 +340,7 @@ pub fn parse_mf1_mt455(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -370,10 +371,11 @@ pub fn parse_mf1_mt455(
             let mut vi: usize = 0;
             for var_k_loop_ in (1_f64 as i64)..=(var_nnf as f64 as i64) {
                 var_k = var_k_loop_ as f64;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("lambda") {
                     result.insert("lambda", EndfValue::new_dict());
                 }
-                result.get_mut("lambda").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("lambda").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
             }
         }
@@ -429,11 +431,13 @@ pub fn parse_mf1_mt455(
                 let mut vi: usize = 0;
                 for var_l_loop_ in (1_f64 as i64)..=(var_nnf as f64 as i64) {
                     var_l = var_l_loop_ as f64;
+                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                     if !result.contains_key("lambda") {
                         result.insert("lambda", EndfValue::new_dict());
                     }
                     // TODO: multi-index list store for lambda
                     vi += 1;
+                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                     if !result.contains_key("alpha") {
                         result.insert("alpha", EndfValue::new_dict());
                     }
@@ -476,10 +480,11 @@ pub fn parse_mf1_mt455(
             let mut vi: usize = 0;
             for var_k_loop_ in (1_f64 as i64)..=(var_nnf as f64 as i64) {
                 var_k = var_k_loop_ as f64;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("lambda") {
                     result.insert("lambda", EndfValue::new_dict());
                 }
-                result.get_mut("lambda").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("lambda").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
             }
         }
@@ -497,8 +502,9 @@ pub fn parse_mf1_mt455(
             // field n2 expected 0 (validation skipped in compiled mode)
 
             let mut vi: usize = 0;
-            result.insert("nubar_d", f64_to_endf_value(vals[vi]));
-            var_nubar_d = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("nubar_d", f64_to_endf_value(_val));
+            var_nubar_d = _val;
             vi += 1;
         }
     } else if ((var_ldg as f64 as i64) == (1_f64 as i64)) && ((var_lnu as f64 as i64) == (1_f64 as i64)) {
@@ -535,11 +541,13 @@ pub fn parse_mf1_mt455(
                 let mut vi: usize = 0;
                 for var_l_loop_ in (1_f64 as i64)..=(var_nnf as f64 as i64) {
                     var_l = var_l_loop_ as f64;
+                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                     if !result.contains_key("lambda") {
                         result.insert("lambda", EndfValue::new_dict());
                     }
                     // TODO: multi-index list store for lambda
                     vi += 1;
+                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                     if !result.contains_key("alpha") {
                         result.insert("alpha", EndfValue::new_dict());
                     }
@@ -565,10 +573,11 @@ pub fn parse_mf1_mt455(
             let mut vi: usize = 0;
             for var_k_loop_ in (1_f64 as i64)..=(var_nc as f64 as i64) {
                 var_k = var_k_loop_ as f64;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("nubar_d") {
                     result.insert("nubar_d", EndfValue::new_dict());
                 }
-                result.get_mut("nubar_d").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("nubar_d").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
             }
         }
@@ -600,7 +609,7 @@ pub fn parse_mf1_mt456(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -644,8 +653,9 @@ pub fn parse_mf1_mt456(
             // field n2 expected 0 (validation skipped in compiled mode)
 
             let mut vi: usize = 0;
-            result.insert("nubar_p", f64_to_endf_value(vals[vi]));
-            var_nubar_p = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("nubar_p", f64_to_endf_value(_val));
+            var_nubar_p = _val;
             vi += 1;
         }
     }
@@ -719,6 +729,7 @@ pub fn parse_mf1_mt458(
     let lookahead_ok_0 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
+            if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
             Ok(((var_lfc as f64 as i64) == (0_f64 as i64)) && ((var_nply as f64 as i64) == (0_f64 as i64)))
         })().unwrap_or(false);
@@ -727,6 +738,7 @@ pub fn parse_mf1_mt458(
     let lookahead_ok_1 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
+            if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
             Ok(((var_lfc as f64 as i64) == (0_f64 as i64)) && ((var_nply as f64 as i64) > (0_f64 as i64)))
         })().unwrap_or(false);
@@ -735,6 +747,7 @@ pub fn parse_mf1_mt458(
     let lookahead_ok_2 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
+            if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
             Ok(((var_lfc as f64 as i64) == (1_f64 as i64)) && ((var_nply as f64 as i64) == (0_f64 as i64)))
         })().unwrap_or(false);
@@ -743,7 +756,7 @@ pub fn parse_mf1_mt458(
     if lookahead_ok_0 {
         // HEAD/CONT record
         {
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
             ofs += 1;
             var_za = cont.c1;
             result.insert("ZA", f64_to_endf_value(var_za));
@@ -770,65 +783,83 @@ pub fn parse_mf1_mt458(
             // field n2 expected 9 (validation skipped in compiled mode)
 
             let mut vi: usize = 0;
-            result.insert("EFR", f64_to_endf_value(vals[vi]));
-            var_efr = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("EFR", f64_to_endf_value(_val));
+            var_efr = _val;
             vi += 1;
-            result.insert("dEFR", f64_to_endf_value(vals[vi]));
-            var_defr = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("dEFR", f64_to_endf_value(_val));
+            var_defr = _val;
             vi += 1;
-            result.insert("ENP", f64_to_endf_value(vals[vi]));
-            var_enp = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("ENP", f64_to_endf_value(_val));
+            var_enp = _val;
             vi += 1;
-            result.insert("dENP", f64_to_endf_value(vals[vi]));
-            var_denp = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("dENP", f64_to_endf_value(_val));
+            var_denp = _val;
             vi += 1;
-            result.insert("END", f64_to_endf_value(vals[vi]));
-            var_end = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("END", f64_to_endf_value(_val));
+            var_end = _val;
             vi += 1;
-            result.insert("dEND", f64_to_endf_value(vals[vi]));
-            var_dend = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("dEND", f64_to_endf_value(_val));
+            var_dend = _val;
             vi += 1;
-            result.insert("EGP", f64_to_endf_value(vals[vi]));
-            var_egp = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("EGP", f64_to_endf_value(_val));
+            var_egp = _val;
             vi += 1;
-            result.insert("dEGP", f64_to_endf_value(vals[vi]));
-            var_degp = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("dEGP", f64_to_endf_value(_val));
+            var_degp = _val;
             vi += 1;
-            result.insert("EGD", f64_to_endf_value(vals[vi]));
-            var_egd = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("EGD", f64_to_endf_value(_val));
+            var_egd = _val;
             vi += 1;
-            result.insert("dEGD", f64_to_endf_value(vals[vi]));
-            var_degd = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("dEGD", f64_to_endf_value(_val));
+            var_degd = _val;
             vi += 1;
-            result.insert("EB", f64_to_endf_value(vals[vi]));
-            var_eb = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("EB", f64_to_endf_value(_val));
+            var_eb = _val;
             vi += 1;
-            result.insert("dEB", f64_to_endf_value(vals[vi]));
-            var_deb = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("dEB", f64_to_endf_value(_val));
+            var_deb = _val;
             vi += 1;
-            result.insert("ENU", f64_to_endf_value(vals[vi]));
-            var_enu = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("ENU", f64_to_endf_value(_val));
+            var_enu = _val;
             vi += 1;
-            result.insert("dENU", f64_to_endf_value(vals[vi]));
-            var_denu = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("dENU", f64_to_endf_value(_val));
+            var_denu = _val;
             vi += 1;
-            result.insert("ER", f64_to_endf_value(vals[vi]));
-            var_er = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("ER", f64_to_endf_value(_val));
+            var_er = _val;
             vi += 1;
-            result.insert("dER", f64_to_endf_value(vals[vi]));
-            var_der = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("dER", f64_to_endf_value(_val));
+            var_der = _val;
             vi += 1;
-            result.insert("ET", f64_to_endf_value(vals[vi]));
-            var_et = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("ET", f64_to_endf_value(_val));
+            var_et = _val;
             vi += 1;
-            result.insert("dET", f64_to_endf_value(vals[vi]));
-            var_det = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("dET", f64_to_endf_value(_val));
+            var_det = _val;
             vi += 1;
         }
     } else if lookahead_ok_1 {
         // HEAD/CONT record
         {
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
             ofs += 1;
             var_za = cont.c1;
             result.insert("ZA", f64_to_endf_value(var_za));
@@ -857,102 +888,120 @@ pub fn parse_mf1_mt458(
             let mut vi: usize = 0;
             for var_k_loop_ in (0_f64 as i64)..=(var_nply as f64 as i64) {
                 var_k = var_k_loop_ as f64;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("c_EFR") {
                     result.insert("c_EFR", EndfValue::new_dict());
                 }
-                result.get_mut("c_EFR").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("c_EFR").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("dc_EFR") {
                     result.insert("dc_EFR", EndfValue::new_dict());
                 }
-                result.get_mut("dc_EFR").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("dc_EFR").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("c_ENP") {
                     result.insert("c_ENP", EndfValue::new_dict());
                 }
-                result.get_mut("c_ENP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("c_ENP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("dc_ENP") {
                     result.insert("dc_ENP", EndfValue::new_dict());
                 }
-                result.get_mut("dc_ENP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("dc_ENP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("c_END") {
                     result.insert("c_END", EndfValue::new_dict());
                 }
-                result.get_mut("c_END").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("c_END").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("dc_END") {
                     result.insert("dc_END", EndfValue::new_dict());
                 }
-                result.get_mut("dc_END").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("dc_END").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("c_EGP") {
                     result.insert("c_EGP", EndfValue::new_dict());
                 }
-                result.get_mut("c_EGP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("c_EGP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("dc_EGP") {
                     result.insert("dc_EGP", EndfValue::new_dict());
                 }
-                result.get_mut("dc_EGP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("dc_EGP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("c_EGD") {
                     result.insert("c_EGD", EndfValue::new_dict());
                 }
-                result.get_mut("c_EGD").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("c_EGD").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("dc_EGD") {
                     result.insert("dc_EGD", EndfValue::new_dict());
                 }
-                result.get_mut("dc_EGD").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("dc_EGD").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("c_EB") {
                     result.insert("c_EB", EndfValue::new_dict());
                 }
-                result.get_mut("c_EB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("c_EB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("dc_EB") {
                     result.insert("dc_EB", EndfValue::new_dict());
                 }
-                result.get_mut("dc_EB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("dc_EB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("c_ENU") {
                     result.insert("c_ENU", EndfValue::new_dict());
                 }
-                result.get_mut("c_ENU").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("c_ENU").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("dc_ENU") {
                     result.insert("dc_ENU", EndfValue::new_dict());
                 }
-                result.get_mut("dc_ENU").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("dc_ENU").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("c_ER") {
                     result.insert("c_ER", EndfValue::new_dict());
                 }
-                result.get_mut("c_ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("c_ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("dc_ER") {
                     result.insert("dc_ER", EndfValue::new_dict());
                 }
-                result.get_mut("dc_ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("dc_ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("c_ET") {
                     result.insert("c_ET", EndfValue::new_dict());
                 }
-                result.get_mut("c_ET").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("c_ET").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("dc_ET") {
                     result.insert("dc_ET", EndfValue::new_dict());
                 }
-                result.get_mut("dc_ET").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("dc_ET").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
             }
         }
     } else if lookahead_ok_2 {
         // HEAD/CONT record
         {
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
             ofs += 1;
             var_za = cont.c1;
             result.insert("ZA", f64_to_endf_value(var_za));
@@ -980,59 +1029,77 @@ pub fn parse_mf1_mt458(
             // field n2 expected 9 (validation skipped in compiled mode)
 
             let mut vi: usize = 0;
-            result.insert("EFR", f64_to_endf_value(vals[vi]));
-            var_efr = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("EFR", f64_to_endf_value(_val));
+            var_efr = _val;
             vi += 1;
-            result.insert("dEFR", f64_to_endf_value(vals[vi]));
-            var_defr = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("dEFR", f64_to_endf_value(_val));
+            var_defr = _val;
             vi += 1;
-            result.insert("ENP", f64_to_endf_value(vals[vi]));
-            var_enp = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("ENP", f64_to_endf_value(_val));
+            var_enp = _val;
             vi += 1;
-            result.insert("dENP", f64_to_endf_value(vals[vi]));
-            var_denp = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("dENP", f64_to_endf_value(_val));
+            var_denp = _val;
             vi += 1;
-            result.insert("END", f64_to_endf_value(vals[vi]));
-            var_end = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("END", f64_to_endf_value(_val));
+            var_end = _val;
             vi += 1;
-            result.insert("dEND", f64_to_endf_value(vals[vi]));
-            var_dend = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("dEND", f64_to_endf_value(_val));
+            var_dend = _val;
             vi += 1;
-            result.insert("EGP", f64_to_endf_value(vals[vi]));
-            var_egp = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("EGP", f64_to_endf_value(_val));
+            var_egp = _val;
             vi += 1;
-            result.insert("dEGP", f64_to_endf_value(vals[vi]));
-            var_degp = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("dEGP", f64_to_endf_value(_val));
+            var_degp = _val;
             vi += 1;
-            result.insert("EGD", f64_to_endf_value(vals[vi]));
-            var_egd = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("EGD", f64_to_endf_value(_val));
+            var_egd = _val;
             vi += 1;
-            result.insert("dEGD", f64_to_endf_value(vals[vi]));
-            var_degd = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("dEGD", f64_to_endf_value(_val));
+            var_degd = _val;
             vi += 1;
-            result.insert("EB", f64_to_endf_value(vals[vi]));
-            var_eb = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("EB", f64_to_endf_value(_val));
+            var_eb = _val;
             vi += 1;
-            result.insert("dEB", f64_to_endf_value(vals[vi]));
-            var_deb = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("dEB", f64_to_endf_value(_val));
+            var_deb = _val;
             vi += 1;
-            result.insert("ENU", f64_to_endf_value(vals[vi]));
-            var_enu = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("ENU", f64_to_endf_value(_val));
+            var_enu = _val;
             vi += 1;
-            result.insert("dENU", f64_to_endf_value(vals[vi]));
-            var_denu = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("dENU", f64_to_endf_value(_val));
+            var_denu = _val;
             vi += 1;
-            result.insert("ER", f64_to_endf_value(vals[vi]));
-            var_er = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("ER", f64_to_endf_value(_val));
+            var_er = _val;
             vi += 1;
-            result.insert("dER", f64_to_endf_value(vals[vi]));
-            var_der = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("dER", f64_to_endf_value(_val));
+            var_der = _val;
             vi += 1;
-            result.insert("ET", f64_to_endf_value(vals[vi]));
-            var_et = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("ET", f64_to_endf_value(_val));
+            var_et = _val;
             vi += 1;
-            result.insert("dET", f64_to_endf_value(vals[vi]));
-            var_det = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("dET", f64_to_endf_value(_val));
+            var_det = _val;
             vi += 1;
         }
         for var_k_loop_ in (1_f64 as i64)..=(var_nfc as f64 as i64) {
@@ -1097,6 +1164,7 @@ pub fn parse_mf1_mt460(
     let lookahead_ok_0 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
+            if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
             Ok((var_lo as f64 as i64) == (1_f64 as i64))
         })().unwrap_or(false);
@@ -1105,6 +1173,7 @@ pub fn parse_mf1_mt460(
     let lookahead_ok_1 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
+            if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
             Ok((var_lo as f64 as i64) == (2_f64 as i64))
         })().unwrap_or(false);
@@ -1113,7 +1182,7 @@ pub fn parse_mf1_mt460(
     if lookahead_ok_0 {
         // HEAD/CONT record
         {
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
             ofs += 1;
             var_za = cont.c1;
             result.insert("ZA", f64_to_endf_value(var_za));
@@ -1154,7 +1223,7 @@ pub fn parse_mf1_mt460(
     } else if lookahead_ok_1 {
         // HEAD/CONT record
         {
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
             ofs += 1;
             var_za = cont.c1;
             result.insert("ZA", f64_to_endf_value(var_za));
@@ -1183,10 +1252,11 @@ pub fn parse_mf1_mt460(
             let mut vi: usize = 0;
             for var_i_loop_ in (1_f64 as i64)..=(var_nnf as f64 as i64) {
                 var_i = var_i_loop_ as f64;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("lambda") {
                     result.insert("lambda", EndfValue::new_dict());
                 }
-                result.get_mut("lambda").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("lambda").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
             }
         }
@@ -1335,7 +1405,7 @@ pub fn parse_mf2_mt151(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -1355,7 +1425,7 @@ pub fn parse_mf2_mt151(
             std::mem::swap(&mut result, &mut section_isotope);
             // HEAD/CONT record
             {
-                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                 ofs += 1;
                 var_zai = cont.c1;
                 result.insert("ZAI", f64_to_endf_value(var_zai));
@@ -1376,7 +1446,7 @@ pub fn parse_mf2_mt151(
                     std::mem::swap(&mut result, &mut section_range);
                     // HEAD/CONT record
                     {
-                        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                         ofs += 1;
                         var_el = cont.c1;
                         result.insert("EL", f64_to_endf_value(var_el));
@@ -1394,7 +1464,7 @@ pub fn parse_mf2_mt151(
                     if ((((((var_lru as f64 as i64) == (0_f64 as i64)) && ((var_lrf as f64 as i64) == (0_f64 as i64))) && ((var_nro as f64 as i64) == (0_f64 as i64))) && ((var_naps as f64 as i64) == (0_f64 as i64))) && ((var_lfw as f64 as i64) == (0_f64 as i64))) && ((var_ner as f64 as i64) == (1_f64 as i64)) {
                         // HEAD/CONT record
                         {
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                             ofs += 1;
                             var_spi = cont.c1;
                             result.insert("SPI", f64_to_endf_value(var_spi));
@@ -1430,7 +1500,7 @@ pub fn parse_mf2_mt151(
                             if ((var_nro as f64 as i64) != (0_f64 as i64)) && (((var_naps as f64 as i64) == (0_f64 as i64)) || ((var_naps as f64 as i64) == (1_f64 as i64))) {
                                 // HEAD/CONT record
                                 {
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                     ofs += 1;
                                     var_spi = cont.c1;
                                     result.insert("SPI", f64_to_endf_value(var_spi));
@@ -1444,7 +1514,7 @@ pub fn parse_mf2_mt151(
                             } else {
                                 // HEAD/CONT record
                                 {
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                     ofs += 1;
                                     var_spi = cont.c1;
                                     result.insert("SPI", f64_to_endf_value(var_spi));
@@ -1484,35 +1554,41 @@ pub fn parse_mf2_mt151(
                                         let mut vi: usize = 0;
                                         for var_k_loop_ in (1_f64 as i64)..=(var_nrs as f64 as i64) {
                                             var_k = var_k_loop_ as f64;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("ER") {
                                                 result.insert("ER", EndfValue::new_dict());
                                             }
-                                            result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("AJ") {
                                                 result.insert("AJ", EndfValue::new_dict());
                                             }
-                                            result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GT") {
                                                 result.insert("GT", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GN") {
                                                 result.insert("GN", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GG") {
                                                 result.insert("GG", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GF") {
                                                 result.insert("GF", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
                                         }
                                     }
@@ -1547,7 +1623,7 @@ pub fn parse_mf2_mt151(
                             if ((var_nro as f64 as i64) != (0_f64 as i64)) && (((var_naps as f64 as i64) == (0_f64 as i64)) || ((var_naps as f64 as i64) == (1_f64 as i64))) {
                                 // HEAD/CONT record
                                 {
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                     ofs += 1;
                                     var_spi = cont.c1;
                                     result.insert("SPI", f64_to_endf_value(var_spi));
@@ -1563,7 +1639,7 @@ pub fn parse_mf2_mt151(
                             } else {
                                 // HEAD/CONT record
                                 {
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                     ofs += 1;
                                     var_spi = cont.c1;
                                     result.insert("SPI", f64_to_endf_value(var_spi));
@@ -1604,35 +1680,41 @@ pub fn parse_mf2_mt151(
                                         let mut vi: usize = 0;
                                         for var_k_loop_ in (1_f64 as i64)..=(var_nrs as f64 as i64) {
                                             var_k = var_k_loop_ as f64;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("ER") {
                                                 result.insert("ER", EndfValue::new_dict());
                                             }
-                                            result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("AJ") {
                                                 result.insert("AJ", EndfValue::new_dict());
                                             }
-                                            result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GN") {
                                                 result.insert("GN", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GG") {
                                                 result.insert("GG", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GFA") {
                                                 result.insert("GFA", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GFA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GFA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GFB") {
                                                 result.insert("GFB", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GFB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GFB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
                                         }
                                     }
@@ -1667,7 +1749,7 @@ pub fn parse_mf2_mt151(
                             if ((var_nro as f64 as i64) != (0_f64 as i64)) && (((var_naps as f64 as i64) == (0_f64 as i64)) || ((var_naps as f64 as i64) == (1_f64 as i64))) {
                                 // HEAD/CONT record
                                 {
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                     ofs += 1;
                                     var_spi = cont.c1;
                                     result.insert("SPI", f64_to_endf_value(var_spi));
@@ -1681,7 +1763,7 @@ pub fn parse_mf2_mt151(
                             } else {
                                 // HEAD/CONT record
                                 {
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                     ofs += 1;
                                     var_spi = cont.c1;
                                     result.insert("SPI", f64_to_endf_value(var_spi));
@@ -1697,6 +1779,7 @@ pub fn parse_mf2_mt151(
                             let lookahead_ok_0 = {
                                 let saved_ofs = ofs;
                                 let ok = (|| -> Result<bool, EndfError> {
+                                    if ofs >= lines.len() { return Ok(false); }
                                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                     Ok((var_nx as f64 as i64) == (1_f64 as i64))
                                 })().unwrap_or(false);
@@ -1705,6 +1788,7 @@ pub fn parse_mf2_mt151(
                             let lookahead_ok_1 = {
                                 let saved_ofs = ofs;
                                 let ok = (|| -> Result<bool, EndfError> {
+                                    if ofs >= lines.len() { return Ok(false); }
                                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                     Ok((var_nx as f64 as i64) == (2_f64 as i64))
                                 })().unwrap_or(false);
@@ -1713,6 +1797,7 @@ pub fn parse_mf2_mt151(
                             let lookahead_ok_2 = {
                                 let saved_ofs = ofs;
                                 let ok = (|| -> Result<bool, EndfError> {
+                                    if ofs >= lines.len() { return Ok(false); }
                                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                     Ok((var_nx as f64 as i64) == (3_f64 as i64))
                                 })().unwrap_or(false);
@@ -1738,18 +1823,20 @@ pub fn parse_mf2_mt151(
                                     let mut vi: usize = 0;
                                     for var_k_loop_ in (1_f64 as i64)..=(4_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("AT") {
                                             result.insert("AT", EndfValue::new_dict());
                                         }
-                                        result.get_mut("AT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("AT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                     for var_k_loop_ in (1_f64 as i64)..=(2_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("BT") {
                                             result.insert("BT", EndfValue::new_dict());
                                         }
-                                        result.get_mut("BT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("BT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -1773,34 +1860,38 @@ pub fn parse_mf2_mt151(
                                     let mut vi: usize = 0;
                                     for var_k_loop_ in (1_f64 as i64)..=(4_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("AT") {
                                             result.insert("AT", EndfValue::new_dict());
                                         }
-                                        result.get_mut("AT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("AT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                     for var_k_loop_ in (1_f64 as i64)..=(2_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("BT") {
                                             result.insert("BT", EndfValue::new_dict());
                                         }
-                                        result.get_mut("BT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("BT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                     for var_k_loop_ in (1_f64 as i64)..=(4_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("AC") {
                                             result.insert("AC", EndfValue::new_dict());
                                         }
-                                        result.get_mut("AC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("AC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                     for var_k_loop_ in (1_f64 as i64)..=(2_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("BC") {
                                             result.insert("BC", EndfValue::new_dict());
                                         }
-                                        result.get_mut("BC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("BC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -1824,50 +1915,56 @@ pub fn parse_mf2_mt151(
                                     let mut vi: usize = 0;
                                     for var_k_loop_ in (1_f64 as i64)..=(4_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("AT") {
                                             result.insert("AT", EndfValue::new_dict());
                                         }
-                                        result.get_mut("AT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("AT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                     for var_k_loop_ in (1_f64 as i64)..=(2_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("BT") {
                                             result.insert("BT", EndfValue::new_dict());
                                         }
-                                        result.get_mut("BT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("BT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                     for var_k_loop_ in (1_f64 as i64)..=(4_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("AF") {
                                             result.insert("AF", EndfValue::new_dict());
                                         }
-                                        result.get_mut("AF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("AF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                     for var_k_loop_ in (1_f64 as i64)..=(2_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("BF") {
                                             result.insert("BF", EndfValue::new_dict());
                                         }
-                                        result.get_mut("BF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("BF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                     for var_k_loop_ in (1_f64 as i64)..=(4_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("AC") {
                                             result.insert("AC", EndfValue::new_dict());
                                         }
-                                        result.get_mut("AC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("AC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                     for var_k_loop_ in (1_f64 as i64)..=(2_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("BC") {
                                             result.insert("BC", EndfValue::new_dict());
                                         }
-                                        result.get_mut("BC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("BC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -1882,7 +1979,7 @@ pub fn parse_mf2_mt151(
                                     std::mem::swap(&mut result, &mut section_l_group);
                                     // HEAD/CONT record
                                     {
-                                        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                         ofs += 1;
                                         // field c1 expected 0 (validation skipped in compiled mode)
                                         // field c2 expected 0 (validation skipped in compiled mode)
@@ -1917,65 +2014,77 @@ pub fn parse_mf2_mt151(
                                                 let mut vi: usize = 0;
                                                 for var_k_loop_ in (1_f64 as i64)..=(var_nlj as f64 as i64) {
                                                     var_k = var_k_loop_ as f64;
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                     if !result.contains_key("DET") {
                                                         result.insert("DET", EndfValue::new_dict());
                                                     }
-                                                    result.get_mut("DET").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                    result.get_mut("DET").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                                     vi += 1;
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                     if !result.contains_key("DWT") {
                                                         result.insert("DWT", EndfValue::new_dict());
                                                     }
-                                                    result.get_mut("DWT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                    result.get_mut("DWT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                                     vi += 1;
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                     if !result.contains_key("GRT") {
                                                         result.insert("GRT", EndfValue::new_dict());
                                                     }
-                                                    result.get_mut("GRT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                    result.get_mut("GRT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                                     vi += 1;
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                     if !result.contains_key("GIT") {
                                                         result.insert("GIT", EndfValue::new_dict());
                                                     }
-                                                    result.get_mut("GIT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                    result.get_mut("GIT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                                     vi += 1;
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                     if !result.contains_key("DEF") {
                                                         result.insert("DEF", EndfValue::new_dict());
                                                     }
-                                                    result.get_mut("DEF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                    result.get_mut("DEF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                                     vi += 1;
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                     if !result.contains_key("DWF") {
                                                         result.insert("DWF", EndfValue::new_dict());
                                                     }
-                                                    result.get_mut("DWF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                    result.get_mut("DWF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                                     vi += 1;
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                     if !result.contains_key("GRF") {
                                                         result.insert("GRF", EndfValue::new_dict());
                                                     }
-                                                    result.get_mut("GRF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                    result.get_mut("GRF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                                     vi += 1;
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                     if !result.contains_key("GIF") {
                                                         result.insert("GIF", EndfValue::new_dict());
                                                     }
-                                                    result.get_mut("GIF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                    result.get_mut("GIF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                                     vi += 1;
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                     if !result.contains_key("DEC") {
                                                         result.insert("DEC", EndfValue::new_dict());
                                                     }
-                                                    result.get_mut("DEC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                    result.get_mut("DEC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                                     vi += 1;
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                     if !result.contains_key("DWC") {
                                                         result.insert("DWC", EndfValue::new_dict());
                                                     }
-                                                    result.get_mut("DWC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                    result.get_mut("DWC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                                     vi += 1;
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                     if !result.contains_key("GRC") {
                                                         result.insert("GRC", EndfValue::new_dict());
                                                     }
-                                                    result.get_mut("GRC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                    result.get_mut("GRC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                                     vi += 1;
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                     if !result.contains_key("GIC") {
                                                         result.insert("GIC", EndfValue::new_dict());
                                                     }
-                                                    result.get_mut("GIC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                    result.get_mut("GIC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                                     vi += 1;
                                                 }
                                             }
@@ -1996,7 +2105,7 @@ pub fn parse_mf2_mt151(
                         } else if (var_lrf as f64 as i64) == (7_f64 as i64) {
                             // HEAD/CONT record
                             {
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                 ofs += 1;
                                 // field c1 expected 0 (validation skipped in compiled mode)
                                 // field c2 expected 0 (validation skipped in compiled mode)
@@ -2026,65 +2135,77 @@ pub fn parse_mf2_mt151(
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_npp as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("MA") {
                                         result.insert("MA", EndfValue::new_dict());
                                     }
-                                    result.get_mut("MA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("MA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("MB") {
                                         result.insert("MB", EndfValue::new_dict());
                                     }
-                                    result.get_mut("MB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("MB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("ZA") {
                                         result.insert("ZA", EndfValue::new_dict());
                                     }
-                                    result.get_mut("ZA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("ZA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("ZB") {
                                         result.insert("ZB", EndfValue::new_dict());
                                     }
-                                    result.get_mut("ZB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("ZB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("IA") {
                                         result.insert("IA", EndfValue::new_dict());
                                     }
-                                    result.get_mut("IA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("IA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("IB") {
                                         result.insert("IB", EndfValue::new_dict());
                                     }
-                                    result.get_mut("IB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("IB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("Q") {
                                         result.insert("Q", EndfValue::new_dict());
                                     }
-                                    result.get_mut("Q").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("Q").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("PNT") {
                                         result.insert("PNT", EndfValue::new_dict());
                                     }
-                                    result.get_mut("PNT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("PNT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("SHF") {
                                         result.insert("SHF", EndfValue::new_dict());
                                     }
-                                    result.get_mut("SHF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("SHF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("MT") {
                                         result.insert("MT", EndfValue::new_dict());
                                     }
-                                    result.get_mut("MT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("MT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("PA") {
                                         result.insert("PA", EndfValue::new_dict());
                                     }
-                                    result.get_mut("PA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("PA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("PB") {
                                         result.insert("PB", EndfValue::new_dict());
                                     }
-                                    result.get_mut("PB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("PB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                             }
@@ -2115,41 +2236,48 @@ pub fn parse_mf2_mt151(
                                         let mut vi: usize = 0;
                                         for var_l_loop_ in (1_f64 as i64)..=(var_nch as f64 as i64) {
                                             var_l = var_l_loop_ as f64;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("PPI") {
                                                 result.insert("PPI", EndfValue::new_dict());
                                             }
-                                            result.get_mut("PPI").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("PPI").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("L") {
                                                 result.insert("L", EndfValue::new_dict());
                                             }
-                                            result.get_mut("L").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("L").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("SCH") {
                                                 result.insert("SCH", EndfValue::new_dict());
                                             }
-                                            result.get_mut("SCH").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("SCH").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("BND") {
                                                 result.insert("BND", EndfValue::new_dict());
                                             }
-                                            result.get_mut("BND").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("BND").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("APE") {
                                                 result.insert("APE", EndfValue::new_dict());
                                             }
-                                            result.get_mut("APE").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("APE").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("APT") {
                                                 result.insert("APT", EndfValue::new_dict());
                                             }
-                                            result.get_mut("APT").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("APT").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
                                         }
                                     }
                                     let lookahead_ok_0 = {
                                         let saved_ofs = ofs;
                                         let ok = (|| -> Result<bool, EndfError> {
+                                            if ofs >= lines.len() { return Ok(false); }
                                             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                             Ok((var_nrs as f64 as i64) > (0_f64 as i64))
                                         })().unwrap_or(false);
@@ -2158,6 +2286,7 @@ pub fn parse_mf2_mt151(
                                     let lookahead_ok_1 = {
                                         let saved_ofs = ofs;
                                         let ok = (|| -> Result<bool, EndfError> {
+                                            if ofs >= lines.len() { return Ok(false); }
                                             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                             Ok(((var_nrs as f64 as i64) == (0_f64 as i64)) && ((var_nx as f64 as i64) == (1_f64 as i64)))
                                         })().unwrap_or(false);
@@ -2184,13 +2313,15 @@ pub fn parse_mf2_mt151(
                                             let mut vi: usize = 0;
                                             for var_n_loop_ in (1_f64 as i64)..=(var_nrs as f64 as i64) {
                                                 var_n = var_n_loop_ as f64;
+                                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                 if !result.contains_key("ER") {
                                                     result.insert("ER", EndfValue::new_dict());
                                                 }
-                                                result.get_mut("ER").unwrap().insert(EndfKey::Int(var_n as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                result.get_mut("ER").unwrap().insert(EndfKey::Int(var_n as f64 as i64), f64_to_endf_value(_val));
                                                 vi += 1;
                                                 for var_m_loop_ in (1_f64 as i64)..=(var_nch as f64 as i64) {
                                                     var_m = var_m_loop_ as f64;
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                     if !result.contains_key("GAM") {
                                                         result.insert("GAM", EndfValue::new_dict());
                                                     }
@@ -2233,7 +2364,7 @@ pub fn parse_mf2_mt151(
                                             var_n = var_n_loop_ as f64;
                                             // HEAD/CONT record
                                             {
-                                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                                let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                                 ofs += 1;
                                                 // field c1 expected 0 (validation skipped in compiled mode)
                                                 // field c2 expected 0 (validation skipped in compiled mode)
@@ -2247,7 +2378,7 @@ pub fn parse_mf2_mt151(
                                             if (var_lbk as f64 as i64) == (1_f64 as i64) {
                                                 // HEAD/CONT record
                                                 {
-                                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                                     ofs += 1;
                                                     // field c1 expected 0 (validation skipped in compiled mode)
                                                     // field c2 expected 0 (validation skipped in compiled mode)
@@ -2311,20 +2442,25 @@ pub fn parse_mf2_mt151(
                                                     // field n2 expected 0 (validation skipped in compiled mode)
 
                                                     let mut vi: usize = 0;
-                                                    result.insert("R0", f64_to_endf_value(vals[vi]));
-                                                    var_r0 = vals[vi];
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                                    result.insert("R0", f64_to_endf_value(_val));
+                                                    var_r0 = _val;
                                                     vi += 1;
-                                                    result.insert("R1", f64_to_endf_value(vals[vi]));
-                                                    var_r1 = vals[vi];
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                                    result.insert("R1", f64_to_endf_value(_val));
+                                                    var_r1 = _val;
                                                     vi += 1;
-                                                    result.insert("R2", f64_to_endf_value(vals[vi]));
-                                                    var_r2 = vals[vi];
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                                    result.insert("R2", f64_to_endf_value(_val));
+                                                    var_r2 = _val;
                                                     vi += 1;
-                                                    result.insert("S0", f64_to_endf_value(vals[vi]));
-                                                    var_s0 = vals[vi];
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                                    result.insert("S0", f64_to_endf_value(_val));
+                                                    var_s0 = _val;
                                                     vi += 1;
-                                                    result.insert("S1", f64_to_endf_value(vals[vi]));
-                                                    var_s1 = vals[vi];
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                                    result.insert("S1", f64_to_endf_value(_val));
+                                                    var_s1 = _val;
                                                     vi += 1;
                                                 }
                                             } else if (var_lbk as f64 as i64) == (3_f64 as i64) {
@@ -2344,14 +2480,17 @@ pub fn parse_mf2_mt151(
                                                     // field n2 expected 0 (validation skipped in compiled mode)
 
                                                     let mut vi: usize = 0;
-                                                    result.insert("R0", f64_to_endf_value(vals[vi]));
-                                                    var_r0 = vals[vi];
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                                    result.insert("R0", f64_to_endf_value(_val));
+                                                    var_r0 = _val;
                                                     vi += 1;
-                                                    result.insert("S0", f64_to_endf_value(vals[vi]));
-                                                    var_s0 = vals[vi];
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                                    result.insert("S0", f64_to_endf_value(_val));
+                                                    var_s0 = _val;
                                                     vi += 1;
-                                                    result.insert("GA", f64_to_endf_value(vals[vi]));
-                                                    var_ga = vals[vi];
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                                    result.insert("GA", f64_to_endf_value(_val));
+                                                    var_ga = _val;
                                                     vi += 1;
                                                 }
                                             }
@@ -2461,7 +2600,7 @@ pub fn parse_mf2_mt151(
                             if ((var_nro as f64 as i64) != (0_f64 as i64)) && (((var_naps as f64 as i64) == (0_f64 as i64)) || ((var_naps as f64 as i64) == (1_f64 as i64))) {
                                 // HEAD/CONT record
                                 {
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                     ofs += 1;
                                     var_spi = cont.c1;
                                     result.insert("SPI", f64_to_endf_value(var_spi));
@@ -2476,7 +2615,7 @@ pub fn parse_mf2_mt151(
                             } else {
                                 // HEAD/CONT record
                                 {
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                     ofs += 1;
                                     var_spi = cont.c1;
                                     result.insert("SPI", f64_to_endf_value(var_spi));
@@ -2515,30 +2654,35 @@ pub fn parse_mf2_mt151(
                                         let mut vi: usize = 0;
                                         for var_m_loop_ in (1_f64 as i64)..=(var_njs as f64 as i64) {
                                             var_m = var_m_loop_ as f64;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("D") {
                                                 result.insert("D", EndfValue::new_dict());
                                             }
-                                            result.get_mut("D").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("D").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("AJ") {
                                                 result.insert("AJ", EndfValue::new_dict());
                                             }
-                                            result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("AMUN") {
                                                 result.insert("AMUN", EndfValue::new_dict());
                                             }
-                                            result.get_mut("AMUN").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("AMUN").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GN0") {
                                                 result.insert("GN0", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GN0").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GN0").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GG") {
                                                 result.insert("GG", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GG").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GG").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
                                             // list body constant 0 (validation skipped)
                                             vi += 1;
@@ -2593,10 +2737,11 @@ pub fn parse_mf2_mt151(
                                     let mut vi: usize = 0;
                                     for var_p_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                         var_p = var_p_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("ES") {
                                             result.insert("ES", EndfValue::new_dict());
                                         }
-                                        result.get_mut("ES").unwrap().insert(EndfKey::Int(var_p as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("ES").unwrap().insert(EndfKey::Int(var_p as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -2622,10 +2767,11 @@ pub fn parse_mf2_mt151(
                                     let mut vi: usize = 0;
                                     for var_p_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                         var_p = var_p_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("ES") {
                                             result.insert("ES", EndfValue::new_dict());
                                         }
-                                        result.get_mut("ES").unwrap().insert(EndfKey::Int(var_p as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("ES").unwrap().insert(EndfKey::Int(var_p as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -2638,7 +2784,7 @@ pub fn parse_mf2_mt151(
                                     std::mem::swap(&mut result, &mut section_l_group);
                                     // HEAD/CONT record
                                     {
-                                        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                         ofs += 1;
                                         var_awri = cont.c1;
                                         result.insert("AWRI", f64_to_endf_value(var_awri));
@@ -2672,29 +2818,35 @@ pub fn parse_mf2_mt151(
                                                 // field n2 expected 0 (validation skipped in compiled mode)
 
                                                 let mut vi: usize = 0;
-                                                result.insert("D", f64_to_endf_value(vals[vi]));
-                                                var_d = vals[vi];
+                                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                                result.insert("D", f64_to_endf_value(_val));
+                                                var_d = _val;
                                                 vi += 1;
-                                                result.insert("AJ", f64_to_endf_value(vals[vi]));
-                                                var_aj = vals[vi];
+                                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                                result.insert("AJ", f64_to_endf_value(_val));
+                                                var_aj = _val;
                                                 vi += 1;
-                                                result.insert("AMUN", f64_to_endf_value(vals[vi]));
-                                                var_amun = vals[vi];
+                                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                                result.insert("AMUN", f64_to_endf_value(_val));
+                                                var_amun = _val;
                                                 vi += 1;
-                                                result.insert("GN0", f64_to_endf_value(vals[vi]));
-                                                var_gn0 = vals[vi];
+                                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                                result.insert("GN0", f64_to_endf_value(_val));
+                                                var_gn0 = _val;
                                                 vi += 1;
-                                                result.insert("GG", f64_to_endf_value(vals[vi]));
-                                                var_gg = vals[vi];
+                                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                                result.insert("GG", f64_to_endf_value(_val));
+                                                var_gg = _val;
                                                 vi += 1;
                                                 // list body constant 0 (validation skipped)
                                                 vi += 1;
                                                 for var_m_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                                     var_m = var_m_loop_ as f64;
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                     if !result.contains_key("GF") {
                                                         result.insert("GF", EndfValue::new_dict());
                                                     }
-                                                    result.get_mut("GF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                    result.get_mut("GF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                                     vi += 1;
                                                 }
                                             }
@@ -2736,7 +2888,7 @@ pub fn parse_mf2_mt151(
                             if ((var_nro as f64 as i64) != (0_f64 as i64)) && (((var_naps as f64 as i64) == (0_f64 as i64)) || ((var_naps as f64 as i64) == (1_f64 as i64))) {
                                 // HEAD/CONT record
                                 {
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                     ofs += 1;
                                     var_spi = cont.c1;
                                     result.insert("SPI", f64_to_endf_value(var_spi));
@@ -2751,7 +2903,7 @@ pub fn parse_mf2_mt151(
                             } else {
                                 // HEAD/CONT record
                                 {
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                     ofs += 1;
                                     var_spi = cont.c1;
                                     result.insert("SPI", f64_to_endf_value(var_spi));
@@ -2773,7 +2925,7 @@ pub fn parse_mf2_mt151(
                                     std::mem::swap(&mut result, &mut section_l_group);
                                     // HEAD/CONT record
                                     {
-                                        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                         ofs += 1;
                                         var_awri = cont.c1;
                                         result.insert("AWRI", f64_to_endf_value(var_awri));
@@ -2812,49 +2964,59 @@ pub fn parse_mf2_mt151(
                                                 vi += 1;
                                                 // list body constant 0 (validation skipped)
                                                 vi += 1;
-                                                result.insert("AMUX", f64_to_endf_value(vals[vi]));
-                                                var_amux = vals[vi];
+                                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                                result.insert("AMUX", f64_to_endf_value(_val));
+                                                var_amux = _val;
                                                 vi += 1;
-                                                result.insert("AMUN", f64_to_endf_value(vals[vi]));
-                                                var_amun = vals[vi];
+                                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                                result.insert("AMUN", f64_to_endf_value(_val));
+                                                var_amun = _val;
                                                 vi += 1;
-                                                result.insert("AMUG", f64_to_endf_value(vals[vi]));
-                                                var_amug = vals[vi];
+                                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                                result.insert("AMUG", f64_to_endf_value(_val));
+                                                var_amug = _val;
                                                 vi += 1;
-                                                result.insert("AMUF", f64_to_endf_value(vals[vi]));
-                                                var_amuf = vals[vi];
+                                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                                result.insert("AMUF", f64_to_endf_value(_val));
+                                                var_amuf = _val;
                                                 vi += 1;
                                                 for var_m_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                                     var_m = var_m_loop_ as f64;
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                     if !result.contains_key("ES") {
                                                         result.insert("ES", EndfValue::new_dict());
                                                     }
-                                                    result.get_mut("ES").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                    result.get_mut("ES").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                                     vi += 1;
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                     if !result.contains_key("D") {
                                                         result.insert("D", EndfValue::new_dict());
                                                     }
-                                                    result.get_mut("D").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                    result.get_mut("D").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                                     vi += 1;
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                     if !result.contains_key("GX") {
                                                         result.insert("GX", EndfValue::new_dict());
                                                     }
-                                                    result.get_mut("GX").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                    result.get_mut("GX").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                                     vi += 1;
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                     if !result.contains_key("GN0") {
                                                         result.insert("GN0", EndfValue::new_dict());
                                                     }
-                                                    result.get_mut("GN0").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                    result.get_mut("GN0").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                                     vi += 1;
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                     if !result.contains_key("GG") {
                                                         result.insert("GG", EndfValue::new_dict());
                                                     }
-                                                    result.get_mut("GG").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                    result.get_mut("GG").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                                     vi += 1;
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                     if !result.contains_key("GF") {
                                                         result.insert("GF", EndfValue::new_dict());
                                                     }
-                                                    result.get_mut("GF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                    result.get_mut("GF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                                     vi += 1;
                                                 }
                                             }
@@ -2918,7 +3080,7 @@ pub fn parse_mf3_wildcard(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -2997,7 +3159,7 @@ pub fn parse_mf4_wildcard(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -3012,6 +3174,7 @@ pub fn parse_mf4_wildcard(
     let lookahead_ok_0 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
+            if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
             Ok(((var_ltt as f64 as i64) == (3_f64 as i64)) && ((var_li as f64 as i64) == (0_f64 as i64)))
         })().unwrap_or(false);
@@ -3020,7 +3183,7 @@ pub fn parse_mf4_wildcard(
     if lookahead_ok_0 {
         // HEAD/CONT record
         {
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
             ofs += 1;
             // field c1 expected 0 (validation skipped in compiled mode)
             var_awr = cont.c2;
@@ -3036,7 +3199,7 @@ pub fn parse_mf4_wildcard(
     } else {
         // HEAD/CONT record
         {
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
             ofs += 1;
             // field c1 expected 0 (validation skipped in compiled mode)
             var_awr = cont.c2;
@@ -3090,6 +3253,7 @@ pub fn parse_mf4_wildcard(
                 let mut vi: usize = 0;
                 for var_l_loop_ in (1_f64 as i64)..=(result.get("NL").and_then(|d| d.get(EndfKey::Int(var_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
                     var_l = var_l_loop_ as f64;
+                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                     if !result.contains_key("a") {
                         result.insert("a", EndfValue::new_dict());
                     }
@@ -3184,6 +3348,7 @@ pub fn parse_mf4_wildcard(
                 let mut vi: usize = 0;
                 for var_j_loop_ in (1_f64 as i64)..=(result.get("NL").and_then(|d| d.get(EndfKey::Int(var_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
                     var_j = var_j_loop_ as f64;
+                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                     if !result.contains_key("al") {
                         result.insert("al", EndfValue::new_dict());
                     }
@@ -3260,7 +3425,7 @@ pub fn parse_mf5_wildcard(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -3351,7 +3516,7 @@ pub fn parse_mf6_wildcard(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -3442,6 +3607,7 @@ pub fn parse_mf6_wildcard(
                         let mut vi: usize = 0;
                         for var_k_loop_ in (1_f64 as i64)..=(result.get("NEP").and_then(|d| d.get(EndfKey::Int(var_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
                             var_k = var_k_loop_ as f64;
+                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                             if !result.contains_key("Ep") {
                                 result.insert("Ep", EndfValue::new_dict());
                             }
@@ -3449,6 +3615,7 @@ pub fn parse_mf6_wildcard(
                             vi += 1;
                             for var_m_loop_ in (0_f64 as i64)..=(result.get("NA").and_then(|d| d.get(EndfKey::Int(var_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
                                 var_m = var_m_loop_ as f64;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("b") {
                                     result.insert("b", EndfValue::new_dict());
                                 }
@@ -3501,6 +3668,7 @@ pub fn parse_mf6_wildcard(
                         let mut vi: usize = 0;
                         for var_l_loop_ in (1_f64 as i64)..=(result.get("NLW").and_then(|d| d.get(EndfKey::Int(var_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
                             var_l = var_l_loop_ as f64;
+                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                             if !result.contains_key("A") {
                                 result.insert("A", EndfValue::new_dict());
                             }
@@ -3556,6 +3724,7 @@ pub fn parse_mf6_wildcard(
                         let mut vi: usize = 0;
                         for var_k_loop_ in (1_f64 as i64)..=(result.get("NW").and_then(|d| d.get(EndfKey::Int(var_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
                             var_k = var_k_loop_ as f64;
+                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                             if !result.contains_key("A") {
                                 result.insert("A", EndfValue::new_dict());
                             }
@@ -3567,7 +3736,7 @@ pub fn parse_mf6_wildcard(
             } else if (var_law as f64 as i64) == (6_f64 as i64) {
                 // HEAD/CONT record
                 {
-                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                     ofs += 1;
                     var_apsx = cont.c1;
                     result.insert("APSX", f64_to_endf_value(var_apsx));
@@ -3686,7 +3855,7 @@ pub fn parse_mf7_mt2(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -3742,6 +3911,7 @@ pub fn parse_mf7_mt2(
                 let mut vi: usize = 0;
                 for var_q_loop_ in (1_f64 as i64)..=(var_np as f64 as i64) {
                     var_q = var_q_loop_ as f64;
+                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                     if !result.contains_key("S") {
                         result.insert("S", EndfValue::new_dict());
                     }
@@ -3812,6 +3982,7 @@ pub fn parse_mf7_mt2(
                 let mut vi: usize = 0;
                 for var_q_loop_ in (1_f64 as i64)..=(var_np as f64 as i64) {
                     var_q = var_q_loop_ as f64;
+                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                     if !result.contains_key("S") {
                         result.insert("S", EndfValue::new_dict());
                     }
@@ -3893,7 +4064,7 @@ pub fn parse_mf7_mt4(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -3925,10 +4096,11 @@ pub fn parse_mf7_mt4(
         let mut vi: usize = 0;
         for var_n_loop_ in (1_f64 as i64)..=(var_ni as f64 as i64) {
             var_n = var_n_loop_ as f64;
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
             if !result.contains_key("B") {
                 result.insert("B", EndfValue::new_dict());
             }
-            result.get_mut("B").unwrap().insert(EndfKey::Int(var_n as f64 as i64), f64_to_endf_value(vals[vi]));
+            result.get_mut("B").unwrap().insert(EndfKey::Int(var_n as f64 as i64), f64_to_endf_value(_val));
             vi += 1;
         }
     }
@@ -4003,6 +4175,7 @@ pub fn parse_mf7_mt4(
                 let mut vi: usize = 0;
                 for var_q_loop_ in (1_f64 as i64)..=(var_np as f64 as i64) {
                     var_q = var_q_loop_ as f64;
+                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                     if !result.contains_key("S") {
                         result.insert("S", EndfValue::new_dict());
                     }
@@ -4122,7 +4295,7 @@ pub fn parse_mf7_mt451(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -4156,26 +4329,31 @@ pub fn parse_mf7_mt451(
             let mut vi: usize = 0;
             for var_j_loop_ in (1_f64 as i64)..=(result.get("NI").and_then(|d| d.get(EndfKey::Int(var_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
                 var_j = var_j_loop_ as f64;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("ZAI") {
                     result.insert("ZAI", EndfValue::new_dict());
                 }
                 // TODO: multi-index list store for ZAI
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("LISI") {
                     result.insert("LISI", EndfValue::new_dict());
                 }
                 // TODO: multi-index list store for LISI
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("AFI") {
                     result.insert("AFI", EndfValue::new_dict());
                 }
                 // TODO: multi-index list store for AFI
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("AWRI") {
                     result.insert("AWRI", EndfValue::new_dict());
                 }
                 // TODO: multi-index list store for AWRI
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("SFI") {
                     result.insert("SFI", EndfValue::new_dict());
                 }
@@ -4226,7 +4404,7 @@ pub fn parse_mf8_wildcard(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -4268,35 +4446,41 @@ pub fn parse_mf8_wildcard(
                     let mut vi: usize = 0;
                     for var_l_loop_ in (1_f64 as i64)..=(var_nd as f64 as i64) {
                         var_l = var_l_loop_ as f64;
+                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                         if !result.contains_key("HL") {
                             result.insert("HL", EndfValue::new_dict());
                         }
-                        result.get_mut("HL").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(vals[vi]));
+                        result.get_mut("HL").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                         vi += 1;
+                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                         if !result.contains_key("RTYP") {
                             result.insert("RTYP", EndfValue::new_dict());
                         }
-                        result.get_mut("RTYP").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(vals[vi]));
+                        result.get_mut("RTYP").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                         vi += 1;
+                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                         if !result.contains_key("ZAN") {
                             result.insert("ZAN", EndfValue::new_dict());
                         }
-                        result.get_mut("ZAN").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(vals[vi]));
+                        result.get_mut("ZAN").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                         vi += 1;
+                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                         if !result.contains_key("BR") {
                             result.insert("BR", EndfValue::new_dict());
                         }
-                        result.get_mut("BR").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(vals[vi]));
+                        result.get_mut("BR").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                         vi += 1;
+                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                         if !result.contains_key("END") {
                             result.insert("END", EndfValue::new_dict());
                         }
-                        result.get_mut("END").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(vals[vi]));
+                        result.get_mut("END").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                         vi += 1;
+                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                         if !result.contains_key("CT") {
                             result.insert("CT", EndfValue::new_dict());
                         }
-                        result.get_mut("CT").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(vals[vi]));
+                        result.get_mut("CT").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                         vi += 1;
                     }
                 }
@@ -4316,7 +4500,7 @@ pub fn parse_mf8_wildcard(
                 std::mem::swap(&mut result, &mut section_subsection);
                 // HEAD/CONT record
                 {
-                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                     ofs += 1;
                     var_zap = cont.c1;
                     result.insert("ZAP", f64_to_endf_value(var_zap));
@@ -4370,7 +4554,7 @@ pub fn parse_mf8_mt454(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -4407,21 +4591,25 @@ pub fn parse_mf8_mt454(
         let mut vi: usize = 0;
         for var_m_loop_ in (1_f64 as i64)..=(result.get("NFP").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
             var_m = var_m_loop_ as f64;
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
             if !result.contains_key("ZAFP") {
                 result.insert("ZAFP", EndfValue::new_dict());
             }
             // TODO: multi-index list store for ZAFP
             vi += 1;
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
             if !result.contains_key("FPS") {
                 result.insert("FPS", EndfValue::new_dict());
             }
             // TODO: multi-index list store for FPS
             vi += 1;
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
             if !result.contains_key("YI") {
                 result.insert("YI", EndfValue::new_dict());
             }
             // TODO: multi-index list store for YI
             vi += 1;
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
             if !result.contains_key("DYI") {
                 result.insert("DYI", EndfValue::new_dict());
             }
@@ -4459,21 +4647,25 @@ pub fn parse_mf8_mt454(
             let mut vi: usize = 0;
             for var_m_loop_ in (1_f64 as i64)..=(result.get("NFP").and_then(|d| d.get(EndfKey::Int(var_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
                 var_m = var_m_loop_ as f64;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("ZAFP") {
                     result.insert("ZAFP", EndfValue::new_dict());
                 }
                 // TODO: multi-index list store for ZAFP
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("FPS") {
                     result.insert("FPS", EndfValue::new_dict());
                 }
                 // TODO: multi-index list store for FPS
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("YI") {
                     result.insert("YI", EndfValue::new_dict());
                 }
                 // TODO: multi-index list store for YI
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("DYI") {
                     result.insert("DYI", EndfValue::new_dict());
                 }
@@ -4566,6 +4758,7 @@ pub fn parse_mf8_mt457(
     let lookahead_ok_0 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
+            if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
             Ok((var_nst as f64 as i64) == (0_f64 as i64))
         })().unwrap_or(false);
@@ -4574,6 +4767,7 @@ pub fn parse_mf8_mt457(
     let lookahead_ok_1 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
+            if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
             Ok((var_nst as f64 as i64) == (1_f64 as i64))
         })().unwrap_or(false);
@@ -4582,7 +4776,7 @@ pub fn parse_mf8_mt457(
     if lookahead_ok_0 {
         // HEAD/CONT record
         {
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
             ofs += 1;
             var_za = cont.c1;
             result.insert("ZA", f64_to_endf_value(var_za));
@@ -4615,15 +4809,17 @@ pub fn parse_mf8_mt457(
             let mut vi: usize = 0;
             for var_k_loop_ in (1_f64 as i64)..=(var_nc as f64 as i64) {
                 var_k = var_k_loop_ as f64;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("Ebar_x") {
                     result.insert("Ebar_x", EndfValue::new_dict());
                 }
-                result.get_mut("Ebar_x").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("Ebar_x").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("dEbar_x") {
                     result.insert("dEbar_x", EndfValue::new_dict());
                 }
-                result.get_mut("dEbar_x").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("dEbar_x").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
             }
         }
@@ -4646,35 +4842,41 @@ pub fn parse_mf8_mt457(
             let mut vi: usize = 0;
             for var_k_loop_ in (1_f64 as i64)..=(var_ndk as f64 as i64) {
                 var_k = var_k_loop_ as f64;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("RTYP") {
                     result.insert("RTYP", EndfValue::new_dict());
                 }
-                result.get_mut("RTYP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("RTYP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("RFS") {
                     result.insert("RFS", EndfValue::new_dict());
                 }
-                result.get_mut("RFS").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("RFS").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("Q") {
                     result.insert("Q", EndfValue::new_dict());
                 }
-                result.get_mut("Q").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("Q").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("dQ") {
                     result.insert("dQ", EndfValue::new_dict());
                 }
-                result.get_mut("dQ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("dQ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("BR") {
                     result.insert("BR", EndfValue::new_dict());
                 }
-                result.get_mut("BR").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("BR").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("dBR") {
                     result.insert("dBR", EndfValue::new_dict());
                 }
-                result.get_mut("dBR").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("dBR").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
             }
         }
@@ -4702,23 +4904,29 @@ pub fn parse_mf8_mt457(
                     result.insert("NER", EndfValue::Int(var_ner as i64));
 
                     let mut vi: usize = 0;
-                    result.insert("FD", f64_to_endf_value(vals[vi]));
-                    var_fd = vals[vi];
+                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                    result.insert("FD", f64_to_endf_value(_val));
+                    var_fd = _val;
                     vi += 1;
-                    result.insert("dFD", f64_to_endf_value(vals[vi]));
-                    var_dfd = vals[vi];
+                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                    result.insert("dFD", f64_to_endf_value(_val));
+                    var_dfd = _val;
                     vi += 1;
-                    result.insert("ERAV", f64_to_endf_value(vals[vi]));
-                    var_erav = vals[vi];
+                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                    result.insert("ERAV", f64_to_endf_value(_val));
+                    var_erav = _val;
                     vi += 1;
-                    result.insert("dERAV", f64_to_endf_value(vals[vi]));
-                    var_derav = vals[vi];
+                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                    result.insert("dERAV", f64_to_endf_value(_val));
+                    var_derav = _val;
                     vi += 1;
-                    result.insert("FC", f64_to_endf_value(vals[vi]));
-                    var_fc = vals[vi];
+                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                    result.insert("FC", f64_to_endf_value(_val));
+                    var_fc = _val;
                     vi += 1;
-                    result.insert("dFC", f64_to_endf_value(vals[vi]));
-                    var_dfc = vals[vi];
+                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                    result.insert("dFC", f64_to_endf_value(_val));
+                    var_dfc = _val;
                     vi += 1;
                 }
                 if (var_lcon as f64 as i64) != (1_f64 as i64) {
@@ -4737,6 +4945,7 @@ pub fn parse_mf8_mt457(
                                 let lookahead_ok_0 = {
                                     let saved_ofs = ofs;
                                     let ok = (|| -> Result<bool, EndfError> {
+                                        if ofs >= lines.len() { return Ok(false); }
                                         let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                         Ok((var_nt as f64 as i64) == (6_f64 as i64))
                                     })().unwrap_or(false);
@@ -4745,6 +4954,7 @@ pub fn parse_mf8_mt457(
                                 let lookahead_ok_1 = {
                                     let saved_ofs = ofs;
                                     let ok = (|| -> Result<bool, EndfError> {
+                                        if ofs >= lines.len() { return Ok(false); }
                                         let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                         Ok((var_nt as f64 as i64) == (8_f64 as i64))
                                     })().unwrap_or(false);
@@ -4753,6 +4963,7 @@ pub fn parse_mf8_mt457(
                                 let lookahead_ok_2 = {
                                     let saved_ofs = ofs;
                                     let ok = (|| -> Result<bool, EndfError> {
+                                        if ofs >= lines.len() { return Ok(false); }
                                         let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                         Ok((var_nt as f64 as i64) == (12_f64 as i64))
                                     })().unwrap_or(false);
@@ -4776,23 +4987,29 @@ pub fn parse_mf8_mt457(
                                         // field n2 expected 0 (validation skipped in compiled mode)
 
                                         let mut vi: usize = 0;
-                                        result.insert("RTYP", f64_to_endf_value(vals[vi]));
-                                        var_rtyp = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("RTYP", f64_to_endf_value(_val));
+                                        var_rtyp = _val;
                                         vi += 1;
-                                        result.insert("TYPE", f64_to_endf_value(vals[vi]));
-                                        var_type = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("TYPE", f64_to_endf_value(_val));
+                                        var_type = _val;
                                         vi += 1;
-                                        result.insert("RI", f64_to_endf_value(vals[vi]));
-                                        var_ri = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("RI", f64_to_endf_value(_val));
+                                        var_ri = _val;
                                         vi += 1;
-                                        result.insert("dRI", f64_to_endf_value(vals[vi]));
-                                        var_dri = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("dRI", f64_to_endf_value(_val));
+                                        var_dri = _val;
                                         vi += 1;
-                                        result.insert("RIS", f64_to_endf_value(vals[vi]));
-                                        var_ris = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("RIS", f64_to_endf_value(_val));
+                                        var_ris = _val;
                                         vi += 1;
-                                        result.insert("dRIS", f64_to_endf_value(vals[vi]));
-                                        var_dris = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("dRIS", f64_to_endf_value(_val));
+                                        var_dris = _val;
                                         vi += 1;
                                     }
                                 } else if lookahead_ok_1 {
@@ -4813,29 +5030,37 @@ pub fn parse_mf8_mt457(
                                         // field n2 expected 0 (validation skipped in compiled mode)
 
                                         let mut vi: usize = 0;
-                                        result.insert("RTYP", f64_to_endf_value(vals[vi]));
-                                        var_rtyp = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("RTYP", f64_to_endf_value(_val));
+                                        var_rtyp = _val;
                                         vi += 1;
-                                        result.insert("TYPE", f64_to_endf_value(vals[vi]));
-                                        var_type = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("TYPE", f64_to_endf_value(_val));
+                                        var_type = _val;
                                         vi += 1;
-                                        result.insert("RI", f64_to_endf_value(vals[vi]));
-                                        var_ri = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("RI", f64_to_endf_value(_val));
+                                        var_ri = _val;
                                         vi += 1;
-                                        result.insert("dRI", f64_to_endf_value(vals[vi]));
-                                        var_dri = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("dRI", f64_to_endf_value(_val));
+                                        var_dri = _val;
                                         vi += 1;
-                                        result.insert("RIS", f64_to_endf_value(vals[vi]));
-                                        var_ris = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("RIS", f64_to_endf_value(_val));
+                                        var_ris = _val;
                                         vi += 1;
-                                        result.insert("dRIS", f64_to_endf_value(vals[vi]));
-                                        var_dris = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("dRIS", f64_to_endf_value(_val));
+                                        var_dris = _val;
                                         vi += 1;
-                                        result.insert("RICC", f64_to_endf_value(vals[vi]));
-                                        var_ricc = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("RICC", f64_to_endf_value(_val));
+                                        var_ricc = _val;
                                         vi += 1;
-                                        result.insert("dRICC", f64_to_endf_value(vals[vi]));
-                                        var_dricc = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("dRICC", f64_to_endf_value(_val));
+                                        var_dricc = _val;
                                         vi += 1;
                                     }
                                 } else if lookahead_ok_2 {
@@ -4856,41 +5081,53 @@ pub fn parse_mf8_mt457(
                                         // field n2 expected 0 (validation skipped in compiled mode)
 
                                         let mut vi: usize = 0;
-                                        result.insert("RTYP", f64_to_endf_value(vals[vi]));
-                                        var_rtyp = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("RTYP", f64_to_endf_value(_val));
+                                        var_rtyp = _val;
                                         vi += 1;
-                                        result.insert("TYPE", f64_to_endf_value(vals[vi]));
-                                        var_type = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("TYPE", f64_to_endf_value(_val));
+                                        var_type = _val;
                                         vi += 1;
-                                        result.insert("RI", f64_to_endf_value(vals[vi]));
-                                        var_ri = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("RI", f64_to_endf_value(_val));
+                                        var_ri = _val;
                                         vi += 1;
-                                        result.insert("dRI", f64_to_endf_value(vals[vi]));
-                                        var_dri = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("dRI", f64_to_endf_value(_val));
+                                        var_dri = _val;
                                         vi += 1;
-                                        result.insert("RIS", f64_to_endf_value(vals[vi]));
-                                        var_ris = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("RIS", f64_to_endf_value(_val));
+                                        var_ris = _val;
                                         vi += 1;
-                                        result.insert("dRIS", f64_to_endf_value(vals[vi]));
-                                        var_dris = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("dRIS", f64_to_endf_value(_val));
+                                        var_dris = _val;
                                         vi += 1;
-                                        result.insert("RICC", f64_to_endf_value(vals[vi]));
-                                        var_ricc = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("RICC", f64_to_endf_value(_val));
+                                        var_ricc = _val;
                                         vi += 1;
-                                        result.insert("dRICC", f64_to_endf_value(vals[vi]));
-                                        var_dricc = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("dRICC", f64_to_endf_value(_val));
+                                        var_dricc = _val;
                                         vi += 1;
-                                        result.insert("RICK", f64_to_endf_value(vals[vi]));
-                                        var_rick = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("RICK", f64_to_endf_value(_val));
+                                        var_rick = _val;
                                         vi += 1;
-                                        result.insert("dRICK", f64_to_endf_value(vals[vi]));
-                                        var_drick = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("dRICK", f64_to_endf_value(_val));
+                                        var_drick = _val;
                                         vi += 1;
-                                        result.insert("RICL", f64_to_endf_value(vals[vi]));
-                                        var_ricl = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("RICL", f64_to_endf_value(_val));
+                                        var_ricl = _val;
                                         vi += 1;
-                                        result.insert("dRICL", f64_to_endf_value(vals[vi]));
-                                        var_dricl = vals[vi];
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                        result.insert("dRICL", f64_to_endf_value(_val));
+                                        var_dricl = _val;
                                         vi += 1;
                                     }
                                 }
@@ -4957,15 +5194,17 @@ pub fn parse_mf8_mt457(
                             let mut vi: usize = 0;
                             for var_m_loop_ in (1_f64 as i64)..=(var_npp as f64 as i64) {
                                 var_m = var_m_loop_ as f64;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("E") {
                                     result.insert("E", EndfValue::new_dict());
                                 }
-                                result.get_mut("E").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("E").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("F") {
                                     result.insert("F", EndfValue::new_dict());
                                 }
-                                result.get_mut("F").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("F").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
                             }
                         }
@@ -5005,16 +5244,18 @@ pub fn parse_mf8_mt457(
                                 let mut vi: usize = 0;
                                 for var_m_loop_ in (1_f64 as i64)..=(var_nerp as f64 as i64) {
                                     var_m = var_m_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("E") {
                                         result.insert("E", EndfValue::new_dict());
                                     }
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                                 for var_m_loop_ in (1_f64 as i64)..=((var_nerp as f64 - 2_f64) as i64) {
                                     var_m = var_m_loop_ as f64;
                                     for var_n_loop_ in (var_m as f64 as i64)..=((var_nerp as f64 - 2_f64) as i64) {
                                         var_n = var_n_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
@@ -5040,7 +5281,7 @@ pub fn parse_mf8_mt457(
     } else if lookahead_ok_1 {
         // HEAD/CONT record
         {
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
             ofs += 1;
             var_za = cont.c1;
             result.insert("ZA", f64_to_endf_value(var_za));
@@ -5144,7 +5385,7 @@ pub fn parse_mf8_mt459(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -5181,21 +5422,25 @@ pub fn parse_mf8_mt459(
         let mut vi: usize = 0;
         for var_m_loop_ in (1_f64 as i64)..=(result.get("NFP").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
             var_m = var_m_loop_ as f64;
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
             if !result.contains_key("ZAFP") {
                 result.insert("ZAFP", EndfValue::new_dict());
             }
             // TODO: multi-index list store for ZAFP
             vi += 1;
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
             if !result.contains_key("FPS") {
                 result.insert("FPS", EndfValue::new_dict());
             }
             // TODO: multi-index list store for FPS
             vi += 1;
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
             if !result.contains_key("YC") {
                 result.insert("YC", EndfValue::new_dict());
             }
             // TODO: multi-index list store for YC
             vi += 1;
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
             if !result.contains_key("DYC") {
                 result.insert("DYC", EndfValue::new_dict());
             }
@@ -5233,21 +5478,25 @@ pub fn parse_mf8_mt459(
             let mut vi: usize = 0;
             for var_m_loop_ in (1_f64 as i64)..=(result.get("NFP").and_then(|d| d.get(EndfKey::Int(var_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
                 var_m = var_m_loop_ as f64;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("ZAFP") {
                     result.insert("ZAFP", EndfValue::new_dict());
                 }
                 // TODO: multi-index list store for ZAFP
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("FPS") {
                     result.insert("FPS", EndfValue::new_dict());
                 }
                 // TODO: multi-index list store for FPS
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("YC") {
                     result.insert("YC", EndfValue::new_dict());
                 }
                 // TODO: multi-index list store for YC
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("DYC") {
                     result.insert("DYC", EndfValue::new_dict());
                 }
@@ -5290,7 +5539,7 @@ pub fn parse_mf9_wildcard(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -5370,7 +5619,7 @@ pub fn parse_mf10_wildcard(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -5458,6 +5707,7 @@ pub fn parse_mf12_wildcard(
     let lookahead_ok_0 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
+            if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
             Ok((var_lo as f64 as i64) == (1_f64 as i64))
         })().unwrap_or(false);
@@ -5466,6 +5716,7 @@ pub fn parse_mf12_wildcard(
     let lookahead_ok_1 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
+            if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
             Ok((var_lo as f64 as i64) == (2_f64 as i64))
         })().unwrap_or(false);
@@ -5474,7 +5725,7 @@ pub fn parse_mf12_wildcard(
     if lookahead_ok_0 {
         // HEAD/CONT record
         {
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
             ofs += 1;
             var_za = cont.c1;
             result.insert("ZA", f64_to_endf_value(var_za));
@@ -5541,7 +5792,7 @@ pub fn parse_mf12_wildcard(
     } else if lookahead_ok_1 {
         // HEAD/CONT record
         {
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
             ofs += 1;
             var_za = cont.c1;
             result.insert("ZA", f64_to_endf_value(var_za));
@@ -5575,15 +5826,17 @@ pub fn parse_mf12_wildcard(
                 let mut vi: usize = 0;
                 for var_i_loop_ in (1_f64 as i64)..=(var_nt as f64 as i64) {
                     var_i = var_i_loop_ as f64;
+                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                     if !result.contains_key("ES") {
                         result.insert("ES", EndfValue::new_dict());
                     }
-                    result.get_mut("ES").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                    result.get_mut("ES").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                     vi += 1;
+                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                     if !result.contains_key("TP") {
                         result.insert("TP", EndfValue::new_dict());
                     }
-                    result.get_mut("TP").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                    result.get_mut("TP").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                     vi += 1;
                 }
             }
@@ -5607,20 +5860,23 @@ pub fn parse_mf12_wildcard(
                 let mut vi: usize = 0;
                 for var_i_loop_ in (1_f64 as i64)..=(var_nt as f64 as i64) {
                     var_i = var_i_loop_ as f64;
+                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                     if !result.contains_key("ES") {
                         result.insert("ES", EndfValue::new_dict());
                     }
-                    result.get_mut("ES").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                    result.get_mut("ES").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                     vi += 1;
+                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                     if !result.contains_key("TP") {
                         result.insert("TP", EndfValue::new_dict());
                     }
-                    result.get_mut("TP").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                    result.get_mut("TP").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                     vi += 1;
+                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                     if !result.contains_key("GP") {
                         result.insert("GP", EndfValue::new_dict());
                     }
-                    result.get_mut("GP").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                    result.get_mut("GP").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                     vi += 1;
                 }
             }
@@ -5660,7 +5916,7 @@ pub fn parse_mf13_wildcard(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -5761,6 +6017,7 @@ pub fn parse_mf14_wildcard(
     let lookahead_ok_0 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
+            if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
             Ok((var_li as f64 as i64) == (1_f64 as i64))
         })().unwrap_or(false);
@@ -5769,6 +6026,7 @@ pub fn parse_mf14_wildcard(
     let lookahead_ok_1 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
+            if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
             Ok(((var_li as f64 as i64) == (0_f64 as i64)) && ((var_ltt as f64 as i64) == (1_f64 as i64)))
         })().unwrap_or(false);
@@ -5777,6 +6035,7 @@ pub fn parse_mf14_wildcard(
     let lookahead_ok_2 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
+            if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
             Ok(((var_li as f64 as i64) == (0_f64 as i64)) && ((var_ltt as f64 as i64) == (2_f64 as i64)))
         })().unwrap_or(false);
@@ -5785,7 +6044,7 @@ pub fn parse_mf14_wildcard(
     if lookahead_ok_0 {
         // HEAD/CONT record
         {
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
             ofs += 1;
             var_za = cont.c1;
             result.insert("ZA", f64_to_endf_value(var_za));
@@ -5801,7 +6060,7 @@ pub fn parse_mf14_wildcard(
     } else if lookahead_ok_1 {
         // HEAD/CONT record
         {
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
             ofs += 1;
             var_za = cont.c1;
             result.insert("ZA", f64_to_endf_value(var_za));
@@ -5820,7 +6079,7 @@ pub fn parse_mf14_wildcard(
             var_k = var_k_loop_ as f64;
             // HEAD/CONT record
             {
-                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                 ofs += 1;
                 if !result.contains_key("EG") {
                     result.insert("EG", EndfValue::new_dict());
@@ -5884,6 +6143,7 @@ pub fn parse_mf14_wildcard(
                     let mut vi: usize = 0;
                     for var_m_loop_ in (1_f64 as i64)..=(0.0 /* TODO: indexed var NL */ as i64) {
                         var_m = var_m_loop_ as f64;
+                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                         if !result.contains_key("a") {
                             result.insert("a", EndfValue::new_dict());
                         }
@@ -5896,7 +6156,7 @@ pub fn parse_mf14_wildcard(
     } else if lookahead_ok_2 {
         // HEAD/CONT record
         {
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
             ofs += 1;
             var_za = cont.c1;
             result.insert("ZA", f64_to_endf_value(var_za));
@@ -5938,7 +6198,7 @@ pub fn parse_mf15_wildcard(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -5991,7 +6251,7 @@ pub fn parse_mf23_wildcard(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -6065,7 +6325,7 @@ pub fn parse_mf27_wildcard(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -6141,7 +6401,7 @@ pub fn parse_mf31_wildcard(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         // field c1 expected 0 (validation skipped in compiled mode)
         // field c2 expected 0 (validation skipped in compiled mode)
@@ -6169,15 +6429,17 @@ pub fn parse_mf31_wildcard(
             let mut vi: usize = 0;
             for var_k_loop_ in (1_f64 as i64)..=(var_nci as f64 as i64) {
                 var_k = var_k_loop_ as f64;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("CI") {
                     result.insert("CI", EndfValue::new_dict());
                 }
-                result.get_mut("CI").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("CI").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
+                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("XMTI") {
                     result.insert("XMTI", EndfValue::new_dict());
                 }
-                result.get_mut("XMTI").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                result.get_mut("XMTI").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
             }
         }
@@ -6198,16 +6460,19 @@ pub fn parse_mf31_wildcard(
             // field n2 expected 1 (validation skipped in compiled mode)
 
             let mut vi: usize = 0;
-            result.insert("XMFS", f64_to_endf_value(vals[vi]));
-            var_xmfs = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("XMFS", f64_to_endf_value(_val));
+            var_xmfs = _val;
             vi += 1;
-            result.insert("XLFSS", f64_to_endf_value(vals[vi]));
-            var_xlfss = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("XLFSS", f64_to_endf_value(_val));
+            var_xlfss = _val;
             vi += 1;
             // list body constant 0 (validation skipped)
             vi += 1;
-            result.insert("Weight", f64_to_endf_value(vals[vi]));
-            var_weight = vals[vi];
+            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+            result.insert("Weight", f64_to_endf_value(_val));
+            var_weight = _val;
             vi += 1;
         }
     } else {
@@ -6280,7 +6545,7 @@ pub fn parse_mf31_mt452(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -6302,7 +6567,7 @@ pub fn parse_mf31_mt452(
                 std::mem::swap(&mut result, &mut section_subsection);
                 // HEAD/CONT record
                 {
-                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                     ofs += 1;
                     var_xmf1 = cont.c1;
                     result.insert("XMF1", f64_to_endf_value(var_xmf1));
@@ -6325,7 +6590,7 @@ pub fn parse_mf31_mt452(
                         std::mem::swap(&mut result, &mut section_nc_subsection);
                         // HEAD/CONT record
                         {
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                             ofs += 1;
                             // field c1 expected 0 (validation skipped in compiled mode)
                             // field c2 expected 0 (validation skipped in compiled mode)
@@ -6355,15 +6620,17 @@ pub fn parse_mf31_mt452(
                                 let mut vi: usize = 0;
                                 for var_i_loop_ in (1_f64 as i64)..=(var_nci as f64 as i64) {
                                     var_i = var_i_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("C") {
                                         result.insert("C", EndfValue::new_dict());
                                     }
-                                    result.get_mut("C").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("C").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("XMT") {
                                         result.insert("XMT", EndfValue::new_dict());
                                     }
-                                    result.get_mut("XMT").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("XMT").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                             }
@@ -6387,23 +6654,27 @@ pub fn parse_mf31_mt452(
                                 result.insert("NEI", EndfValue::Int(var_nei as i64));
 
                                 let mut vi: usize = 0;
-                                result.insert("XMFS", f64_to_endf_value(vals[vi]));
-                                var_xmfs = vals[vi];
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                result.insert("XMFS", f64_to_endf_value(_val));
+                                var_xmfs = _val;
                                 vi += 1;
-                                result.insert("XLFSS", f64_to_endf_value(vals[vi]));
-                                var_xlfss = vals[vi];
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                result.insert("XLFSS", f64_to_endf_value(_val));
+                                var_xlfss = _val;
                                 vi += 1;
                                 for var_i_loop_ in (1_f64 as i64)..=(var_nei as f64 as i64) {
                                     var_i = var_i_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("E") {
                                         result.insert("E", EndfValue::new_dict());
                                     }
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("WE") {
                                         result.insert("WE", EndfValue::new_dict());
                                     }
-                                    result.get_mut("WE").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("WE").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                             }
@@ -6424,6 +6695,7 @@ pub fn parse_mf31_mt452(
                         let lookahead_ok_0 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
+                                if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                 Ok(((var_lb as f64 as i64) >= (0_f64 as i64)) && ((var_lb as f64 as i64) <= (4_f64 as i64)))
                             })().unwrap_or(false);
@@ -6432,6 +6704,7 @@ pub fn parse_mf31_mt452(
                         let lookahead_ok_1 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
+                                if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
@@ -6440,6 +6713,7 @@ pub fn parse_mf31_mt452(
                         let lookahead_ok_2 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
+                                if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (1_f64 as i64)))
                             })().unwrap_or(false);
@@ -6448,6 +6722,7 @@ pub fn parse_mf31_mt452(
                         let lookahead_ok_3 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
+                                if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                 Ok((var_lb as f64 as i64) == (6_f64 as i64))
                             })().unwrap_or(false);
@@ -6456,6 +6731,7 @@ pub fn parse_mf31_mt452(
                         let lookahead_ok_4 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
+                                if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                 Ok((((var_lb as f64 as i64) == (8_f64 as i64)) || ((var_lb as f64 as i64) == (9_f64 as i64))) && ((var_lt as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
@@ -6481,28 +6757,32 @@ pub fn parse_mf31_mt452(
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(((var_np as f64 - var_lt as f64)) as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("Ek") {
                                         result.insert("Ek", EndfValue::new_dict());
                                     }
-                                    result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("Fk") {
                                         result.insert("Fk", EndfValue::new_dict());
                                     }
-                                    result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                                 for var_k_loop_ in (1_f64 as i64)..=(var_lt as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("El") {
                                         result.insert("El", EndfValue::new_dict());
                                     }
-                                    result.get_mut("El").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("El").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("Fl") {
                                         result.insert("Fl", EndfValue::new_dict());
                                     }
-                                    result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                             }
@@ -6528,16 +6808,18 @@ pub fn parse_mf31_mt452(
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("E") {
                                         result.insert("E", EndfValue::new_dict());
                                     }
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                                 for var_k_loop_ in (1_f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                     var_k = var_k_loop_ as f64;
                                     for var_kp_loop_ in (1_f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                         var_kp = var_kp_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
@@ -6568,16 +6850,18 @@ pub fn parse_mf31_mt452(
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("E") {
                                         result.insert("E", EndfValue::new_dict());
                                     }
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                                 for var_k_loop_ in (1_f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                     var_k = var_k_loop_ as f64;
                                     for var_kp_loop_ in (var_k as f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                         var_kp = var_kp_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
@@ -6607,24 +6891,27 @@ pub fn parse_mf31_mt452(
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ner as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("ER") {
                                         result.insert("ER", EndfValue::new_dict());
                                     }
-                                    result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                                 for var_k_loop_ in (1_f64 as i64)..=(var_nec as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("EC") {
                                         result.insert("EC", EndfValue::new_dict());
                                     }
-                                    result.get_mut("EC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("EC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                                 for var_k_loop_ in (1_f64 as i64)..=((var_ner as f64 - 1_f64) as i64) {
                                     var_k = var_k_loop_ as f64;
                                     for var_l_loop_ in (1_f64 as i64)..=((var_nec as f64 - 1_f64) as i64) {
                                         var_l = var_l_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
@@ -6653,15 +6940,17 @@ pub fn parse_mf31_mt452(
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_np as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("E") {
                                         result.insert("E", EndfValue::new_dict());
                                     }
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("F") {
                                         result.insert("F", EndfValue::new_dict());
                                     }
-                                    result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                             }
@@ -6748,7 +7037,7 @@ pub fn parse_mf31_mt455(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -6770,7 +7059,7 @@ pub fn parse_mf31_mt455(
                 std::mem::swap(&mut result, &mut section_subsection);
                 // HEAD/CONT record
                 {
-                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                     ofs += 1;
                     var_xmf1 = cont.c1;
                     result.insert("XMF1", f64_to_endf_value(var_xmf1));
@@ -6793,7 +7082,7 @@ pub fn parse_mf31_mt455(
                         std::mem::swap(&mut result, &mut section_nc_subsection);
                         // HEAD/CONT record
                         {
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                             ofs += 1;
                             // field c1 expected 0 (validation skipped in compiled mode)
                             // field c2 expected 0 (validation skipped in compiled mode)
@@ -6823,15 +7112,17 @@ pub fn parse_mf31_mt455(
                                 let mut vi: usize = 0;
                                 for var_i_loop_ in (1_f64 as i64)..=(var_nci as f64 as i64) {
                                     var_i = var_i_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("C") {
                                         result.insert("C", EndfValue::new_dict());
                                     }
-                                    result.get_mut("C").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("C").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("XMT") {
                                         result.insert("XMT", EndfValue::new_dict());
                                     }
-                                    result.get_mut("XMT").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("XMT").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                             }
@@ -6855,23 +7146,27 @@ pub fn parse_mf31_mt455(
                                 result.insert("NEI", EndfValue::Int(var_nei as i64));
 
                                 let mut vi: usize = 0;
-                                result.insert("XMFS", f64_to_endf_value(vals[vi]));
-                                var_xmfs = vals[vi];
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                result.insert("XMFS", f64_to_endf_value(_val));
+                                var_xmfs = _val;
                                 vi += 1;
-                                result.insert("XLFSS", f64_to_endf_value(vals[vi]));
-                                var_xlfss = vals[vi];
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                result.insert("XLFSS", f64_to_endf_value(_val));
+                                var_xlfss = _val;
                                 vi += 1;
                                 for var_i_loop_ in (1_f64 as i64)..=(var_nei as f64 as i64) {
                                     var_i = var_i_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("E") {
                                         result.insert("E", EndfValue::new_dict());
                                     }
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("WE") {
                                         result.insert("WE", EndfValue::new_dict());
                                     }
-                                    result.get_mut("WE").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("WE").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                             }
@@ -6892,6 +7187,7 @@ pub fn parse_mf31_mt455(
                         let lookahead_ok_0 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
+                                if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                 Ok(((var_lb as f64 as i64) >= (0_f64 as i64)) && ((var_lb as f64 as i64) <= (4_f64 as i64)))
                             })().unwrap_or(false);
@@ -6900,6 +7196,7 @@ pub fn parse_mf31_mt455(
                         let lookahead_ok_1 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
+                                if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
@@ -6908,6 +7205,7 @@ pub fn parse_mf31_mt455(
                         let lookahead_ok_2 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
+                                if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (1_f64 as i64)))
                             })().unwrap_or(false);
@@ -6916,6 +7214,7 @@ pub fn parse_mf31_mt455(
                         let lookahead_ok_3 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
+                                if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                 Ok((var_lb as f64 as i64) == (6_f64 as i64))
                             })().unwrap_or(false);
@@ -6924,6 +7223,7 @@ pub fn parse_mf31_mt455(
                         let lookahead_ok_4 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
+                                if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                 Ok((((var_lb as f64 as i64) == (8_f64 as i64)) || ((var_lb as f64 as i64) == (9_f64 as i64))) && ((var_lt as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
@@ -6949,28 +7249,32 @@ pub fn parse_mf31_mt455(
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(((var_np as f64 - var_lt as f64)) as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("Ek") {
                                         result.insert("Ek", EndfValue::new_dict());
                                     }
-                                    result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("Fk") {
                                         result.insert("Fk", EndfValue::new_dict());
                                     }
-                                    result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                                 for var_k_loop_ in (1_f64 as i64)..=(var_lt as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("El") {
                                         result.insert("El", EndfValue::new_dict());
                                     }
-                                    result.get_mut("El").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("El").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("Fl") {
                                         result.insert("Fl", EndfValue::new_dict());
                                     }
-                                    result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                             }
@@ -6996,16 +7300,18 @@ pub fn parse_mf31_mt455(
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("E") {
                                         result.insert("E", EndfValue::new_dict());
                                     }
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                                 for var_k_loop_ in (1_f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                     var_k = var_k_loop_ as f64;
                                     for var_kp_loop_ in (1_f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                         var_kp = var_kp_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
@@ -7036,16 +7342,18 @@ pub fn parse_mf31_mt455(
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("E") {
                                         result.insert("E", EndfValue::new_dict());
                                     }
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                                 for var_k_loop_ in (1_f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                     var_k = var_k_loop_ as f64;
                                     for var_kp_loop_ in (var_k as f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                         var_kp = var_kp_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
@@ -7075,24 +7383,27 @@ pub fn parse_mf31_mt455(
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ner as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("ER") {
                                         result.insert("ER", EndfValue::new_dict());
                                     }
-                                    result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                                 for var_k_loop_ in (1_f64 as i64)..=(var_nec as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("EC") {
                                         result.insert("EC", EndfValue::new_dict());
                                     }
-                                    result.get_mut("EC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("EC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                                 for var_k_loop_ in (1_f64 as i64)..=((var_ner as f64 - 1_f64) as i64) {
                                     var_k = var_k_loop_ as f64;
                                     for var_l_loop_ in (1_f64 as i64)..=((var_nec as f64 - 1_f64) as i64) {
                                         var_l = var_l_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
@@ -7121,15 +7432,17 @@ pub fn parse_mf31_mt455(
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_np as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("E") {
                                         result.insert("E", EndfValue::new_dict());
                                     }
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("F") {
                                         result.insert("F", EndfValue::new_dict());
                                     }
-                                    result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                             }
@@ -7216,7 +7529,7 @@ pub fn parse_mf31_mt456(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -7238,7 +7551,7 @@ pub fn parse_mf31_mt456(
                 std::mem::swap(&mut result, &mut section_subsection);
                 // HEAD/CONT record
                 {
-                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                     ofs += 1;
                     var_xmf1 = cont.c1;
                     result.insert("XMF1", f64_to_endf_value(var_xmf1));
@@ -7261,7 +7574,7 @@ pub fn parse_mf31_mt456(
                         std::mem::swap(&mut result, &mut section_nc_subsection);
                         // HEAD/CONT record
                         {
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                             ofs += 1;
                             // field c1 expected 0 (validation skipped in compiled mode)
                             // field c2 expected 0 (validation skipped in compiled mode)
@@ -7291,15 +7604,17 @@ pub fn parse_mf31_mt456(
                                 let mut vi: usize = 0;
                                 for var_i_loop_ in (1_f64 as i64)..=(var_nci as f64 as i64) {
                                     var_i = var_i_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("C") {
                                         result.insert("C", EndfValue::new_dict());
                                     }
-                                    result.get_mut("C").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("C").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("XMT") {
                                         result.insert("XMT", EndfValue::new_dict());
                                     }
-                                    result.get_mut("XMT").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("XMT").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                             }
@@ -7323,23 +7638,27 @@ pub fn parse_mf31_mt456(
                                 result.insert("NEI", EndfValue::Int(var_nei as i64));
 
                                 let mut vi: usize = 0;
-                                result.insert("XMFS", f64_to_endf_value(vals[vi]));
-                                var_xmfs = vals[vi];
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                result.insert("XMFS", f64_to_endf_value(_val));
+                                var_xmfs = _val;
                                 vi += 1;
-                                result.insert("XLFSS", f64_to_endf_value(vals[vi]));
-                                var_xlfss = vals[vi];
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                result.insert("XLFSS", f64_to_endf_value(_val));
+                                var_xlfss = _val;
                                 vi += 1;
                                 for var_i_loop_ in (1_f64 as i64)..=(var_nei as f64 as i64) {
                                     var_i = var_i_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("E") {
                                         result.insert("E", EndfValue::new_dict());
                                     }
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("WE") {
                                         result.insert("WE", EndfValue::new_dict());
                                     }
-                                    result.get_mut("WE").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("WE").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                             }
@@ -7360,6 +7679,7 @@ pub fn parse_mf31_mt456(
                         let lookahead_ok_0 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
+                                if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                 Ok(((var_lb as f64 as i64) >= (0_f64 as i64)) && ((var_lb as f64 as i64) <= (4_f64 as i64)))
                             })().unwrap_or(false);
@@ -7368,6 +7688,7 @@ pub fn parse_mf31_mt456(
                         let lookahead_ok_1 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
+                                if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
@@ -7376,6 +7697,7 @@ pub fn parse_mf31_mt456(
                         let lookahead_ok_2 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
+                                if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (1_f64 as i64)))
                             })().unwrap_or(false);
@@ -7384,6 +7706,7 @@ pub fn parse_mf31_mt456(
                         let lookahead_ok_3 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
+                                if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                 Ok((var_lb as f64 as i64) == (6_f64 as i64))
                             })().unwrap_or(false);
@@ -7392,6 +7715,7 @@ pub fn parse_mf31_mt456(
                         let lookahead_ok_4 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
+                                if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                 Ok((((var_lb as f64 as i64) == (8_f64 as i64)) || ((var_lb as f64 as i64) == (9_f64 as i64))) && ((var_lt as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
@@ -7417,28 +7741,32 @@ pub fn parse_mf31_mt456(
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(((var_np as f64 - var_lt as f64)) as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("Ek") {
                                         result.insert("Ek", EndfValue::new_dict());
                                     }
-                                    result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("Fk") {
                                         result.insert("Fk", EndfValue::new_dict());
                                     }
-                                    result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                                 for var_k_loop_ in (1_f64 as i64)..=(var_lt as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("El") {
                                         result.insert("El", EndfValue::new_dict());
                                     }
-                                    result.get_mut("El").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("El").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("Fl") {
                                         result.insert("Fl", EndfValue::new_dict());
                                     }
-                                    result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                             }
@@ -7464,16 +7792,18 @@ pub fn parse_mf31_mt456(
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("E") {
                                         result.insert("E", EndfValue::new_dict());
                                     }
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                                 for var_k_loop_ in (1_f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                     var_k = var_k_loop_ as f64;
                                     for var_kp_loop_ in (1_f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                         var_kp = var_kp_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
@@ -7504,16 +7834,18 @@ pub fn parse_mf31_mt456(
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("E") {
                                         result.insert("E", EndfValue::new_dict());
                                     }
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                                 for var_k_loop_ in (1_f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                     var_k = var_k_loop_ as f64;
                                     for var_kp_loop_ in (var_k as f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                         var_kp = var_kp_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
@@ -7543,24 +7875,27 @@ pub fn parse_mf31_mt456(
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ner as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("ER") {
                                         result.insert("ER", EndfValue::new_dict());
                                     }
-                                    result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                                 for var_k_loop_ in (1_f64 as i64)..=(var_nec as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("EC") {
                                         result.insert("EC", EndfValue::new_dict());
                                     }
-                                    result.get_mut("EC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("EC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                                 for var_k_loop_ in (1_f64 as i64)..=((var_ner as f64 - 1_f64) as i64) {
                                     var_k = var_k_loop_ as f64;
                                     for var_l_loop_ in (1_f64 as i64)..=((var_nec as f64 - 1_f64) as i64) {
                                         var_l = var_l_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
@@ -7589,15 +7924,17 @@ pub fn parse_mf31_mt456(
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_np as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("E") {
                                         result.insert("E", EndfValue::new_dict());
                                     }
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("F") {
                                         result.insert("F", EndfValue::new_dict());
                                     }
-                                    result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                             }
@@ -7776,7 +8113,7 @@ pub fn parse_mf32_wildcard(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -7796,7 +8133,7 @@ pub fn parse_mf32_wildcard(
             std::mem::swap(&mut result, &mut section_isotope);
             // HEAD/CONT record
             {
-                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                 ofs += 1;
                 var_zai = cont.c1;
                 result.insert("ZAI", f64_to_endf_value(var_zai));
@@ -7817,7 +8154,7 @@ pub fn parse_mf32_wildcard(
                     std::mem::swap(&mut result, &mut section_range);
                     // HEAD/CONT record
                     {
-                        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                         ofs += 1;
                         var_el = cont.c1;
                         result.insert("EL", f64_to_endf_value(var_el));
@@ -7835,7 +8172,7 @@ pub fn parse_mf32_wildcard(
                     if (var_nro as f64 as i64) != (0_f64 as i64) {
                         // HEAD/CONT record
                         {
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                             ofs += 1;
                             // field c1 expected 0 (validation skipped in compiled mode)
                             // field c2 expected 0 (validation skipped in compiled mode)
@@ -7854,6 +8191,7 @@ pub fn parse_mf32_wildcard(
                                 let lookahead_ok_0 = {
                                     let saved_ofs = ofs;
                                     let ok = (|| -> Result<bool, EndfError> {
+                                        if ofs >= lines.len() { return Ok(false); }
                                         let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                         Ok(((var_lb as f64 as i64) >= (0_f64 as i64)) && ((var_lb as f64 as i64) <= (4_f64 as i64)))
                                     })().unwrap_or(false);
@@ -7862,6 +8200,7 @@ pub fn parse_mf32_wildcard(
                                 let lookahead_ok_1 = {
                                     let saved_ofs = ofs;
                                     let ok = (|| -> Result<bool, EndfError> {
+                                        if ofs >= lines.len() { return Ok(false); }
                                         let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                         Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (0_f64 as i64)))
                                     })().unwrap_or(false);
@@ -7870,6 +8209,7 @@ pub fn parse_mf32_wildcard(
                                 let lookahead_ok_2 = {
                                     let saved_ofs = ofs;
                                     let ok = (|| -> Result<bool, EndfError> {
+                                        if ofs >= lines.len() { return Ok(false); }
                                         let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                         Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (1_f64 as i64)))
                                     })().unwrap_or(false);
@@ -7895,28 +8235,32 @@ pub fn parse_mf32_wildcard(
                                         let mut vi: usize = 0;
                                         for var_k_loop_ in (1_f64 as i64)..=(((var_np as f64 - var_lt as f64)) as i64) {
                                             var_k = var_k_loop_ as f64;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("Ek") {
                                                 result.insert("Ek", EndfValue::new_dict());
                                             }
-                                            result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("Fk") {
                                                 result.insert("Fk", EndfValue::new_dict());
                                             }
-                                            result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
                                         }
                                         for var_k_loop_ in (1_f64 as i64)..=(var_lt as f64 as i64) {
                                             var_k = var_k_loop_ as f64;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("El") {
                                                 result.insert("El", EndfValue::new_dict());
                                             }
-                                            result.get_mut("El").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("El").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("Fl") {
                                                 result.insert("Fl", EndfValue::new_dict());
                                             }
-                                            result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
                                         }
                                     }
@@ -7942,16 +8286,18 @@ pub fn parse_mf32_wildcard(
                                         let mut vi: usize = 0;
                                         for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                             var_k = var_k_loop_ as f64;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("E") {
                                                 result.insert("E", EndfValue::new_dict());
                                             }
-                                            result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
                                         }
                                         for var_k_loop_ in (1_f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                             var_k = var_k_loop_ as f64;
                                             for var_kp_loop_ in (1_f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                                 var_kp = var_kp_loop_ as f64;
+                                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                 if !result.contains_key("F") {
                                                     result.insert("F", EndfValue::new_dict());
                                                 }
@@ -7982,16 +8328,18 @@ pub fn parse_mf32_wildcard(
                                         let mut vi: usize = 0;
                                         for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                             var_k = var_k_loop_ as f64;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("E") {
                                                 result.insert("E", EndfValue::new_dict());
                                             }
-                                            result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
                                         }
                                         for var_k_loop_ in (1_f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                             var_k = var_k_loop_ as f64;
                                             for var_kp_loop_ in (var_k as f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                                 var_kp = var_kp_loop_ as f64;
+                                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                 if !result.contains_key("F") {
                                                     result.insert("F", EndfValue::new_dict());
                                                 }
@@ -8014,6 +8362,7 @@ pub fn parse_mf32_wildcard(
                     let lookahead_ok_0 = {
                         let saved_ofs = ofs;
                         let ok = (|| -> Result<bool, EndfError> {
+                            if ofs >= lines.len() { return Ok(false); }
                             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                             Ok((((var_lcomp as f64 as i64) == (0_f64 as i64)) && ((var_lru as f64 as i64) == (1_f64 as i64))) && (((var_lrf as f64 as i64) == (1_f64 as i64)) || ((var_lrf as f64 as i64) == (2_f64 as i64))))
                         })().unwrap_or(false);
@@ -8022,6 +8371,7 @@ pub fn parse_mf32_wildcard(
                     let lookahead_ok_1 = {
                         let saved_ofs = ofs;
                         let ok = (|| -> Result<bool, EndfError> {
+                            if ofs >= lines.len() { return Ok(false); }
                             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                             Ok((((var_lcomp as f64 as i64) == (1_f64 as i64)) && ((var_lru as f64 as i64) == (1_f64 as i64))) && ((var_lrf as f64 as i64) != (7_f64 as i64)))
                         })().unwrap_or(false);
@@ -8030,6 +8380,7 @@ pub fn parse_mf32_wildcard(
                     let lookahead_ok_2 = {
                         let saved_ofs = ofs;
                         let ok = (|| -> Result<bool, EndfError> {
+                            if ofs >= lines.len() { return Ok(false); }
                             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                             Ok((((var_lcomp as f64 as i64) == (1_f64 as i64)) && ((var_lru as f64 as i64) == (1_f64 as i64))) && ((var_lrf as f64 as i64) == (7_f64 as i64)))
                         })().unwrap_or(false);
@@ -8038,6 +8389,7 @@ pub fn parse_mf32_wildcard(
                     let lookahead_ok_3 = {
                         let saved_ofs = ofs;
                         let ok = (|| -> Result<bool, EndfError> {
+                            if ofs >= lines.len() { return Ok(false); }
                             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                             Ok((((var_lcomp as f64 as i64) == (2_f64 as i64)) && ((var_lru as f64 as i64) == (1_f64 as i64))) && (((var_lrf as f64 as i64) == (1_f64 as i64)) || ((var_lrf as f64 as i64) == (2_f64 as i64))))
                         })().unwrap_or(false);
@@ -8046,6 +8398,7 @@ pub fn parse_mf32_wildcard(
                     let lookahead_ok_4 = {
                         let saved_ofs = ofs;
                         let ok = (|| -> Result<bool, EndfError> {
+                            if ofs >= lines.len() { return Ok(false); }
                             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                             Ok((((var_lcomp as f64 as i64) == (2_f64 as i64)) && ((var_lru as f64 as i64) == (1_f64 as i64))) && ((var_lrf as f64 as i64) == (3_f64 as i64)))
                         })().unwrap_or(false);
@@ -8054,6 +8407,7 @@ pub fn parse_mf32_wildcard(
                     let lookahead_ok_5 = {
                         let saved_ofs = ofs;
                         let ok = (|| -> Result<bool, EndfError> {
+                            if ofs >= lines.len() { return Ok(false); }
                             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                             Ok((((var_lcomp as f64 as i64) == (2_f64 as i64)) && ((var_lru as f64 as i64) == (1_f64 as i64))) && ((var_lrf as f64 as i64) == (7_f64 as i64)))
                         })().unwrap_or(false);
@@ -8062,7 +8416,7 @@ pub fn parse_mf32_wildcard(
                     if lookahead_ok_0 {
                         // HEAD/CONT record
                         {
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                             ofs += 1;
                             var_spi = cont.c1;
                             result.insert("SPI", f64_to_endf_value(var_spi));
@@ -8079,7 +8433,7 @@ pub fn parse_mf32_wildcard(
                         if (var_isr as f64 as i64) != (0_f64 as i64) {
                             // HEAD/CONT record
                             {
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                 ofs += 1;
                                 // field c1 expected 0 (validation skipped in compiled mode)
                                 var_dap = cont.c2;
@@ -8115,90 +8469,107 @@ pub fn parse_mf32_wildcard(
                                     let mut vi: usize = 0;
                                     for var_m_loop_ in (1_f64 as i64)..=(var_nrs as f64 as i64) {
                                         var_m = var_m_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("ER") {
                                             result.insert("ER", EndfValue::new_dict());
                                         }
-                                        result.get_mut("ER").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("ER").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("AJ") {
                                             result.insert("AJ", EndfValue::new_dict());
                                         }
-                                        result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("GT") {
                                             result.insert("GT", EndfValue::new_dict());
                                         }
-                                        result.get_mut("GT").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("GT").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("GN") {
                                             result.insert("GN", EndfValue::new_dict());
                                         }
-                                        result.get_mut("GN").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("GN").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("GG") {
                                             result.insert("GG", EndfValue::new_dict());
                                         }
-                                        result.get_mut("GG").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("GG").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("GF") {
                                             result.insert("GF", EndfValue::new_dict());
                                         }
-                                        result.get_mut("GF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("GF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("DE2") {
                                             result.insert("DE2", EndfValue::new_dict());
                                         }
-                                        result.get_mut("DE2").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("DE2").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("DN2") {
                                             result.insert("DN2", EndfValue::new_dict());
                                         }
-                                        result.get_mut("DN2").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("DN2").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("DNDG") {
                                             result.insert("DNDG", EndfValue::new_dict());
                                         }
-                                        result.get_mut("DNDG").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("DNDG").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("DG2") {
                                             result.insert("DG2", EndfValue::new_dict());
                                         }
-                                        result.get_mut("DG2").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("DG2").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("DNDF") {
                                             result.insert("DNDF", EndfValue::new_dict());
                                         }
-                                        result.get_mut("DNDF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("DNDF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("DGDF") {
                                             result.insert("DGDF", EndfValue::new_dict());
                                         }
-                                        result.get_mut("DGDF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("DGDF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("DF2") {
                                             result.insert("DF2", EndfValue::new_dict());
                                         }
-                                        result.get_mut("DF2").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("DF2").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("DJDN") {
                                             result.insert("DJDN", EndfValue::new_dict());
                                         }
-                                        result.get_mut("DJDN").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("DJDN").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("DJDG") {
                                             result.insert("DJDG", EndfValue::new_dict());
                                         }
-                                        result.get_mut("DJDG").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("DJDG").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("DJDF") {
                                             result.insert("DJDF", EndfValue::new_dict());
                                         }
-                                        result.get_mut("DJDF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("DJDF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("DJ2") {
                                             result.insert("DJ2", EndfValue::new_dict());
                                         }
-                                        result.get_mut("DJ2").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("DJ2").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                         // list body constant 0 (validation skipped)
                                         vi += 1;
@@ -8214,7 +8585,7 @@ pub fn parse_mf32_wildcard(
                     } else if lookahead_ok_1 {
                         // HEAD/CONT record
                         {
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                             ofs += 1;
                             var_spi = cont.c1;
                             result.insert("SPI", f64_to_endf_value(var_spi));
@@ -8232,7 +8603,7 @@ pub fn parse_mf32_wildcard(
                             if (var_isr as f64 as i64) > (0_f64 as i64) {
                                 // HEAD/CONT record
                                 {
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                     ofs += 1;
                                     // field c1 expected 0 (validation skipped in compiled mode)
                                     var_dap = cont.c2;
@@ -8245,7 +8616,7 @@ pub fn parse_mf32_wildcard(
                             }
                             // HEAD/CONT record
                             {
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                 ofs += 1;
                                 var_awri = cont.c1;
                                 result.insert("AWRI", f64_to_endf_value(var_awri));
@@ -8281,41 +8652,48 @@ pub fn parse_mf32_wildcard(
                                         let mut vi: usize = 0;
                                         for var_k_loop_ in (1_f64 as i64)..=(var_nrb as f64 as i64) {
                                             var_k = var_k_loop_ as f64;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("ER") {
                                                 result.insert("ER", EndfValue::new_dict());
                                             }
-                                            result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("AJ") {
                                                 result.insert("AJ", EndfValue::new_dict());
                                             }
-                                            result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GT") {
                                                 result.insert("GT", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GN") {
                                                 result.insert("GN", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GG") {
                                                 result.insert("GG", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GF") {
                                                 result.insert("GF", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
                                         }
                                         for var_m_loop_ in (1_f64 as i64)..=((var_mpar as f64 * var_nrb as f64) as i64) {
                                             var_m = var_m_loop_ as f64;
                                             for var_n_loop_ in (var_m as f64 as i64)..=((var_mpar as f64 * var_nrb as f64) as i64) {
                                                 var_n = var_n_loop_ as f64;
+                                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                 if !result.contains_key("V") {
                                                     result.insert("V", EndfValue::new_dict());
                                                 }
@@ -8350,17 +8728,18 @@ pub fn parse_mf32_wildcard(
                                     let mut vi: usize = 0;
                                     for var_k_loop_ in (1_f64 as i64)..=(var_mls as f64 as i64) {
                                         var_k = var_k_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("DAP") {
                                             result.insert("DAP", EndfValue::new_dict());
                                         }
-                                        result.get_mut("DAP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("DAP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
                             }
                             // HEAD/CONT record
                             {
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                 ofs += 1;
                                 var_awri = cont.c1;
                                 result.insert("AWRI", f64_to_endf_value(var_awri));
@@ -8396,41 +8775,48 @@ pub fn parse_mf32_wildcard(
                                         let mut vi: usize = 0;
                                         for var_k_loop_ in (1_f64 as i64)..=(var_nrb as f64 as i64) {
                                             var_k = var_k_loop_ as f64;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("ER") {
                                                 result.insert("ER", EndfValue::new_dict());
                                             }
-                                            result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("AJ") {
                                                 result.insert("AJ", EndfValue::new_dict());
                                             }
-                                            result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GN") {
                                                 result.insert("GN", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GG") {
                                                 result.insert("GG", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GFA") {
                                                 result.insert("GFA", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GFA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GFA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GFB") {
                                                 result.insert("GFB", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GFB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GFB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
                                         }
                                         for var_m_loop_ in (1_f64 as i64)..=((var_mpar as f64 * var_nrb as f64) as i64) {
                                             var_m = var_m_loop_ as f64;
                                             for var_n_loop_ in (var_m as f64 as i64)..=((var_mpar as f64 * var_nrb as f64) as i64) {
                                                 var_n = var_n_loop_ as f64;
+                                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                 if !result.contains_key("V") {
                                                     result.insert("V", EndfValue::new_dict());
                                                 }
@@ -8450,7 +8836,7 @@ pub fn parse_mf32_wildcard(
                             if (var_isr as f64 as i64) > (0_f64 as i64) {
                                 // HEAD/CONT record
                                 {
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                     ofs += 1;
                                     // field c1 expected 0 (validation skipped in compiled mode)
                                     var_dap = cont.c2;
@@ -8463,7 +8849,7 @@ pub fn parse_mf32_wildcard(
                             }
                             // HEAD/CONT record
                             {
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                 ofs += 1;
                                 var_awri = cont.c1;
                                 result.insert("AWRI", f64_to_endf_value(var_awri));
@@ -8499,71 +8885,84 @@ pub fn parse_mf32_wildcard(
                                         let mut vi: usize = 0;
                                         for var_k_loop_ in (1_f64 as i64)..=(var_nrb as f64 as i64) {
                                             var_k = var_k_loop_ as f64;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("DET") {
                                                 result.insert("DET", EndfValue::new_dict());
                                             }
-                                            result.get_mut("DET").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("DET").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("DWT") {
                                                 result.insert("DWT", EndfValue::new_dict());
                                             }
-                                            result.get_mut("DWT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("DWT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GRT") {
                                                 result.insert("GRT", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GRT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GRT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GIT") {
                                                 result.insert("GIT", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GIT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GIT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("DEF") {
                                                 result.insert("DEF", EndfValue::new_dict());
                                             }
-                                            result.get_mut("DEF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("DEF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("DWF") {
                                                 result.insert("DWF", EndfValue::new_dict());
                                             }
-                                            result.get_mut("DWF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("DWF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GRF") {
                                                 result.insert("GRF", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GRF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GRF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GIF") {
                                                 result.insert("GIF", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GIF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GIF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("DEC") {
                                                 result.insert("DEC", EndfValue::new_dict());
                                             }
-                                            result.get_mut("DEC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("DEC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("DWC") {
                                                 result.insert("DWC", EndfValue::new_dict());
                                             }
-                                            result.get_mut("DWC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("DWC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GRC") {
                                                 result.insert("GRC", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GRC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GRC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GIC") {
                                                 result.insert("GIC", EndfValue::new_dict());
                                             }
-                                            result.get_mut("GIC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                            result.get_mut("GIC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
                                         }
                                         for var_m_loop_ in (1_f64 as i64)..=((var_mpar as f64 * var_nrb as f64) as i64) {
                                             var_m = var_m_loop_ as f64;
                                             for var_n_loop_ in (var_m as f64 as i64)..=((var_mpar as f64 * var_nrb as f64) as i64) {
                                                 var_n = var_n_loop_ as f64;
+                                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                 if !result.contains_key("V") {
                                                     result.insert("V", EndfValue::new_dict());
                                                 }
@@ -8590,6 +8989,7 @@ pub fn parse_mf32_wildcard(
                                     let lookahead_ok_0 = {
                                         let saved_ofs = ofs;
                                         let ok = (|| -> Result<bool, EndfError> {
+                                            if ofs >= lines.len() { return Ok(false); }
                                             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                             Ok(((var_lb as f64) >= (-(1_f64))) && ((var_lb as f64 as i64) <= (2_f64 as i64)))
                                         })().unwrap_or(false);
@@ -8598,6 +8998,7 @@ pub fn parse_mf32_wildcard(
                                     let lookahead_ok_1 = {
                                         let saved_ofs = ofs;
                                         let ok = (|| -> Result<bool, EndfError> {
+                                            if ofs >= lines.len() { return Ok(false); }
                                             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                             Ok((var_lb as f64 as i64) == (5_f64 as i64))
                                         })().unwrap_or(false);
@@ -8623,15 +9024,17 @@ pub fn parse_mf32_wildcard(
                                             let mut vi: usize = 0;
                                             for var_k_loop_ in (1_f64 as i64)..=(var_neb as f64 as i64) {
                                                 var_k = var_k_loop_ as f64;
+                                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                 if !result.contains_key("Ek") {
                                                     result.insert("Ek", EndfValue::new_dict());
                                                 }
-                                                result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                                 vi += 1;
+                                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                 if !result.contains_key("Fk") {
                                                     result.insert("Fk", EndfValue::new_dict());
                                                 }
-                                                result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                                 vi += 1;
                                             }
                                         }
@@ -8655,16 +9058,18 @@ pub fn parse_mf32_wildcard(
                                             let mut vi: usize = 0;
                                             for var_k_loop_ in (1_f64 as i64)..=(var_neb as f64 as i64) {
                                                 var_k = var_k_loop_ as f64;
+                                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                 if !result.contains_key("E") {
                                                     result.insert("E", EndfValue::new_dict());
                                                 }
-                                                result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                                 vi += 1;
                                             }
                                             for var_k_loop_ in (1_f64 as i64)..=((var_neb as f64 - 1_f64) as i64) {
                                                 var_k = var_k_loop_ as f64;
                                                 for var_kp_loop_ in (var_k as f64 as i64)..=((var_neb as f64 - 1_f64) as i64) {
                                                     var_kp = var_kp_loop_ as f64;
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                     if !result.contains_key("F") {
                                                         result.insert("F", EndfValue::new_dict());
                                                     }
@@ -8687,7 +9092,7 @@ pub fn parse_mf32_wildcard(
                     } else if lookahead_ok_2 {
                         // HEAD/CONT record
                         {
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                             ofs += 1;
                             // field c1 expected 0 (validation skipped in compiled mode)
                             // field c2 expected 0 (validation skipped in compiled mode)
@@ -8718,6 +9123,7 @@ pub fn parse_mf32_wildcard(
                                     var_m = var_m_loop_ as f64;
                                     for var_n_loop_ in (1_f64 as i64)..=(var_nch as f64 as i64) {
                                         var_n = var_n_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("DAP") {
                                             result.insert("DAP", EndfValue::new_dict());
                                         }
@@ -8729,7 +9135,7 @@ pub fn parse_mf32_wildcard(
                         }
                         // HEAD/CONT record
                         {
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                             ofs += 1;
                             var_awri = cont.c1;
                             result.insert("AWRI", f64_to_endf_value(var_awri));
@@ -8748,7 +9154,7 @@ pub fn parse_mf32_wildcard(
                                 std::mem::swap(&mut result, &mut section_sr_subsec);
                                 // HEAD/CONT record
                                 {
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                     ofs += 1;
                                     // field c1 expected 0 (validation skipped in compiled mode)
                                     // field c2 expected 0 (validation skipped in compiled mode)
@@ -8785,13 +9191,15 @@ pub fn parse_mf32_wildcard(
                                             let mut vi: usize = 0;
                                             for var_p_loop_ in (1_f64 as i64)..=(var_nrb as f64 as i64) {
                                                 var_p = var_p_loop_ as f64;
+                                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                 if !result.contains_key("ER") {
                                                     result.insert("ER", EndfValue::new_dict());
                                                 }
-                                                result.get_mut("ER").unwrap().insert(EndfKey::Int(var_p as f64 as i64), f64_to_endf_value(vals[vi]));
+                                                result.get_mut("ER").unwrap().insert(EndfKey::Int(var_p as f64 as i64), f64_to_endf_value(_val));
                                                 vi += 1;
                                                 for var_q_loop_ in (1_f64 as i64)..=(var_nch as f64 as i64) {
                                                     var_q = var_q_loop_ as f64;
+                                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                                     if !result.contains_key("GAM") {
                                                         result.insert("GAM", EndfValue::new_dict());
                                                     }
@@ -8833,6 +9241,7 @@ pub fn parse_mf32_wildcard(
                                         var_p = var_p_loop_ as f64;
                                         for var_q_loop_ in (var_p as f64 as i64)..=(var_nparb as f64 as i64) {
                                             var_q = var_q_loop_ as f64;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("V") {
                                                 result.insert("V", EndfValue::new_dict());
                                             }
@@ -8851,7 +9260,7 @@ pub fn parse_mf32_wildcard(
                     } else if lookahead_ok_3 {
                         // HEAD/CONT record
                         {
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                             ofs += 1;
                             var_spi = cont.c1;
                             result.insert("SPI", f64_to_endf_value(var_spi));
@@ -8867,7 +9276,7 @@ pub fn parse_mf32_wildcard(
                         if (var_isr as f64 as i64) > (0_f64 as i64) {
                             // HEAD/CONT record
                             {
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                 ofs += 1;
                                 // field c1 expected 0 (validation skipped in compiled mode)
                                 var_dap = cont.c2;
@@ -8898,65 +9307,75 @@ pub fn parse_mf32_wildcard(
                             let mut vi: usize = 0;
                             for var_k_loop_ in (1_f64 as i64)..=(var_nrsa as f64 as i64) {
                                 var_k = var_k_loop_ as f64;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("ER") {
                                     result.insert("ER", EndfValue::new_dict());
                                 }
-                                result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("AJ") {
                                     result.insert("AJ", EndfValue::new_dict());
                                 }
-                                result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("GT") {
                                     result.insert("GT", EndfValue::new_dict());
                                 }
-                                result.get_mut("GT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("GT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("GN") {
                                     result.insert("GN", EndfValue::new_dict());
                                 }
-                                result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("GG") {
                                     result.insert("GG", EndfValue::new_dict());
                                 }
-                                result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("GF") {
                                     result.insert("GF", EndfValue::new_dict());
                                 }
-                                result.get_mut("GF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("GF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("DER") {
                                     result.insert("DER", EndfValue::new_dict());
                                 }
-                                result.get_mut("DER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("DER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
                                 // list body constant 0 (validation skipped)
                                 vi += 1;
                                 // list body constant 0 (validation skipped)
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("DGN") {
                                     result.insert("DGN", EndfValue::new_dict());
                                 }
-                                result.get_mut("DGN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("DGN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("DGG") {
                                     result.insert("DGG", EndfValue::new_dict());
                                 }
-                                result.get_mut("DGG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("DGG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("DGF") {
                                     result.insert("DGF", EndfValue::new_dict());
                                 }
-                                result.get_mut("DGF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("DGF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
                             }
                         }
                         // HEAD/CONT record
                         {
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                             ofs += 1;
                             // field c1 expected 0 (validation skipped in compiled mode)
                             // field c2 expected 0 (validation skipped in compiled mode)
@@ -8975,7 +9394,7 @@ pub fn parse_mf32_wildcard(
                     } else if lookahead_ok_4 {
                         // HEAD/CONT record
                         {
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                             ofs += 1;
                             var_spi = cont.c1;
                             result.insert("SPI", f64_to_endf_value(var_spi));
@@ -9007,10 +9426,11 @@ pub fn parse_mf32_wildcard(
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_mls as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("DAP") {
                                         result.insert("DAP", EndfValue::new_dict());
                                     }
-                                    result.get_mut("DAP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("DAP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                             }
@@ -9034,68 +9454,79 @@ pub fn parse_mf32_wildcard(
                             let mut vi: usize = 0;
                             for var_k_loop_ in (1_f64 as i64)..=(var_nrsa as f64 as i64) {
                                 var_k = var_k_loop_ as f64;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("ER") {
                                     result.insert("ER", EndfValue::new_dict());
                                 }
-                                result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("AJ") {
                                     result.insert("AJ", EndfValue::new_dict());
                                 }
-                                result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("GN") {
                                     result.insert("GN", EndfValue::new_dict());
                                 }
-                                result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("GG") {
                                     result.insert("GG", EndfValue::new_dict());
                                 }
-                                result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("GFA") {
                                     result.insert("GFA", EndfValue::new_dict());
                                 }
-                                result.get_mut("GFA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("GFA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("GFB") {
                                     result.insert("GFB", EndfValue::new_dict());
                                 }
-                                result.get_mut("GFB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("GFB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("DER") {
                                     result.insert("DER", EndfValue::new_dict());
                                 }
-                                result.get_mut("DER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("DER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
                                 // list body constant 0 (validation skipped)
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("DGN") {
                                     result.insert("DGN", EndfValue::new_dict());
                                 }
-                                result.get_mut("DGN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("DGN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("DGG") {
                                     result.insert("DGG", EndfValue::new_dict());
                                 }
-                                result.get_mut("DGG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("DGG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("DGFA") {
                                     result.insert("DGFA", EndfValue::new_dict());
                                 }
-                                result.get_mut("DGFA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("DGFA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("DGFB") {
                                     result.insert("DGFB", EndfValue::new_dict());
                                 }
-                                result.get_mut("DGFB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("DGFB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
                             }
                         }
                         // HEAD/CONT record
                         {
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                             ofs += 1;
                             // field c1 expected 0 (validation skipped in compiled mode)
                             // field c2 expected 0 (validation skipped in compiled mode)
@@ -9114,7 +9545,7 @@ pub fn parse_mf32_wildcard(
                     } else if lookahead_ok_5 {
                         // HEAD/CONT record
                         {
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                             ofs += 1;
                             // field c1 expected 0 (validation skipped in compiled mode)
                             // field c2 expected 0 (validation skipped in compiled mode)
@@ -9147,6 +9578,7 @@ pub fn parse_mf32_wildcard(
                                     var_m = var_m_loop_ as f64;
                                     for var_n_loop_ in (1_f64 as i64)..=((var_njch as f64 / var_njs as f64) as i64) {
                                         var_n = var_n_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("DAP") {
                                             result.insert("DAP", EndfValue::new_dict());
                                         }
@@ -9174,65 +9606,77 @@ pub fn parse_mf32_wildcard(
                             let mut vi: usize = 0;
                             for var_k_loop_ in (1_f64 as i64)..=(var_npp as f64 as i64) {
                                 var_k = var_k_loop_ as f64;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("MA") {
                                     result.insert("MA", EndfValue::new_dict());
                                 }
-                                result.get_mut("MA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("MA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("MB") {
                                     result.insert("MB", EndfValue::new_dict());
                                 }
-                                result.get_mut("MB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("MB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("ZA") {
                                     result.insert("ZA", EndfValue::new_dict());
                                 }
-                                result.get_mut("ZA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("ZA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("ZB") {
                                     result.insert("ZB", EndfValue::new_dict());
                                 }
-                                result.get_mut("ZB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("ZB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("IA") {
                                     result.insert("IA", EndfValue::new_dict());
                                 }
-                                result.get_mut("IA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("IA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("IB") {
                                     result.insert("IB", EndfValue::new_dict());
                                 }
-                                result.get_mut("IB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("IB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("Q") {
                                     result.insert("Q", EndfValue::new_dict());
                                 }
-                                result.get_mut("Q").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("Q").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("PNT") {
                                     result.insert("PNT", EndfValue::new_dict());
                                 }
-                                result.get_mut("PNT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("PNT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("SHF") {
                                     result.insert("SHF", EndfValue::new_dict());
                                 }
-                                result.get_mut("SHF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("SHF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("MT") {
                                     result.insert("MT", EndfValue::new_dict());
                                 }
-                                result.get_mut("MT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("MT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("PA") {
                                     result.insert("PA", EndfValue::new_dict());
                                 }
-                                result.get_mut("PA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("PA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("PB") {
                                     result.insert("PB", EndfValue::new_dict());
                                 }
-                                result.get_mut("PB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                result.get_mut("PB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
                             }
                         }
@@ -9261,35 +9705,41 @@ pub fn parse_mf32_wildcard(
                                     let mut vi: usize = 0;
                                     for var_k_loop_ in (1_f64 as i64)..=(var_nch as f64 as i64) {
                                         var_k = var_k_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("PPI") {
                                             result.insert("PPI", EndfValue::new_dict());
                                         }
-                                        result.get_mut("PPI").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("PPI").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("L") {
                                             result.insert("L", EndfValue::new_dict());
                                         }
-                                        result.get_mut("L").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("L").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("SCH") {
                                             result.insert("SCH", EndfValue::new_dict());
                                         }
-                                        result.get_mut("SCH").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("SCH").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("BND") {
                                             result.insert("BND", EndfValue::new_dict());
                                         }
-                                        result.get_mut("BND").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("BND").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("APE") {
                                             result.insert("APE", EndfValue::new_dict());
                                         }
-                                        result.get_mut("APE").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("APE").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("APT") {
                                             result.insert("APT", EndfValue::new_dict());
                                         }
-                                        result.get_mut("APT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("APT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -9313,13 +9763,15 @@ pub fn parse_mf32_wildcard(
                                     let mut vi: usize = 0;
                                     for var_k_loop_ in (1_f64 as i64)..=(var_nrsa as f64 as i64) {
                                         var_k = var_k_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("ER") {
                                             result.insert("ER", EndfValue::new_dict());
                                         }
-                                        result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                         for var_p_loop_ in (1_f64 as i64)..=(var_nch as f64 as i64) {
                                             var_p = var_p_loop_ as f64;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("GAM") {
                                                 result.insert("GAM", EndfValue::new_dict());
                                             }
@@ -9331,13 +9783,15 @@ pub fn parse_mf32_wildcard(
                                             // list body constant 0 (validation skipped)
                                             vi += 1;
                                         }
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("DER") {
                                             result.insert("DER", EndfValue::new_dict());
                                         }
-                                        result.get_mut("DER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("DER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                         for var_p_loop_ in (1_f64 as i64)..=(var_nch as f64 as i64) {
                                             var_p = var_p_loop_ as f64;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("DGAM") {
                                                 result.insert("DGAM", EndfValue::new_dict());
                                             }
@@ -9360,7 +9814,7 @@ pub fn parse_mf32_wildcard(
                         }
                         // HEAD/CONT record
                         {
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                             ofs += 1;
                             // field c1 expected 0 (validation skipped in compiled mode)
                             // field c2 expected 0 (validation skipped in compiled mode)
@@ -9379,7 +9833,7 @@ pub fn parse_mf32_wildcard(
                     } else if (var_lru as f64 as i64) == (2_f64 as i64) {
                         // HEAD/CONT record
                         {
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                             ofs += 1;
                             var_spi = cont.c1;
                             result.insert("SPI", f64_to_endf_value(var_spi));
@@ -9416,35 +9870,41 @@ pub fn parse_mf32_wildcard(
                                     let mut vi: usize = 0;
                                     for var_k_loop_ in (1_f64 as i64)..=(var_njs as f64 as i64) {
                                         var_k = var_k_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("D") {
                                             result.insert("D", EndfValue::new_dict());
                                         }
-                                        result.get_mut("D").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("D").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("AJ") {
                                             result.insert("AJ", EndfValue::new_dict());
                                         }
-                                        result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("GN0") {
                                             result.insert("GN0", EndfValue::new_dict());
                                         }
-                                        result.get_mut("GN0").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("GN0").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("GG") {
                                             result.insert("GG", EndfValue::new_dict());
                                         }
-                                        result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("GF") {
                                             result.insert("GF", EndfValue::new_dict());
                                         }
-                                        result.get_mut("GF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("GF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("GX") {
                                             result.insert("GX", EndfValue::new_dict());
                                         }
-                                        result.get_mut("GX").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("GX").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -9475,6 +9935,7 @@ pub fn parse_mf32_wildcard(
                                 var_p = var_p_loop_ as f64;
                                 for var_q_loop_ in (var_p as f64 as i64)..=(var_npar as f64 as i64) {
                                     var_q = var_q_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("RV") {
                                         result.insert("RV", EndfValue::new_dict());
                                     }
@@ -9565,7 +10026,7 @@ pub fn parse_mf33_wildcard(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -9587,7 +10048,7 @@ pub fn parse_mf33_wildcard(
                 std::mem::swap(&mut result, &mut section_subsection);
                 // HEAD/CONT record
                 {
-                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                     ofs += 1;
                     var_xmf1 = cont.c1;
                     result.insert("XMF1", f64_to_endf_value(var_xmf1));
@@ -9610,7 +10071,7 @@ pub fn parse_mf33_wildcard(
                         std::mem::swap(&mut result, &mut section_nc_subsection);
                         // HEAD/CONT record
                         {
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                             ofs += 1;
                             // field c1 expected 0 (validation skipped in compiled mode)
                             // field c2 expected 0 (validation skipped in compiled mode)
@@ -9640,15 +10101,17 @@ pub fn parse_mf33_wildcard(
                                 let mut vi: usize = 0;
                                 for var_i_loop_ in (1_f64 as i64)..=(var_nci as f64 as i64) {
                                     var_i = var_i_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("C") {
                                         result.insert("C", EndfValue::new_dict());
                                     }
-                                    result.get_mut("C").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("C").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("XMT") {
                                         result.insert("XMT", EndfValue::new_dict());
                                     }
-                                    result.get_mut("XMT").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("XMT").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                             }
@@ -9672,23 +10135,27 @@ pub fn parse_mf33_wildcard(
                                 result.insert("NEI", EndfValue::Int(var_nei as i64));
 
                                 let mut vi: usize = 0;
-                                result.insert("XMFS", f64_to_endf_value(vals[vi]));
-                                var_xmfs = vals[vi];
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                result.insert("XMFS", f64_to_endf_value(_val));
+                                var_xmfs = _val;
                                 vi += 1;
-                                result.insert("XLFSS", f64_to_endf_value(vals[vi]));
-                                var_xlfss = vals[vi];
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                result.insert("XLFSS", f64_to_endf_value(_val));
+                                var_xlfss = _val;
                                 vi += 1;
                                 for var_i_loop_ in (1_f64 as i64)..=(var_nei as f64 as i64) {
                                     var_i = var_i_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("E") {
                                         result.insert("E", EndfValue::new_dict());
                                     }
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("WE") {
                                         result.insert("WE", EndfValue::new_dict());
                                     }
-                                    result.get_mut("WE").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("WE").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                             }
@@ -9709,6 +10176,7 @@ pub fn parse_mf33_wildcard(
                         let lookahead_ok_0 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
+                                if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                 Ok(((var_lb as f64 as i64) >= (0_f64 as i64)) && ((var_lb as f64 as i64) <= (4_f64 as i64)))
                             })().unwrap_or(false);
@@ -9717,6 +10185,7 @@ pub fn parse_mf33_wildcard(
                         let lookahead_ok_1 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
+                                if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
@@ -9725,6 +10194,7 @@ pub fn parse_mf33_wildcard(
                         let lookahead_ok_2 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
+                                if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (1_f64 as i64)))
                             })().unwrap_or(false);
@@ -9733,6 +10203,7 @@ pub fn parse_mf33_wildcard(
                         let lookahead_ok_3 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
+                                if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                 Ok((var_lb as f64 as i64) == (6_f64 as i64))
                             })().unwrap_or(false);
@@ -9741,6 +10212,7 @@ pub fn parse_mf33_wildcard(
                         let lookahead_ok_4 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
+                                if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                 Ok((((var_lb as f64 as i64) == (8_f64 as i64)) || ((var_lb as f64 as i64) == (9_f64 as i64))) && ((var_lt as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
@@ -9766,28 +10238,32 @@ pub fn parse_mf33_wildcard(
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(((var_np as f64 - var_lt as f64)) as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("Ek") {
                                         result.insert("Ek", EndfValue::new_dict());
                                     }
-                                    result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("Fk") {
                                         result.insert("Fk", EndfValue::new_dict());
                                     }
-                                    result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                                 for var_k_loop_ in (1_f64 as i64)..=(var_lt as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("El") {
                                         result.insert("El", EndfValue::new_dict());
                                     }
-                                    result.get_mut("El").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("El").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("Fl") {
                                         result.insert("Fl", EndfValue::new_dict());
                                     }
-                                    result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                             }
@@ -9813,16 +10289,18 @@ pub fn parse_mf33_wildcard(
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("E") {
                                         result.insert("E", EndfValue::new_dict());
                                     }
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                                 for var_k_loop_ in (1_f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                     var_k = var_k_loop_ as f64;
                                     for var_kp_loop_ in (1_f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                         var_kp = var_kp_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
@@ -9853,16 +10331,18 @@ pub fn parse_mf33_wildcard(
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("E") {
                                         result.insert("E", EndfValue::new_dict());
                                     }
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                                 for var_k_loop_ in (1_f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                     var_k = var_k_loop_ as f64;
                                     for var_kp_loop_ in (var_k as f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                         var_kp = var_kp_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
@@ -9892,24 +10372,27 @@ pub fn parse_mf33_wildcard(
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ner as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("ER") {
                                         result.insert("ER", EndfValue::new_dict());
                                     }
-                                    result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                                 for var_k_loop_ in (1_f64 as i64)..=(var_nec as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("EC") {
                                         result.insert("EC", EndfValue::new_dict());
                                     }
-                                    result.get_mut("EC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("EC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                                 for var_k_loop_ in (1_f64 as i64)..=((var_ner as f64 - 1_f64) as i64) {
                                     var_k = var_k_loop_ as f64;
                                     for var_l_loop_ in (1_f64 as i64)..=((var_nec as f64 - 1_f64) as i64) {
                                         var_l = var_l_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
@@ -9938,15 +10421,17 @@ pub fn parse_mf33_wildcard(
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_np as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("E") {
                                         result.insert("E", EndfValue::new_dict());
                                     }
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                     if !result.contains_key("F") {
                                         result.insert("F", EndfValue::new_dict());
                                     }
-                                    result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(vals[vi]));
+                                    result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                             }
@@ -10009,7 +10494,7 @@ pub fn parse_mf34_wildcard(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -10031,6 +10516,7 @@ pub fn parse_mf34_wildcard(
             let lookahead_ok_0 = {
                 let saved_ofs = ofs;
                 let ok = (|| -> Result<bool, EndfError> {
+                    if ofs >= lines.len() { return Ok(false); }
                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                     Ok(((var_mt1 as f64 as i64) == (0_f64 as i64)) || ((var_mt as f64) == (var_mt1 as f64)))
                 })().unwrap_or(false);
@@ -10039,7 +10525,7 @@ pub fn parse_mf34_wildcard(
             if lookahead_ok_0 {
                 // HEAD/CONT record
                 {
-                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                     ofs += 1;
                     // field c1 expected 0 (validation skipped in compiled mode)
                     // field c2 expected 0 (validation skipped in compiled mode)
@@ -10057,7 +10543,7 @@ pub fn parse_mf34_wildcard(
                     if (var_n as f64 as i64) == (1_f64 as i64) {
                         // HEAD/CONT record
                         {
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                             ofs += 1;
                             // field c1 expected 0 (validation skipped in compiled mode)
                             // field c2 expected 0 (validation skipped in compiled mode)
@@ -10079,7 +10565,7 @@ pub fn parse_mf34_wildcard(
                     } else {
                         // HEAD/CONT record
                         {
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                             ofs += 1;
                             // field c1 expected 0 (validation skipped in compiled mode)
                             // field c2 expected 0 (validation skipped in compiled mode)
@@ -10128,6 +10614,7 @@ pub fn parse_mf34_wildcard(
                             let mut vi: usize = 0;
                             for var_q_loop_ in (1_f64 as i64)..=(0.0 /* TODO: indexed var NT */ as i64) {
                                 var_q = var_q_loop_ as f64;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("Data") {
                                     result.insert("Data", EndfValue::new_dict());
                                 }
@@ -10140,7 +10627,7 @@ pub fn parse_mf34_wildcard(
             } else {
                 // HEAD/CONT record
                 {
-                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                     ofs += 1;
                     // field c1 expected 0 (validation skipped in compiled mode)
                     // field c2 expected 0 (validation skipped in compiled mode)
@@ -10158,7 +10645,7 @@ pub fn parse_mf34_wildcard(
                     if (var_n as f64 as i64) == (1_f64 as i64) {
                         // HEAD/CONT record
                         {
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                             ofs += 1;
                             // field c1 expected 0 (validation skipped in compiled mode)
                             // field c2 expected 0 (validation skipped in compiled mode)
@@ -10180,7 +10667,7 @@ pub fn parse_mf34_wildcard(
                     } else {
                         // HEAD/CONT record
                         {
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                             ofs += 1;
                             // field c1 expected 0 (validation skipped in compiled mode)
                             // field c2 expected 0 (validation skipped in compiled mode)
@@ -10229,6 +10716,7 @@ pub fn parse_mf34_wildcard(
                             let mut vi: usize = 0;
                             for var_q_loop_ in (1_f64 as i64)..=(0.0 /* TODO: indexed var NT */ as i64) {
                                 var_q = var_q_loop_ as f64;
+                                let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("Data") {
                                     result.insert("Data", EndfValue::new_dict());
                                 }
@@ -10281,7 +10769,7 @@ pub fn parse_mf35_wildcard(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -10302,6 +10790,7 @@ pub fn parse_mf35_wildcard(
             let lookahead_ok_0 = {
                 let saved_ofs = ofs;
                 let ok = (|| -> Result<bool, EndfError> {
+                    if ofs >= lines.len() { return Ok(false); }
                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                     Ok(((var_ls as f64 as i64) == (1_f64 as i64)) && ((var_lb as f64 as i64) == (7_f64 as i64)))
                 })().unwrap_or(false);
@@ -10330,16 +10819,18 @@ pub fn parse_mf35_wildcard(
                     let mut vi: usize = 0;
                     for var_i_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                         var_i = var_i_loop_ as f64;
+                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                         if !result.contains_key("E") {
                             result.insert("E", EndfValue::new_dict());
                         }
-                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                         vi += 1;
                     }
                     for var_i_loop_ in (1_f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                         var_i = var_i_loop_ as f64;
                         for var_j_loop_ in (var_i as f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                             var_j = var_j_loop_ as f64;
+                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                             if !result.contains_key("F") {
                                 result.insert("F", EndfValue::new_dict());
                             }
@@ -10428,7 +10919,7 @@ pub fn parse_mf40_wildcard(
 
     // HEAD/CONT record
     {
-        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
         var_za = cont.c1;
         result.insert("ZA", f64_to_endf_value(var_za));
@@ -10449,7 +10940,7 @@ pub fn parse_mf40_wildcard(
             std::mem::swap(&mut result, &mut section_subsection);
             // HEAD/CONT record
             {
-                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                 ofs += 1;
                 var_qm = cont.c1;
                 result.insert("QM", f64_to_endf_value(var_qm));
@@ -10471,7 +10962,7 @@ pub fn parse_mf40_wildcard(
                     std::mem::swap(&mut result, &mut section_subsubsec);
                     // HEAD/CONT record
                     {
-                        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                        let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                         ofs += 1;
                         var_xmf1 = cont.c1;
                         result.insert("XMF1", f64_to_endf_value(var_xmf1));
@@ -10495,6 +10986,7 @@ pub fn parse_mf40_wildcard(
                             let lookahead_ok_0 = {
                                 let saved_ofs = ofs;
                                 let ok = (|| -> Result<bool, EndfError> {
+                                    if ofs >= lines.len() { return Ok(false); }
                                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                     Ok((var_lty as f64 as i64) == (0_f64 as i64))
                                 })().unwrap_or(false);
@@ -10503,6 +10995,7 @@ pub fn parse_mf40_wildcard(
                             let lookahead_ok_1 = {
                                 let saved_ofs = ofs;
                                 let ok = (|| -> Result<bool, EndfError> {
+                                    if ofs >= lines.len() { return Ok(false); }
                                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                     Ok((((var_lty as f64 as i64) == (1_f64 as i64)) || ((var_lty as f64 as i64) == (2_f64 as i64))) || ((var_lty as f64 as i64) == (3_f64 as i64)))
                                 })().unwrap_or(false);
@@ -10511,7 +11004,7 @@ pub fn parse_mf40_wildcard(
                             if lookahead_ok_0 {
                                 // HEAD/CONT record
                                 {
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                     ofs += 1;
                                     // field c1 expected 0 (validation skipped in compiled mode)
                                     // field c2 expected 0 (validation skipped in compiled mode)
@@ -10540,22 +11033,24 @@ pub fn parse_mf40_wildcard(
                                     let mut vi: usize = 0;
                                     for var_i_loop_ in (1_f64 as i64)..=(var_nci as f64 as i64) {
                                         var_i = var_i_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("C") {
                                             result.insert("C", EndfValue::new_dict());
                                         }
-                                        result.get_mut("C").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("C").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("XMT") {
                                             result.insert("XMT", EndfValue::new_dict());
                                         }
-                                        result.get_mut("XMT").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("XMT").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
                             } else if lookahead_ok_1 {
                                 // HEAD/CONT record
                                 {
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
                                     ofs += 1;
                                     // field c1 expected 0 (validation skipped in compiled mode)
                                     // field c2 expected 0 (validation skipped in compiled mode)
@@ -10584,23 +11079,27 @@ pub fn parse_mf40_wildcard(
                                     result.insert("NEI", EndfValue::Int(var_nei as i64));
 
                                     let mut vi: usize = 0;
-                                    result.insert("XMFS", f64_to_endf_value(vals[vi]));
-                                    var_xmfs = vals[vi];
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                    result.insert("XMFS", f64_to_endf_value(_val));
+                                    var_xmfs = _val;
                                     vi += 1;
-                                    result.insert("XLFSS", f64_to_endf_value(vals[vi]));
-                                    var_xlfss = vals[vi];
+                                    let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
+                                    result.insert("XLFSS", f64_to_endf_value(_val));
+                                    var_xlfss = _val;
                                     vi += 1;
                                     for var_i_loop_ in (1_f64 as i64)..=(var_nei as f64 as i64) {
                                         var_i = var_i_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("E") {
                                             result.insert("E", EndfValue::new_dict());
                                         }
-                                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("WE") {
                                             result.insert("WE", EndfValue::new_dict());
                                         }
-                                        result.get_mut("WE").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("WE").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -10621,6 +11120,7 @@ pub fn parse_mf40_wildcard(
                             let lookahead_ok_0 = {
                                 let saved_ofs = ofs;
                                 let ok = (|| -> Result<bool, EndfError> {
+                                    if ofs >= lines.len() { return Ok(false); }
                                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                     Ok(((var_lb as f64 as i64) >= (0_f64 as i64)) && ((var_lb as f64 as i64) <= (4_f64 as i64)))
                                 })().unwrap_or(false);
@@ -10629,6 +11129,7 @@ pub fn parse_mf40_wildcard(
                             let lookahead_ok_1 = {
                                 let saved_ofs = ofs;
                                 let ok = (|| -> Result<bool, EndfError> {
+                                    if ofs >= lines.len() { return Ok(false); }
                                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                     Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (0_f64 as i64)))
                                 })().unwrap_or(false);
@@ -10637,6 +11138,7 @@ pub fn parse_mf40_wildcard(
                             let lookahead_ok_2 = {
                                 let saved_ofs = ofs;
                                 let ok = (|| -> Result<bool, EndfError> {
+                                    if ofs >= lines.len() { return Ok(false); }
                                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                     Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (1_f64 as i64)))
                                 })().unwrap_or(false);
@@ -10645,6 +11147,7 @@ pub fn parse_mf40_wildcard(
                             let lookahead_ok_3 = {
                                 let saved_ofs = ofs;
                                 let ok = (|| -> Result<bool, EndfError> {
+                                    if ofs >= lines.len() { return Ok(false); }
                                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                     Ok((var_lb as f64 as i64) == (6_f64 as i64))
                                 })().unwrap_or(false);
@@ -10653,6 +11156,7 @@ pub fn parse_mf40_wildcard(
                             let lookahead_ok_4 = {
                                 let saved_ofs = ofs;
                                 let ok = (|| -> Result<bool, EndfError> {
+                                    if ofs >= lines.len() { return Ok(false); }
                                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
                                     Ok((((var_lb as f64 as i64) == (8_f64 as i64)) || ((var_lb as f64 as i64) == (9_f64 as i64))) && ((var_lt as f64 as i64) == (0_f64 as i64)))
                                 })().unwrap_or(false);
@@ -10678,28 +11182,32 @@ pub fn parse_mf40_wildcard(
                                     let mut vi: usize = 0;
                                     for var_q_loop_ in (1_f64 as i64)..=(((var_np as f64 - var_lt as f64)) as i64) {
                                         var_q = var_q_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("Ek") {
                                             result.insert("Ek", EndfValue::new_dict());
                                         }
-                                        result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("Fk") {
                                             result.insert("Fk", EndfValue::new_dict());
                                         }
-                                        result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                     for var_q_loop_ in (1_f64 as i64)..=(var_lt as f64 as i64) {
                                         var_q = var_q_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("El") {
                                             result.insert("El", EndfValue::new_dict());
                                         }
-                                        result.get_mut("El").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("El").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("Fl") {
                                             result.insert("Fl", EndfValue::new_dict());
                                         }
-                                        result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -10724,16 +11232,18 @@ pub fn parse_mf40_wildcard(
                                     let mut vi: usize = 0;
                                     for var_q_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                         var_q = var_q_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("E") {
                                             result.insert("E", EndfValue::new_dict());
                                         }
-                                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                     for var_q_loop_ in (1_f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                         var_q = var_q_loop_ as f64;
                                         for var_qp_loop_ in (1_f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                             var_qp = var_qp_loop_ as f64;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("F") {
                                                 result.insert("F", EndfValue::new_dict());
                                             }
@@ -10763,16 +11273,18 @@ pub fn parse_mf40_wildcard(
                                     let mut vi: usize = 0;
                                     for var_q_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                         var_q = var_q_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("E") {
                                             result.insert("E", EndfValue::new_dict());
                                         }
-                                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                     for var_q_loop_ in (1_f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                         var_q = var_q_loop_ as f64;
                                         for var_qp_loop_ in (var_q as f64 as i64)..=((var_ne as f64 - 1_f64) as i64) {
                                             var_qp = var_qp_loop_ as f64;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("F") {
                                                 result.insert("F", EndfValue::new_dict());
                                             }
@@ -10801,24 +11313,27 @@ pub fn parse_mf40_wildcard(
                                     let mut vi: usize = 0;
                                     for var_q_loop_ in (1_f64 as i64)..=(var_ner as f64 as i64) {
                                         var_q = var_q_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("ER") {
                                             result.insert("ER", EndfValue::new_dict());
                                         }
-                                        result.get_mut("ER").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("ER").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                     for var_q_loop_ in (1_f64 as i64)..=((((var_nt as f64 - 1_f64)) / var_ner as f64) as i64) {
                                         var_q = var_q_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("EC") {
                                             result.insert("EC", EndfValue::new_dict());
                                         }
-                                        result.get_mut("EC").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("EC").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                     for var_q_loop_ in (1_f64 as i64)..=((var_ner as f64 - 1_f64) as i64) {
                                         var_q = var_q_loop_ as f64;
                                         for var_l_loop_ in (1_f64 as i64)..=(((((var_nt as f64 - 1_f64)) / var_ner as f64) - 1_f64) as i64) {
                                             var_l = var_l_loop_ as f64;
+                                            let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                             if !result.contains_key("F") {
                                                 result.insert("F", EndfValue::new_dict());
                                             }
@@ -10847,15 +11362,17 @@ pub fn parse_mf40_wildcard(
                                     let mut vi: usize = 0;
                                     for var_q_loop_ in (1_f64 as i64)..=(var_np as f64 as i64) {
                                         var_q = var_q_loop_ as f64;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("E") {
                                             result.insert("E", EndfValue::new_dict());
                                         }
-                                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
+                                        let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
-                                        result.get_mut("F").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(vals[vi]));
+                                        result.get_mut("F").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }

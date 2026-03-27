@@ -494,7 +494,7 @@ impl CodeGen {
         self.line("// HEAD/CONT record");
         self.line("{");
         self.indent += 1;
-        self.line("let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;");
+        self.line("let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;");
         self.line("ofs += 1;");
 
         let cont_fields = ["c1", "c2", "l1", "l2", "n1", "n2"];
@@ -826,18 +826,28 @@ impl CodeGen {
     }
 
     fn emit_list_value_store(&mut self, expr: &Expr, target: &str) {
+        // Helper: bounds-checked vals access
+        let vals_get = "*vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!(\"LIST body index {} out of bounds (len={})\", vi, vals.len()) })?";
         match expr {
             Expr::Variable(v) if v.indices.is_empty() => {
                 self.line(&format!(
-                    "{}.insert(\"{}\", f64_to_endf_value(vals[vi]));",
+                    "let _val = {};",
+                    vals_get
+                ));
+                self.line(&format!(
+                    "{}.insert(\"{}\", f64_to_endf_value(_val));",
                     target, v.name
                 ));
                 // Also set as local var for later use
-                self.declare_or_assign_f64(&v.name, "vals[vi]");
+                self.declare_or_assign_f64(&v.name, "_val");
                 self.line("vi += 1;");
             }
             Expr::Variable(v) => {
                 // Indexed: e.g., ER[j]
+                self.line(&format!(
+                    "let _val = {};",
+                    vals_get
+                ));
                 self.line(&format!(
                     "if !{}.contains_key(\"{}\") {{",
                     target, v.name
@@ -853,7 +863,7 @@ impl CodeGen {
                 if v.indices.len() == 1 {
                     let idx = self.expr_to_rust(&v.indices[0]);
                     self.line(&format!(
-                        "{}.get_mut(\"{}\").unwrap().insert(EndfKey::Int({} as i64), f64_to_endf_value(vals[vi]));",
+                        "{}.get_mut(\"{}\").unwrap().insert(EndfKey::Int({} as i64), f64_to_endf_value(_val));",
                         target, v.name, idx
                     ));
                 } else {
@@ -874,10 +884,14 @@ impl CodeGen {
             }
             Expr::InconsistentVar(v) if v.indices.is_empty() => {
                 self.line(&format!(
-                    "{}.insert(\"{}\", f64_to_endf_value(vals[vi]));",
+                    "let _val = {};",
+                    vals_get
+                ));
+                self.line(&format!(
+                    "{}.insert(\"{}\", f64_to_endf_value(_val));",
                     target, v.name
                 ));
-                self.declare_or_assign_f64(&v.name, "vals[vi]");
+                self.declare_or_assign_f64(&v.name, "_val");
                 self.line("vi += 1;");
             }
             _ => {
@@ -934,6 +948,7 @@ impl CodeGen {
                 self.line("let saved_ofs = ofs;");
                 self.line("let ok = (|| -> Result<bool, EndfError> {");
                 self.indent += 1;
+                self.line("if ofs >= lines.len() { return Ok(false); }");
                 self.line("let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;");
                 let cond_rust = self.bool_expr_to_rust(&branch.condition);
                 self.line(&format!("Ok({})", cond_rust));
@@ -1088,7 +1103,7 @@ impl CodeGen {
         self.line("// TEXT record");
         self.line("{");
         self.indent += 1;
-        self.line("let (text_rec, _ctrl) = records::read_text(&lines[ofs], read_opts)?;");
+        self.line("let (text_rec, _ctrl) = records::read_text(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;");
         self.line("ofs += 1;");
 
         if placeholders.len() == 1 {
@@ -1123,7 +1138,7 @@ impl CodeGen {
         self.line("// DIR record");
         self.line("{");
         self.indent += 1;
-        self.line("let (dir_rec, _ctrl) = records::read_dir(&lines[ofs], read_opts)?;");
+        self.line("let (dir_rec, _ctrl) = records::read_dir(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;");
         self.line("ofs += 1;");
 
         let dir_fields = ["l1", "l2", "n1", "n2"];
