@@ -13,29 +13,32 @@ pub fn fortstr_to_f64(s: &str, opts: &ReadOpts) -> EndfResult<f64> {
         return Ok(0.0);
     }
 
-    let working: String = if opts.accept_spaces {
-        trimmed.replace(' ', "")
-    } else {
-        trimmed.to_string()
-    };
-
-    // Insert 'E' before '+'/'-' when preceded by a digit.
-    // Only insert once (matching Python's `break` after first insertion).
-    let mut chars: Vec<char> = working.chars().collect();
+    // Use a stack buffer (max 24 bytes) to avoid heap allocation.
+    // ENDF fields are at most 11 chars; with 'E' insertion, max 12.
+    let mut buf = [0u8; 24];
+    let mut len = 0usize;
     let mut inserted = false;
-    let mut i = 1;
-    while i < chars.len() && !inserted {
-        let c = chars[i];
-        if (c == '+' || c == '-') && chars[i - 1].is_ascii_digit() {
-            chars.insert(i, 'E');
+
+    for &b in trimmed.as_bytes() {
+        // Skip spaces if accept_spaces is enabled
+        if b == b' ' && opts.accept_spaces {
+            continue;
+        }
+        // Insert 'E' before '+'/'-' when preceded by a digit (once only)
+        if !inserted && len > 0 && (b == b'+' || b == b'-') && buf[len - 1].is_ascii_digit() {
+            buf[len] = b'E';
+            len += 1;
             inserted = true;
         }
-        i += 1;
+        if len < buf.len() {
+            buf[len] = b;
+            len += 1;
+        }
     }
 
-    let valstr: String = chars.into_iter().collect();
+    let valstr = unsafe { std::str::from_utf8_unchecked(&buf[..len]) };
     valstr.parse::<f64>().map_err(|_| EndfError::InvalidFloat {
-        input: valstr.clone(),
+        input: valstr.to_string(),
     })
 }
 
