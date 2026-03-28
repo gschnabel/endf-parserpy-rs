@@ -773,6 +773,9 @@ pub fn parse_mf1_mt458(
         let ok = (|| -> Result<bool, EndfError> {
             if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            var_za = cont.c1;
+            var_awr = cont.c2;
+            var_lfc = cont.l2 as f64;
             Ok(((var_lfc as f64 as i64) == (0_f64 as i64)) && ((var_nply as f64 as i64) == (0_f64 as i64)))
         })().unwrap_or(false);
         ok
@@ -782,6 +785,9 @@ pub fn parse_mf1_mt458(
         let ok = (|| -> Result<bool, EndfError> {
             if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            var_za = cont.c1;
+            var_awr = cont.c2;
+            var_lfc = cont.l2 as f64;
             Ok(((var_lfc as f64 as i64) == (0_f64 as i64)) && ((var_nply as f64 as i64) > (0_f64 as i64)))
         })().unwrap_or(false);
         ok
@@ -791,6 +797,10 @@ pub fn parse_mf1_mt458(
         let ok = (|| -> Result<bool, EndfError> {
             if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            var_za = cont.c1;
+            var_awr = cont.c2;
+            var_lfc = cont.l2 as f64;
+            var_nfc = cont.n2 as f64;
             Ok(((var_lfc as f64 as i64) == (1_f64 as i64)) && ((var_nply as f64 as i64) == (0_f64 as i64)))
         })().unwrap_or(false);
         ok
@@ -1211,6 +1221,10 @@ pub fn parse_mf1_mt460(
         let ok = (|| -> Result<bool, EndfError> {
             if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            var_za = cont.c1;
+            var_awr = cont.c2;
+            var_lo = cont.l1 as f64;
+            var_ng = cont.n1 as f64;
             Ok((var_lo as f64 as i64) == (1_f64 as i64))
         })().unwrap_or(false);
         ok
@@ -1220,6 +1234,9 @@ pub fn parse_mf1_mt460(
         let ok = (|| -> Result<bool, EndfError> {
             if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            var_za = cont.c1;
+            var_awr = cont.c2;
+            var_lo = cont.l1 as f64;
             Ok((var_lo as f64 as i64) == (2_f64 as i64))
         })().unwrap_or(false);
         ok
@@ -1829,6 +1846,9 @@ pub fn parse_mf2_mt151(
                                 let ok = (|| -> Result<bool, EndfError> {
                                     if ofs >= lines.len() { return Ok(false); }
                                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    var_awri = cont.c1;
+                                    var_li = cont.l1 as f64;
+                                    var_nx = cont.n2 as f64;
                                     Ok((var_nx as f64 as i64) == (1_f64 as i64))
                                 })().unwrap_or(false);
                                 ok
@@ -1838,6 +1858,9 @@ pub fn parse_mf2_mt151(
                                 let ok = (|| -> Result<bool, EndfError> {
                                     if ofs >= lines.len() { return Ok(false); }
                                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    var_awri = cont.c1;
+                                    var_li = cont.l1 as f64;
+                                    var_nx = cont.n2 as f64;
                                     Ok((var_nx as f64 as i64) == (2_f64 as i64))
                                 })().unwrap_or(false);
                                 ok
@@ -1847,6 +1870,9 @@ pub fn parse_mf2_mt151(
                                 let ok = (|| -> Result<bool, EndfError> {
                                     if ofs >= lines.len() { return Ok(false); }
                                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    var_awri = cont.c1;
+                                    var_li = cont.l1 as f64;
+                                    var_nx = cont.n2 as f64;
                                     Ok((var_nx as f64 as i64) == (3_f64 as i64))
                                 })().unwrap_or(false);
                                 ok
@@ -2327,6 +2353,8 @@ pub fn parse_mf2_mt151(
                                         let ok = (|| -> Result<bool, EndfError> {
                                             if ofs >= lines.len() { return Ok(false); }
                                             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                            var_nrs = cont.l2 as f64;
+                                            var_nx = cont.n2 as f64;
                                             Ok((var_nrs as f64 as i64) > (0_f64 as i64))
                                         })().unwrap_or(false);
                                         ok
@@ -2336,6 +2364,8 @@ pub fn parse_mf2_mt151(
                                         let ok = (|| -> Result<bool, EndfError> {
                                             if ofs >= lines.len() { return Ok(false); }
                                             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                            var_nrs = cont.l2 as f64;
+                                            var_nx = cont.n2 as f64;
                                             Ok(((var_nrs as f64 as i64) == (0_f64 as i64)) && ((var_nx as f64 as i64) == (1_f64 as i64)))
                                         })().unwrap_or(false);
                                         ok
@@ -3236,6 +3266,10 @@ pub fn parse_mf4_wildcard(
         let ok = (|| -> Result<bool, EndfError> {
             if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            var_awr = cont.c2;
+            var_li = cont.l1 as f64;
+            var_lct = cont.l2 as f64;
+            var_nm = cont.n2 as f64;
             Ok(((var_ltt as f64 as i64) == (3_f64 as i64)) && ((var_li as f64 as i64) == (0_f64 as i64)))
         })().unwrap_or(false);
         ok
@@ -3552,6 +3586,9 @@ pub fn parse_mf5_wildcard(
                 let ok = (|| -> Result<bool, EndfError> {
                     if ofs >= lines.len() { return Ok(false); }
                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    var_lf = cont.l2 as f64;
+                    var_nr = cont.n1 as f64;
+                    var_np = cont.n2 as f64;
                     Ok((var_lf as f64 as i64) == (1_f64 as i64))
                 })().unwrap_or(false);
                 ok
@@ -3561,6 +3598,10 @@ pub fn parse_mf5_wildcard(
                 let ok = (|| -> Result<bool, EndfError> {
                     if ofs >= lines.len() { return Ok(false); }
                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    var_u = cont.c1;
+                    var_lf = cont.l2 as f64;
+                    var_nr = cont.n1 as f64;
+                    var_np = cont.n2 as f64;
                     Ok((var_lf as f64 as i64) == (5_f64 as i64))
                 })().unwrap_or(false);
                 ok
@@ -3570,6 +3611,10 @@ pub fn parse_mf5_wildcard(
                 let ok = (|| -> Result<bool, EndfError> {
                     if ofs >= lines.len() { return Ok(false); }
                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    var_u = cont.c1;
+                    var_lf = cont.l2 as f64;
+                    var_nr = cont.n1 as f64;
+                    var_np = cont.n2 as f64;
                     Ok((var_lf as f64 as i64) == (7_f64 as i64))
                 })().unwrap_or(false);
                 ok
@@ -3579,6 +3624,10 @@ pub fn parse_mf5_wildcard(
                 let ok = (|| -> Result<bool, EndfError> {
                     if ofs >= lines.len() { return Ok(false); }
                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    var_u = cont.c1;
+                    var_lf = cont.l2 as f64;
+                    var_nr = cont.n1 as f64;
+                    var_np = cont.n2 as f64;
                     Ok((var_lf as f64 as i64) == (9_f64 as i64))
                 })().unwrap_or(false);
                 ok
@@ -3588,6 +3637,10 @@ pub fn parse_mf5_wildcard(
                 let ok = (|| -> Result<bool, EndfError> {
                     if ofs >= lines.len() { return Ok(false); }
                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    var_u = cont.c1;
+                    var_lf = cont.l2 as f64;
+                    var_nr = cont.n1 as f64;
+                    var_np = cont.n2 as f64;
                     Ok((var_lf as f64 as i64) == (11_f64 as i64))
                 })().unwrap_or(false);
                 ok
@@ -3597,6 +3650,9 @@ pub fn parse_mf5_wildcard(
                 let ok = (|| -> Result<bool, EndfError> {
                     if ofs >= lines.len() { return Ok(false); }
                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    var_lf = cont.l2 as f64;
+                    var_nr = cont.n1 as f64;
+                    var_np = cont.n2 as f64;
                     Ok((var_lf as f64 as i64) == (12_f64 as i64))
                 })().unwrap_or(false);
                 ok
@@ -5296,6 +5352,12 @@ pub fn parse_mf8_mt457(
         let ok = (|| -> Result<bool, EndfError> {
             if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            var_za = cont.c1;
+            var_awr = cont.c2;
+            var_lis = cont.l1 as f64;
+            var_liso = cont.l2 as f64;
+            var_nst = cont.n1 as f64;
+            var_nsp = cont.n2 as f64;
             Ok((var_nst as f64 as i64) == (0_f64 as i64))
         })().unwrap_or(false);
         ok
@@ -5305,6 +5367,11 @@ pub fn parse_mf8_mt457(
         let ok = (|| -> Result<bool, EndfError> {
             if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            var_za = cont.c1;
+            var_awr = cont.c2;
+            var_lis = cont.l1 as f64;
+            var_liso = cont.l2 as f64;
+            var_nst = cont.n1 as f64;
             Ok((var_nst as f64 as i64) == (1_f64 as i64))
         })().unwrap_or(false);
         ok
@@ -5483,6 +5550,9 @@ pub fn parse_mf8_mt457(
                                     let ok = (|| -> Result<bool, EndfError> {
                                         if ofs >= lines.len() { return Ok(false); }
                                         let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                        var_er = cont.c1;
+                                        var_der = cont.c2;
+                                        var_nt = cont.n1 as f64;
                                         Ok((var_nt as f64 as i64) == (6_f64 as i64))
                                     })().unwrap_or(false);
                                     ok
@@ -5492,6 +5562,9 @@ pub fn parse_mf8_mt457(
                                     let ok = (|| -> Result<bool, EndfError> {
                                         if ofs >= lines.len() { return Ok(false); }
                                         let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                        var_er = cont.c1;
+                                        var_der = cont.c2;
+                                        var_nt = cont.n1 as f64;
                                         Ok((var_nt as f64 as i64) == (8_f64 as i64))
                                     })().unwrap_or(false);
                                     ok
@@ -5501,6 +5574,9 @@ pub fn parse_mf8_mt457(
                                     let ok = (|| -> Result<bool, EndfError> {
                                         if ofs >= lines.len() { return Ok(false); }
                                         let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                        var_er = cont.c1;
+                                        var_der = cont.c2;
+                                        var_nt = cont.n1 as f64;
                                         Ok((var_nt as f64 as i64) == (12_f64 as i64))
                                     })().unwrap_or(false);
                                     ok
@@ -6281,6 +6357,10 @@ pub fn parse_mf12_wildcard(
         let ok = (|| -> Result<bool, EndfError> {
             if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            var_za = cont.c1;
+            var_awr = cont.c2;
+            var_lo = cont.l1 as f64;
+            var_nk = cont.n1 as f64;
             Ok((var_lo as f64 as i64) == (1_f64 as i64))
         })().unwrap_or(false);
         ok
@@ -6290,6 +6370,11 @@ pub fn parse_mf12_wildcard(
         let ok = (|| -> Result<bool, EndfError> {
             if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            var_za = cont.c1;
+            var_awr = cont.c2;
+            var_lo = cont.l1 as f64;
+            var_lg = cont.l2 as f64;
+            var_ns = cont.n1 as f64;
             Ok((var_lo as f64 as i64) == (2_f64 as i64))
         })().unwrap_or(false);
         ok
@@ -6594,6 +6679,10 @@ pub fn parse_mf14_wildcard(
         let ok = (|| -> Result<bool, EndfError> {
             if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            var_za = cont.c1;
+            var_awr = cont.c2;
+            var_li = cont.l1 as f64;
+            var_nk = cont.n1 as f64;
             Ok((var_li as f64 as i64) == (1_f64 as i64))
         })().unwrap_or(false);
         ok
@@ -6603,6 +6692,12 @@ pub fn parse_mf14_wildcard(
         let ok = (|| -> Result<bool, EndfError> {
             if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            var_za = cont.c1;
+            var_awr = cont.c2;
+            var_li = cont.l1 as f64;
+            var_ltt = cont.l2 as f64;
+            var_nk = cont.n1 as f64;
+            var_ni = cont.n2 as f64;
             Ok(((var_li as f64 as i64) == (0_f64 as i64)) && ((var_ltt as f64 as i64) == (1_f64 as i64)))
         })().unwrap_or(false);
         ok
@@ -6612,6 +6707,12 @@ pub fn parse_mf14_wildcard(
         let ok = (|| -> Result<bool, EndfError> {
             if ofs >= lines.len() { return Ok(false); }
             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            var_za = cont.c1;
+            var_awr = cont.c2;
+            var_li = cont.l1 as f64;
+            var_ltt = cont.l2 as f64;
+            var_nk = cont.n1 as f64;
+            var_ni = cont.n2 as f64;
             Ok(((var_li as f64 as i64) == (0_f64 as i64)) && ((var_ltt as f64 as i64) == (2_f64 as i64)))
         })().unwrap_or(false);
         ok
@@ -6831,6 +6932,9 @@ pub fn parse_mf15_wildcard(
                 let ok = (|| -> Result<bool, EndfError> {
                     if ofs >= lines.len() { return Ok(false); }
                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    var_lf = cont.l2 as f64;
+                    var_nr = cont.n1 as f64;
+                    var_np = cont.n2 as f64;
                     Ok((var_lf as f64 as i64) == (1_f64 as i64))
                 })().unwrap_or(false);
                 ok
@@ -7380,6 +7484,9 @@ pub fn parse_mf31_mt452(
                             let ok = (|| -> Result<bool, EndfError> {
                                 if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                var_lt = cont.l1 as f64;
+                                var_lb = cont.l2 as f64;
+                                var_np = cont.n2 as f64;
                                 Ok(((var_lb as f64 as i64) >= (0_f64 as i64)) && ((var_lb as f64 as i64) <= (4_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -7389,6 +7496,10 @@ pub fn parse_mf31_mt452(
                             let ok = (|| -> Result<bool, EndfError> {
                                 if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                var_ls = cont.l1 as f64;
+                                var_lb = cont.l2 as f64;
+                                var_nt = cont.n1 as f64;
+                                var_ne = cont.n2 as f64;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -7398,6 +7509,10 @@ pub fn parse_mf31_mt452(
                             let ok = (|| -> Result<bool, EndfError> {
                                 if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                var_ls = cont.l1 as f64;
+                                var_lb = cont.l2 as f64;
+                                var_nt = cont.n1 as f64;
+                                var_ne = cont.n2 as f64;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (1_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -7407,6 +7522,9 @@ pub fn parse_mf31_mt452(
                             let ok = (|| -> Result<bool, EndfError> {
                                 if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                var_lb = cont.l2 as f64;
+                                var_nt = cont.n1 as f64;
+                                var_ner = cont.n2 as f64;
                                 Ok((var_lb as f64 as i64) == (6_f64 as i64))
                             })().unwrap_or(false);
                             ok
@@ -7416,6 +7534,9 @@ pub fn parse_mf31_mt452(
                             let ok = (|| -> Result<bool, EndfError> {
                                 if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                var_lt = cont.l1 as f64;
+                                var_lb = cont.l2 as f64;
+                                var_np = cont.n2 as f64;
                                 Ok((((var_lb as f64 as i64) == (8_f64 as i64)) || ((var_lb as f64 as i64) == (9_f64 as i64))) && ((var_lt as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -7878,6 +7999,9 @@ pub fn parse_mf31_mt455(
                             let ok = (|| -> Result<bool, EndfError> {
                                 if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                var_lt = cont.l1 as f64;
+                                var_lb = cont.l2 as f64;
+                                var_np = cont.n2 as f64;
                                 Ok(((var_lb as f64 as i64) >= (0_f64 as i64)) && ((var_lb as f64 as i64) <= (4_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -7887,6 +8011,10 @@ pub fn parse_mf31_mt455(
                             let ok = (|| -> Result<bool, EndfError> {
                                 if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                var_ls = cont.l1 as f64;
+                                var_lb = cont.l2 as f64;
+                                var_nt = cont.n1 as f64;
+                                var_ne = cont.n2 as f64;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -7896,6 +8024,10 @@ pub fn parse_mf31_mt455(
                             let ok = (|| -> Result<bool, EndfError> {
                                 if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                var_ls = cont.l1 as f64;
+                                var_lb = cont.l2 as f64;
+                                var_nt = cont.n1 as f64;
+                                var_ne = cont.n2 as f64;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (1_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -7905,6 +8037,9 @@ pub fn parse_mf31_mt455(
                             let ok = (|| -> Result<bool, EndfError> {
                                 if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                var_lb = cont.l2 as f64;
+                                var_nt = cont.n1 as f64;
+                                var_ner = cont.n2 as f64;
                                 Ok((var_lb as f64 as i64) == (6_f64 as i64))
                             })().unwrap_or(false);
                             ok
@@ -7914,6 +8049,9 @@ pub fn parse_mf31_mt455(
                             let ok = (|| -> Result<bool, EndfError> {
                                 if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                var_lt = cont.l1 as f64;
+                                var_lb = cont.l2 as f64;
+                                var_np = cont.n2 as f64;
                                 Ok((((var_lb as f64 as i64) == (8_f64 as i64)) || ((var_lb as f64 as i64) == (9_f64 as i64))) && ((var_lt as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -8376,6 +8514,9 @@ pub fn parse_mf31_mt456(
                             let ok = (|| -> Result<bool, EndfError> {
                                 if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                var_lt = cont.l1 as f64;
+                                var_lb = cont.l2 as f64;
+                                var_np = cont.n2 as f64;
                                 Ok(((var_lb as f64 as i64) >= (0_f64 as i64)) && ((var_lb as f64 as i64) <= (4_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -8385,6 +8526,10 @@ pub fn parse_mf31_mt456(
                             let ok = (|| -> Result<bool, EndfError> {
                                 if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                var_ls = cont.l1 as f64;
+                                var_lb = cont.l2 as f64;
+                                var_nt = cont.n1 as f64;
+                                var_ne = cont.n2 as f64;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -8394,6 +8539,10 @@ pub fn parse_mf31_mt456(
                             let ok = (|| -> Result<bool, EndfError> {
                                 if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                var_ls = cont.l1 as f64;
+                                var_lb = cont.l2 as f64;
+                                var_nt = cont.n1 as f64;
+                                var_ne = cont.n2 as f64;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (1_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -8403,6 +8552,9 @@ pub fn parse_mf31_mt456(
                             let ok = (|| -> Result<bool, EndfError> {
                                 if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                var_lb = cont.l2 as f64;
+                                var_nt = cont.n1 as f64;
+                                var_ner = cont.n2 as f64;
                                 Ok((var_lb as f64 as i64) == (6_f64 as i64))
                             })().unwrap_or(false);
                             ok
@@ -8412,6 +8564,9 @@ pub fn parse_mf31_mt456(
                             let ok = (|| -> Result<bool, EndfError> {
                                 if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                var_lt = cont.l1 as f64;
+                                var_lb = cont.l2 as f64;
+                                var_np = cont.n2 as f64;
                                 Ok((((var_lb as f64 as i64) == (8_f64 as i64)) || ((var_lb as f64 as i64) == (9_f64 as i64))) && ((var_lt as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -8894,6 +9049,9 @@ pub fn parse_mf32_wildcard(
                                     let ok = (|| -> Result<bool, EndfError> {
                                         if ofs >= lines.len() { return Ok(false); }
                                         let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                        var_lt = cont.l1 as f64;
+                                        var_lb = cont.l2 as f64;
+                                        var_np = cont.n2 as f64;
                                         Ok(((var_lb as f64 as i64) >= (0_f64 as i64)) && ((var_lb as f64 as i64) <= (4_f64 as i64)))
                                     })().unwrap_or(false);
                                     ok
@@ -8903,6 +9061,10 @@ pub fn parse_mf32_wildcard(
                                     let ok = (|| -> Result<bool, EndfError> {
                                         if ofs >= lines.len() { return Ok(false); }
                                         let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                        var_ls = cont.l1 as f64;
+                                        var_lb = cont.l2 as f64;
+                                        var_nt = cont.n1 as f64;
+                                        var_ne = cont.n2 as f64;
                                         Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (0_f64 as i64)))
                                     })().unwrap_or(false);
                                     ok
@@ -8912,6 +9074,10 @@ pub fn parse_mf32_wildcard(
                                     let ok = (|| -> Result<bool, EndfError> {
                                         if ofs >= lines.len() { return Ok(false); }
                                         let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                        var_ls = cont.l1 as f64;
+                                        var_lb = cont.l2 as f64;
+                                        var_nt = cont.n1 as f64;
+                                        var_ne = cont.n2 as f64;
                                         Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (1_f64 as i64)))
                                     })().unwrap_or(false);
                                     ok
@@ -9069,6 +9235,11 @@ pub fn parse_mf32_wildcard(
                         let ok = (|| -> Result<bool, EndfError> {
                             if ofs >= lines.len() { return Ok(false); }
                             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            var_spi = cont.c1;
+                            var_ap = cont.c2;
+                            var_lcomp = cont.l2 as f64;
+                            var_nls = cont.n1 as f64;
+                            var_isr = cont.n2 as f64;
                             Ok((((var_lcomp as f64 as i64) == (0_f64 as i64)) && ((var_lru as f64 as i64) == (1_f64 as i64))) && (((var_lrf as f64 as i64) == (1_f64 as i64)) || ((var_lrf as f64 as i64) == (2_f64 as i64))))
                         })().unwrap_or(false);
                         ok
@@ -9078,6 +9249,11 @@ pub fn parse_mf32_wildcard(
                         let ok = (|| -> Result<bool, EndfError> {
                             if ofs >= lines.len() { return Ok(false); }
                             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            var_spi = cont.c1;
+                            var_ap = cont.c2;
+                            var_lcomp = cont.l2 as f64;
+                            var_nls = cont.n1 as f64;
+                            var_isr = cont.n2 as f64;
                             Ok((((var_lcomp as f64 as i64) == (1_f64 as i64)) && ((var_lru as f64 as i64) == (1_f64 as i64))) && ((var_lrf as f64 as i64) != (7_f64 as i64)))
                         })().unwrap_or(false);
                         ok
@@ -9087,6 +9263,8 @@ pub fn parse_mf32_wildcard(
                         let ok = (|| -> Result<bool, EndfError> {
                             if ofs >= lines.len() { return Ok(false); }
                             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            var_lcomp = cont.l2 as f64;
+                            var_isr = cont.n2 as f64;
                             Ok((((var_lcomp as f64 as i64) == (1_f64 as i64)) && ((var_lru as f64 as i64) == (1_f64 as i64))) && ((var_lrf as f64 as i64) == (7_f64 as i64)))
                         })().unwrap_or(false);
                         ok
@@ -9096,6 +9274,10 @@ pub fn parse_mf32_wildcard(
                         let ok = (|| -> Result<bool, EndfError> {
                             if ofs >= lines.len() { return Ok(false); }
                             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            var_spi = cont.c1;
+                            var_ap = cont.c2;
+                            var_lcomp = cont.l2 as f64;
+                            var_isr = cont.n2 as f64;
                             Ok((((var_lcomp as f64 as i64) == (2_f64 as i64)) && ((var_lru as f64 as i64) == (1_f64 as i64))) && (((var_lrf as f64 as i64) == (1_f64 as i64)) || ((var_lrf as f64 as i64) == (2_f64 as i64))))
                         })().unwrap_or(false);
                         ok
@@ -9105,6 +9287,11 @@ pub fn parse_mf32_wildcard(
                         let ok = (|| -> Result<bool, EndfError> {
                             if ofs >= lines.len() { return Ok(false); }
                             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            var_spi = cont.c1;
+                            var_ap = cont.c2;
+                            var_lad = cont.l1 as f64;
+                            var_lcomp = cont.l2 as f64;
+                            var_isr = cont.n2 as f64;
                             Ok((((var_lcomp as f64 as i64) == (2_f64 as i64)) && ((var_lru as f64 as i64) == (1_f64 as i64))) && ((var_lrf as f64 as i64) == (3_f64 as i64)))
                         })().unwrap_or(false);
                         ok
@@ -9114,6 +9301,10 @@ pub fn parse_mf32_wildcard(
                         let ok = (|| -> Result<bool, EndfError> {
                             if ofs >= lines.len() { return Ok(false); }
                             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            var_ifg = cont.l1 as f64;
+                            var_lcomp = cont.l2 as f64;
+                            var_njs = cont.n1 as f64;
+                            var_isr = cont.n2 as f64;
                             Ok((((var_lcomp as f64 as i64) == (2_f64 as i64)) && ((var_lru as f64 as i64) == (1_f64 as i64))) && ((var_lrf as f64 as i64) == (7_f64 as i64)))
                         })().unwrap_or(false);
                         ok
@@ -9708,6 +9899,9 @@ pub fn parse_mf32_wildcard(
                                         let ok = (|| -> Result<bool, EndfError> {
                                             if ofs >= lines.len() { return Ok(false); }
                                             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                            var_idp = cont.l1 as f64;
+                                            var_lb = cont.l2 as f64;
+                                            var_neb = cont.n2 as f64;
                                             Ok(((var_lb as f64) >= (-(1_f64))) && ((var_lb as f64 as i64) <= (2_f64 as i64)))
                                         })().unwrap_or(false);
                                         ok
@@ -9717,6 +9911,9 @@ pub fn parse_mf32_wildcard(
                                         let ok = (|| -> Result<bool, EndfError> {
                                             if ofs >= lines.len() { return Ok(false); }
                                             let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                            var_idp = cont.l1 as f64;
+                                            var_lb = cont.l2 as f64;
+                                            var_neb = cont.n2 as f64;
                                             Ok((var_lb as f64 as i64) == (5_f64 as i64))
                                         })().unwrap_or(false);
                                         ok
@@ -10976,6 +11173,9 @@ pub fn parse_mf33_wildcard(
                             let ok = (|| -> Result<bool, EndfError> {
                                 if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                var_lt = cont.l1 as f64;
+                                var_lb = cont.l2 as f64;
+                                var_np = cont.n2 as f64;
                                 Ok(((var_lb as f64 as i64) >= (0_f64 as i64)) && ((var_lb as f64 as i64) <= (4_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -10985,6 +11185,10 @@ pub fn parse_mf33_wildcard(
                             let ok = (|| -> Result<bool, EndfError> {
                                 if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                var_ls = cont.l1 as f64;
+                                var_lb = cont.l2 as f64;
+                                var_nt = cont.n1 as f64;
+                                var_ne = cont.n2 as f64;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -10994,6 +11198,10 @@ pub fn parse_mf33_wildcard(
                             let ok = (|| -> Result<bool, EndfError> {
                                 if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                var_ls = cont.l1 as f64;
+                                var_lb = cont.l2 as f64;
+                                var_nt = cont.n1 as f64;
+                                var_ne = cont.n2 as f64;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (1_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -11003,6 +11211,9 @@ pub fn parse_mf33_wildcard(
                             let ok = (|| -> Result<bool, EndfError> {
                                 if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                var_lb = cont.l2 as f64;
+                                var_nt = cont.n1 as f64;
+                                var_ner = cont.n2 as f64;
                                 Ok((var_lb as f64 as i64) == (6_f64 as i64))
                             })().unwrap_or(false);
                             ok
@@ -11012,6 +11223,9 @@ pub fn parse_mf33_wildcard(
                             let ok = (|| -> Result<bool, EndfError> {
                                 if ofs >= lines.len() { return Ok(false); }
                                 let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                var_lt = cont.l1 as f64;
+                                var_lb = cont.l2 as f64;
+                                var_np = cont.n2 as f64;
                                 Ok((((var_lb as f64 as i64) == (8_f64 as i64)) || ((var_lb as f64 as i64) == (9_f64 as i64))) && ((var_lt as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -11322,6 +11536,10 @@ pub fn parse_mf34_wildcard(
                 let ok = (|| -> Result<bool, EndfError> {
                     if ofs >= lines.len() { return Ok(false); }
                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    var_mat1 = cont.l1 as f64;
+                    var_mt1 = cont.l2 as f64;
+                    var_nl = cont.n1 as f64;
+                    var_nl = cont.n2 as f64;
                     Ok(((var_mt1 as f64 as i64) == (0_f64 as i64)) || ((var_mt as f64) == (var_mt1 as f64)))
                 })().unwrap_or(false);
                 ok
@@ -11644,6 +11862,12 @@ pub fn parse_mf35_wildcard(
                 let ok = (|| -> Result<bool, EndfError> {
                     if ofs >= lines.len() { return Ok(false); }
                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    var_e1 = cont.c1;
+                    var_e2 = cont.c2;
+                    var_ls = cont.l1 as f64;
+                    var_lb = cont.l2 as f64;
+                    var_nt = cont.n1 as f64;
+                    var_ne = cont.n2 as f64;
                     Ok(((var_ls as f64 as i64) == (1_f64 as i64)) && ((var_lb as f64 as i64) == (7_f64 as i64)))
                 })().unwrap_or(false);
                 ok
@@ -11844,6 +12068,7 @@ pub fn parse_mf40_wildcard(
                                 let ok = (|| -> Result<bool, EndfError> {
                                     if ofs >= lines.len() { return Ok(false); }
                                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    var_lty = cont.l2 as f64;
                                     Ok((var_lty as f64 as i64) == (0_f64 as i64))
                                 })().unwrap_or(false);
                                 ok
@@ -11853,6 +12078,7 @@ pub fn parse_mf40_wildcard(
                                 let ok = (|| -> Result<bool, EndfError> {
                                     if ofs >= lines.len() { return Ok(false); }
                                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    var_lty = cont.l2 as f64;
                                     Ok((((var_lty as f64 as i64) == (1_f64 as i64)) || ((var_lty as f64 as i64) == (2_f64 as i64))) || ((var_lty as f64 as i64) == (3_f64 as i64)))
                                 })().unwrap_or(false);
                                 ok
@@ -11978,6 +12204,9 @@ pub fn parse_mf40_wildcard(
                                 let ok = (|| -> Result<bool, EndfError> {
                                     if ofs >= lines.len() { return Ok(false); }
                                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    var_lt = cont.l1 as f64;
+                                    var_lb = cont.l2 as f64;
+                                    var_np = cont.n2 as f64;
                                     Ok(((var_lb as f64 as i64) >= (0_f64 as i64)) && ((var_lb as f64 as i64) <= (4_f64 as i64)))
                                 })().unwrap_or(false);
                                 ok
@@ -11987,6 +12216,10 @@ pub fn parse_mf40_wildcard(
                                 let ok = (|| -> Result<bool, EndfError> {
                                     if ofs >= lines.len() { return Ok(false); }
                                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    var_ls = cont.l1 as f64;
+                                    var_lb = cont.l2 as f64;
+                                    var_nt = cont.n1 as f64;
+                                    var_ne = cont.n2 as f64;
                                     Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (0_f64 as i64)))
                                 })().unwrap_or(false);
                                 ok
@@ -11996,6 +12229,10 @@ pub fn parse_mf40_wildcard(
                                 let ok = (|| -> Result<bool, EndfError> {
                                     if ofs >= lines.len() { return Ok(false); }
                                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    var_ls = cont.l1 as f64;
+                                    var_lb = cont.l2 as f64;
+                                    var_nt = cont.n1 as f64;
+                                    var_ne = cont.n2 as f64;
                                     Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (1_f64 as i64)))
                                 })().unwrap_or(false);
                                 ok
@@ -12005,6 +12242,9 @@ pub fn parse_mf40_wildcard(
                                 let ok = (|| -> Result<bool, EndfError> {
                                     if ofs >= lines.len() { return Ok(false); }
                                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    var_lb = cont.l2 as f64;
+                                    var_nt = cont.n1 as f64;
+                                    var_ner = cont.n2 as f64;
                                     Ok((var_lb as f64 as i64) == (6_f64 as i64))
                                 })().unwrap_or(false);
                                 ok
@@ -12014,6 +12254,9 @@ pub fn parse_mf40_wildcard(
                                 let ok = (|| -> Result<bool, EndfError> {
                                     if ofs >= lines.len() { return Ok(false); }
                                     let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    var_lt = cont.l1 as f64;
+                                    var_lb = cont.l2 as f64;
+                                    var_np = cont.n2 as f64;
                                     Ok((((var_lb as f64 as i64) == (8_f64 as i64)) || ((var_lb as f64 as i64) == (9_f64 as i64))) && ((var_lt as f64 as i64) == (0_f64 as i64)))
                                 })().unwrap_or(false);
                                 ok

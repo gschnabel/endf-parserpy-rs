@@ -132,6 +132,19 @@ fn generate_dispatch_fn(recipes: &[(i32, i32, &[RecipeNode])]) -> String {
 }
 
 // ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/// Extract the variable name from a simple scalar variable expression.
+fn get_simple_scalar_var(expr: &Expr) -> Option<String> {
+    match expr {
+        Expr::Variable(v) if v.indices.is_empty() => Some(v.name.clone()),
+        Expr::InconsistentVar(v) if v.indices.is_empty() => Some(v.name.clone()),
+        _ => None,
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Variable collection – pre-pass to find all variable names in a recipe
 // ---------------------------------------------------------------------------
 
@@ -1083,6 +1096,32 @@ impl CodeGen {
         self.line("}");
     }
 
+    /// Extract the field expressions from the first record node in a body.
+    /// Works for HEAD/CONT (6 fields), TAB1 (6), TAB2 (6), LIST (6).
+    fn first_record_fields(body: &[RecipeNode]) -> Option<Vec<&Expr>> {
+        for node in body {
+            match node {
+                RecipeNode::HeadOrCont { fields, .. } => {
+                    return Some(fields.iter().collect());
+                }
+                RecipeNode::Tab1 { fields, .. } => {
+                    return Some(fields.iter().collect());
+                }
+                RecipeNode::Tab2 { fields, .. } => {
+                    return Some(fields.iter().collect());
+                }
+                RecipeNode::List { fields, .. } => {
+                    return Some(fields.iter().collect());
+                }
+                RecipeNode::Comment(_) | RecipeNode::Abbreviation { .. } => {
+                    continue; // skip non-record nodes
+                }
+                _ => return None,
+            }
+        }
+        None
+    }
+
     // -- IfClause -----------------------------------------------------------
 
     fn emit_if_clause(
@@ -1102,11 +1141,29 @@ impl CodeGen {
                 self.indent += 1;
                 self.line("if ofs >= lines.len() { return Ok(false); }");
                 self.line("let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;");
+
+                // Extract field-to-variable mappings from the first record in the
+                // branch body (HEAD/CONT/TAB1/TAB2/LIST) so that condition variables
+                // like LO, LF, LTT are populated from the CONT fields.
+                if let Some(fields) = Self::first_record_fields(&branch.body) {
+                    let cont_names = ["c1", "c2", "l1", "l2", "n1", "n2"];
+                    for (fi, expr) in fields.iter().enumerate() {
+                        if fi >= cont_names.len() { break; }
+                        if let Some(var) = get_simple_scalar_var(expr) {
+                            self.line(&format!(
+                                "{} = cont.{}{};",
+                                Self::var_name(&var),
+                                cont_names[fi],
+                                if fi >= 2 { " as f64" } else { "" }
+                            ));
+                        }
+                    }
+                }
+
                 let cond_rust = self.bool_expr_to_rust(&branch.condition);
                 self.line(&format!("Ok({})", cond_rust));
                 self.indent -= 1;
                 self.line("})().unwrap_or(false);");
-                // Note: ofs is not modified here (closure borrows immutably via lines[ofs])
                 self.line("ok");
                 self.indent -= 1;
                 self.line("};");
