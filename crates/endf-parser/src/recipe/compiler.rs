@@ -63,7 +63,7 @@ fn generate_header() -> String {
 #![allow(unused_variables, unused_mut, unused_assignments)]
 
 use endf_parser::records::{self, read_cont, read_tab1, read_tab1_body, read_tab2, read_tab2_body, read_list, read_intg, read_endf_numbers};
-use endf_parser::records::{write_cont, write_text, write_dir, write_tab1_body, write_tab2_body, write_send, ContRecord, TextRecord, DirRecord, Tab1Body, Tab2Body, CtrlRecord};
+use endf_parser::records::{write_cont, write_text, write_dir, write_intg, write_tab1_body, write_tab2_body, write_send, ContRecord, TextRecord, DirRecord, IntgRecord, Tab1Body, Tab2Body, CtrlRecord};
 use endf_parser::fortran::{fortstr_to_f64, read_fort_int, f64_to_fortstr};
 use endf_parser::value::{EndfKey, EndfValue, EndfTable};
 use endf_parser::options::{ReadOpts, ParseOpts, WriteOpts};
@@ -2476,9 +2476,35 @@ impl WriteCodeGen {
         ));
     }
 
-    fn emit_write_intg(&mut self, _fields: &[Expr; 3], _ndigit: &Expr, _scope: &str) {
-        self.line("// TODO: INTG write not yet implemented");
-        self.line("lines.push(String::new());");
+    fn emit_write_intg(&mut self, fields: &[Expr; 3], ndigit: &Expr, scope: &str) {
+        self.line("// Write INTG");
+        let ii = self.expr_to_rust(&fields[0], scope);
+        let jj = self.expr_to_rust(&fields[1], scope);
+        let ndigit_rust = self.expr_to_rust(ndigit, scope);
+
+        // KIJ is a list variable
+        let kij_expr = match &fields[2] {
+            Expr::Variable(v) | Expr::InconsistentVar(v) => {
+                if v.indices.is_empty() {
+                    format!("get_int_vec({}, \"{}\")", scope, v.name)
+                } else {
+                    let mut e = format!("{}.get(\"{}\")", scope, v.name);
+                    for idx in &v.indices {
+                        let idx_rust = self.expr_to_rust(idx, scope);
+                        e = format!("{}.and_then(|d| d.get(EndfKey::Int({} as i64)))", e, idx_rust);
+                    }
+                    // Read as int vec from the nested value
+                    format!("match {} {{ Some(EndfValue::List(l)) => l.iter().map(|v| v.as_ref().and_then(|e| e.as_int()).unwrap_or(0)).collect(), _ => Vec::new() }}", e)
+                }
+            }
+            _ => "Vec::new()".to_string(),
+        };
+
+        self.line(&format!("let _kij: Vec<i64> = {};", kij_expr));
+        self.line(&format!(
+            "lines.push(write_intg(&IntgRecord {{ ii: {} as i64, jj: {} as i64, kij: _kij }}, &ctrl, {} as usize, write_opts));",
+            ii, jj, ndigit_rust
+        ));
     }
 
     fn emit_write_for_loop(&mut self, var: &str, start: &Expr, stop: &Expr, body: &[RecipeNode], scope: &str) {

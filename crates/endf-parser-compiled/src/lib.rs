@@ -5,7 +5,7 @@
 #![allow(unused_variables, unused_mut, unused_assignments)]
 
 use endf_parser::records::{self, read_cont, read_tab1, read_tab1_body, read_tab2, read_tab2_body, read_list, read_intg, read_endf_numbers};
-use endf_parser::records::{write_cont, write_text, write_dir, write_tab1_body, write_tab2_body, write_send, ContRecord, TextRecord, DirRecord, Tab1Body, Tab2Body, CtrlRecord};
+use endf_parser::records::{write_cont, write_text, write_dir, write_intg, write_tab1_body, write_tab2_body, write_send, ContRecord, TextRecord, DirRecord, IntgRecord, Tab1Body, Tab2Body, CtrlRecord};
 use endf_parser::fortran::{fortstr_to_f64, read_fort_int, f64_to_fortstr};
 use endf_parser::value::{EndfKey, EndfValue, EndfTable};
 use endf_parser::options::{ReadOpts, ParseOpts, WriteOpts};
@@ -13626,8 +13626,9 @@ pub fn write_mf32_wildcard(
                         // Write HEAD/CONT
                         lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "NDIGIT") as i64, l2: get_float(data, "NNN") as i64, n1: get_float(data, "NM") as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
                         for _i_k in (1_f64 as i64)..=(get_float(data, "NM") as i64) {
-                            // TODO: INTG write not yet implemented
-                            lines.push(String::new());
+                            // Write INTG
+                            let _kij: Vec<i64> = match data.get("KIJ").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))) { Some(EndfValue::List(l)) => l.iter().map(|v| v.as_ref().and_then(|e| e.as_int()).unwrap_or(0)).collect(), _ => Vec::new() };
+                            lines.push(write_intg(&IntgRecord { ii: data.get("II").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, jj: data.get("JJ").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, kij: _kij }, &ctrl, get_float(data, "NDIGIT") as usize, write_opts));
                         }
                     } else if (((get_float(data, "LCOMP") as i64) == (2_f64 as i64)) && ((get_float(data, "LRU") as i64) == (1_f64 as i64))) && ((get_float(data, "LRF") as i64) == (3_f64 as i64)) {
                         // Write HEAD/CONT
@@ -13664,8 +13665,9 @@ pub fn write_mf32_wildcard(
                         // Write HEAD/CONT
                         lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "NDIGIT") as i64, l2: get_float(data, "NNN") as i64, n1: get_float(data, "NM") as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
                         for _i_k in (1_f64 as i64)..=(get_float(data, "NM") as i64) {
-                            // TODO: INTG write not yet implemented
-                            lines.push(String::new());
+                            // Write INTG
+                            let _kij: Vec<i64> = match data.get("KIJ").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))) { Some(EndfValue::List(l)) => l.iter().map(|v| v.as_ref().and_then(|e| e.as_int()).unwrap_or(0)).collect(), _ => Vec::new() };
+                            lines.push(write_intg(&IntgRecord { ii: data.get("II").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, jj: data.get("JJ").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, kij: _kij }, &ctrl, get_float(data, "NDIGIT") as usize, write_opts));
                         }
                     } else if (((get_float(data, "LCOMP") as i64) == (2_f64 as i64)) && ((get_float(data, "LRU") as i64) == (1_f64 as i64))) && ((get_float(data, "LRF") as i64) == (7_f64 as i64)) {
                         // Write HEAD/CONT
@@ -13746,8 +13748,9 @@ pub fn write_mf32_wildcard(
                         // Write HEAD/CONT
                         lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "NDIGIT") as i64, l2: get_float(data, "NNN") as i64, n1: get_float(data, "NM") as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
                         for _i_q in (1_f64 as i64)..=(get_float(data, "NM") as i64) {
-                            // TODO: INTG write not yet implemented
-                            lines.push(String::new());
+                            // Write INTG
+                            let _kij: Vec<i64> = match data.get("KIJ").and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))) { Some(EndfValue::List(l)) => l.iter().map(|v| v.as_ref().and_then(|e| e.as_int()).unwrap_or(0)).collect(), _ => Vec::new() };
+                            lines.push(write_intg(&IntgRecord { ii: data.get("II").and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, jj: data.get("JJ").and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, kij: _kij }, &ctrl, get_float(data, "NDIGIT") as usize, write_opts));
                         }
                     } else if (get_float(data, "LRU") as i64) == (2_f64 as i64) {
                         // Write HEAD/CONT
