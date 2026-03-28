@@ -801,17 +801,14 @@ pub fn map_tab1(
     write_opts: &WriteOpts,
 ) -> EndfResult<()> {
     if is_read(state) {
-        // Read header + body.
-        let lines_ref = remaining_lines_for_tab1(state, read_opts)?;
-        let (cont, body, _ctrl, new_ofs) = read_tab1(&lines_ref, 0, read_opts)?;
-        let lines_consumed = new_ofs;
-        state.ofs += lines_consumed;
+        // Step 1: Read only the header line (as a CONT record).
+        let line = state.current_line()?;
+        let (cont, _ctrl) = read_cont(line, read_opts)?;
+        state.advance();
 
         // Map only the first 4 header fields (C1, C2, L1, L2).
         // N1 (NR) and N2 (NP) are NOT mapped as named variables because
         // they are inferred from the table arrays (NBT.len() and X.len()).
-        // This matches the Python behavior in endf_mappings.py where
-        // expr_list = tab1_cont_fields.children[:-3] excludes N1/N2.
         let header_fields = &fields[..4];
         let header_values = [
             cont.c1,
@@ -821,6 +818,19 @@ pub fn map_tab1(
         ];
         let field_names = ["C1", "C2", "L1", "L2"];
         map_fields_to_datadic(header_fields, &header_values, &field_names, state, parse_opts)?;
+
+        // Step 2: Read the table body as a separate action.
+        // In lookahead mode, the body counts as a distinct step so that
+        // lookahead=1 reads only the header (matching Python behavior).
+        if !state.should_proceed(true) {
+            return Ok(());
+        }
+
+        let nr = cont.n1 as usize;
+        let np = cont.n2 as usize;
+        let line_refs: Vec<&str> = state.lines[state.ofs..].iter().map(|s| s.as_str()).collect();
+        let (body, body_end) = read_tab1_body(&line_refs, 0, nr, np, read_opts)?;
+        state.ofs += body_end;
 
         // Enter table section if named.
         let section_depth = if let Some(ref tn) = table_name {
@@ -915,15 +925,11 @@ pub fn map_tab2(
     write_opts: &WriteOpts,
 ) -> EndfResult<()> {
     if is_read(state) {
-        let lines_ref = remaining_lines_for_tab2(state, read_opts)?;
-        let (cont, body, _ctrl, new_ofs) = read_tab2(&lines_ref, 0, read_opts)?;
-        let lines_consumed = new_ofs;
-        state.ofs += lines_consumed;
+        // Step 1: Read only the header line (as a CONT record).
+        let line = state.current_line()?;
+        let (cont, _ctrl) = read_cont(line, read_opts)?;
+        state.advance();
 
-        // Map the 6 header fields. We map all 6 for consistency
-        // (the Python code maps 5: C1, C2, L1, L2, N2 -- skipping N1=NR
-        // because NR is inferred from NBT length). We map all 6 and let
-        // the expression evaluation handle it.
         // Map only the first 4 header fields (C1, C2, L1, L2) plus N2.
         // N1 (NR) is NOT mapped as a named variable because it is inferred
         // from the NBT array length. This matches the Python behavior.
@@ -938,6 +944,16 @@ pub fn map_tab2(
         let field_names = ["C1", "C2", "L1", "L2", "N2"];
         let header_field_refs: Vec<Expr> = header_fields.iter().map(|e| (*e).clone()).collect();
         map_fields_to_datadic(&header_field_refs, &header_values, &field_names, state, parse_opts)?;
+
+        // Step 2: Read the table body as a separate action.
+        if !state.should_proceed(true) {
+            return Ok(());
+        }
+
+        let nr = cont.n1 as usize;
+        let line_refs: Vec<&str> = state.lines[state.ofs..].iter().map(|s| s.as_str()).collect();
+        let (body, body_end) = read_tab2_body(&line_refs, 0, nr, read_opts)?;
+        state.ofs += body_end;
 
         // Enter table section if named.
         let section_depth = if let Some(ref tn) = table_name {
@@ -1018,11 +1034,10 @@ pub fn map_list(
     write_opts: &WriteOpts,
 ) -> EndfResult<()> {
     if is_read(state) {
-        // Read the full LIST record (header + body values).
-        let lines_ref = remaining_lines_for_list(state, read_opts)?;
-        let (cont, vals, _ctrl, new_ofs) = read_list(&lines_ref, 0, read_opts)?;
-        let lines_consumed = new_ofs;
-        state.ofs += lines_consumed;
+        // Step 1: Read only the header line (as a CONT record).
+        let line = state.current_line()?;
+        let (cont, _ctrl) = read_cont(line, read_opts)?;
+        state.advance();
 
         // Map the 6 header fields.
         let header_values = [
@@ -1035,6 +1050,16 @@ pub fn map_list(
         ];
         let field_names = ["C1", "C2", "L1", "L2", "N1", "N2"];
         map_fields_to_datadic(fields, &header_values, &field_names, state, parse_opts)?;
+
+        // Step 2: Read the list body as a separate action.
+        if !state.should_proceed(true) {
+            return Ok(());
+        }
+
+        let npl = cont.n1 as usize;
+        let line_refs: Vec<&str> = state.lines[state.ofs..].iter().map(|s| s.as_str()).collect();
+        let (vals, body_end) = read_endf_numbers(&line_refs, npl, 0, false, read_opts)?;
+        state.ofs += body_end;
 
         // Enter list section if named.
         let section_depth = if let Some(ref ln) = list_name {
