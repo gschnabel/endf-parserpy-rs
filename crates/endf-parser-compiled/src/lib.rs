@@ -39,14 +39,14 @@ pub fn parse_mf0_mt0(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
+    let mut var_tapedescr: f64 = 0.0;
+
     if !lines.is_empty() {
         let ctrl = records::read_ctrl(&lines[0], read_opts)?;
         result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
         result.insert("MF", EndfValue::Int(ctrl.mf as i64));
         result.insert("MT", EndfValue::Int(ctrl.mt as i64));
     }
-    let mut var_tapedescr: f64 = 0.0;
-
     // TEXT record
     {
         let (text_rec, _ctrl) = records::read_text(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -63,12 +63,6 @@ pub fn parse_mf1_mt451(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_alab: f64 = 0.0;
     let mut var_auth: f64 = 0.0;
     let mut var_awi: f64 = 0.0;
@@ -105,6 +99,12 @@ pub fn parse_mf1_mt451(
     let mut var_za: f64 = 0.0;
     let mut var_zsymam: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -173,19 +173,19 @@ pub fn parse_mf1_mt451(
     {
         let (text_rec, _ctrl) = records::read_text(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
-        result.insert("ZSYMAM", EndfValue::Str(text_rec.text[0..11].to_string()));
-        result.insert("ALAB", EndfValue::Str(text_rec.text[11..22].to_string()));
-        result.insert("EDATE", EndfValue::Str(text_rec.text[22..32].to_string()));
-        result.insert("AUTH", EndfValue::Str(text_rec.text[33..66].to_string()));
+        result.insert("ZSYMAM", EndfValue::Str(text_rec.text[0..11.min(text_rec.text.len())].to_string()));
+        result.insert("ALAB", EndfValue::Str(text_rec.text[11..22.min(text_rec.text.len())].to_string()));
+        result.insert("EDATE", EndfValue::Str(text_rec.text[22..32.min(text_rec.text.len())].to_string()));
+        result.insert("AUTH", EndfValue::Str(text_rec.text[33..66.min(text_rec.text.len())].to_string()));
     }
     // TEXT record
     {
         let (text_rec, _ctrl) = records::read_text(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
-        result.insert("REF", EndfValue::Str(text_rec.text[1..22].to_string()));
-        result.insert("DDATE", EndfValue::Str(text_rec.text[22..32].to_string()));
-        result.insert("RDATE", EndfValue::Str(text_rec.text[33..43].to_string()));
-        result.insert("ENDATE", EndfValue::Str(text_rec.text[55..63].to_string()));
+        result.insert("REF", EndfValue::Str(text_rec.text[1..22.min(text_rec.text.len())].to_string()));
+        result.insert("DDATE", EndfValue::Str(text_rec.text[22..32.min(text_rec.text.len())].to_string()));
+        result.insert("RDATE", EndfValue::Str(text_rec.text[33..43.min(text_rec.text.len())].to_string()));
+        result.insert("ENDATE", EndfValue::Str(text_rec.text[55..63.min(text_rec.text.len())].to_string()));
     }
     for var_i_loop_ in (1_f64 as i64)..=(3_f64 as i64) {
         var_i = var_i_loop_ as f64;
@@ -193,7 +193,10 @@ pub fn parse_mf1_mt451(
         {
             let (text_rec, _ctrl) = records::read_text(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
             ofs += 1;
-            result.insert("HSUB", EndfValue::Str(text_rec.text.clone()));
+            if !result.contains_key("HSUB") {
+                result.insert("HSUB", EndfValue::new_dict());
+            }
+            result.get_mut("HSUB").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Str(text_rec.text.clone()));
         }
     }
     for var_i_loop_ in (1_f64 as i64)..=((var_nwd as f64 - 5_f64) as i64) {
@@ -202,7 +205,10 @@ pub fn parse_mf1_mt451(
         {
             let (text_rec, _ctrl) = records::read_text(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
             ofs += 1;
-            result.insert("DESCRIPTION", EndfValue::Str(text_rec.text.clone()));
+            if !result.contains_key("DESCRIPTION") {
+                result.insert("DESCRIPTION", EndfValue::new_dict());
+            }
+            result.get_mut("DESCRIPTION").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Str(text_rec.text.clone()));
         }
     }
     for var_i_loop_ in (1_f64 as i64)..=(var_nxc as f64 as i64) {
@@ -244,12 +250,6 @@ pub fn parse_mf1_mt452(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_c: f64 = 0.0;
     let mut var_eint: f64 = 0.0;
@@ -261,6 +261,12 @@ pub fn parse_mf1_mt452(
     let mut var_nu: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -330,12 +336,6 @@ pub fn parse_mf1_mt455(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_alpha: f64 = 0.0;
     let mut var_awr: f64 = 0.0;
     let mut var_e: f64 = 0.0;
@@ -354,6 +354,12 @@ pub fn parse_mf1_mt455(
     let mut var_nubar_d: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -422,6 +428,8 @@ pub fn parse_mf1_mt455(
             // field c2 expected 0 (validation skipped in compiled mode)
             // field l1 expected 0 (validation skipped in compiled mode)
             // field l2 expected 0 (validation skipped in compiled mode)
+            var_ne = cont.n2 as f64;
+            result.insert("NE", EndfValue::Int(var_ne as i64));
 
             result.insert("NBT", list_from_i64(&body.nbt));
             result.insert("INT", list_from_i64(&body.int));
@@ -441,8 +449,9 @@ pub fn parse_mf1_mt455(
                 result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(cont.c2));
                 // field l1 expected 0 (validation skipped in compiled mode)
                 // field l2 expected 0 (validation skipped in compiled mode)
-                // field n1 complex expression (validation skipped in compiled mode)
                 // field n2 expected 0 (validation skipped in compiled mode)
+                var_nnf = (cont.n1 as f64 / (2_f64));
+                result.insert("NNF", EndfValue::Int(var_nnf as i64));
 
                 let mut vi: usize = 0;
                 for var_l_loop_ in (1_f64 as i64)..=(var_nnf as f64 as i64) {
@@ -542,6 +551,8 @@ pub fn parse_mf1_mt455(
             // field c2 expected 0 (validation skipped in compiled mode)
             // field l1 expected 0 (validation skipped in compiled mode)
             // field l2 expected 0 (validation skipped in compiled mode)
+            var_ne = cont.n2 as f64;
+            result.insert("NE", EndfValue::Int(var_ne as i64));
 
             result.insert("NBT", list_from_i64(&body.nbt));
             result.insert("INT", list_from_i64(&body.int));
@@ -559,8 +570,9 @@ pub fn parse_mf1_mt455(
                 result.insert("E1", f64_to_endf_value(var_e1));
                 // field l1 expected 0 (validation skipped in compiled mode)
                 // field l2 expected 0 (validation skipped in compiled mode)
-                // field n1 complex expression (validation skipped in compiled mode)
                 // field n2 expected 0 (validation skipped in compiled mode)
+                var_nnf = (cont.n1 as f64 / (2_f64));
+                result.insert("NNF", EndfValue::Int(var_nnf as i64));
 
                 let mut vi: usize = 0;
                 for var_l_loop_ in (1_f64 as i64)..=(var_nnf as f64 as i64) {
@@ -625,12 +637,6 @@ pub fn parse_mf1_mt456(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_eint: f64 = 0.0;
     let mut var_lnu: f64 = 0.0;
@@ -639,6 +645,12 @@ pub fn parse_mf1_mt456(
     let mut var_nubar_p: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -702,12 +714,6 @@ pub fn parse_mf1_mt458(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_c_eb: f64 = 0.0;
     let mut var_c_efr: f64 = 0.0;
@@ -758,11 +764,23 @@ pub fn parse_mf1_mt458(
     let mut var_nr: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     let lookahead_ok_0 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
-            if ofs >= lines.len() { return Ok(false); }
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            if ofs + 0 >= lines.len() { return Ok(false); }
+            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+            var_za = cont_0.c1;
+            var_awr = cont_0.c2;
+            var_lfc = cont_0.l2 as f64;
+            if ofs + 1 >= lines.len() { return Ok(false); }
+            let (cont_1, _ctrl) = read_cont(&lines[ofs + 1], read_opts)?;
+            var_nply = cont_1.l2 as f64;
             Ok(((var_lfc as f64 as i64) == (0_f64 as i64)) && ((var_nply as f64 as i64) == (0_f64 as i64)))
         })().unwrap_or(false);
         ok
@@ -770,8 +788,14 @@ pub fn parse_mf1_mt458(
     let lookahead_ok_1 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
-            if ofs >= lines.len() { return Ok(false); }
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            if ofs + 0 >= lines.len() { return Ok(false); }
+            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+            var_za = cont_0.c1;
+            var_awr = cont_0.c2;
+            var_lfc = cont_0.l2 as f64;
+            if ofs + 1 >= lines.len() { return Ok(false); }
+            let (cont_1, _ctrl) = read_cont(&lines[ofs + 1], read_opts)?;
+            var_nply = cont_1.l2 as f64;
             Ok(((var_lfc as f64 as i64) == (0_f64 as i64)) && ((var_nply as f64 as i64) > (0_f64 as i64)))
         })().unwrap_or(false);
         ok
@@ -779,8 +803,15 @@ pub fn parse_mf1_mt458(
     let lookahead_ok_2 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
-            if ofs >= lines.len() { return Ok(false); }
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            if ofs + 0 >= lines.len() { return Ok(false); }
+            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+            var_za = cont_0.c1;
+            var_awr = cont_0.c2;
+            var_lfc = cont_0.l2 as f64;
+            var_nfc = cont_0.n2 as f64;
+            if ofs + 1 >= lines.len() { return Ok(false); }
+            let (cont_1, _ctrl) = read_cont(&lines[ofs + 1], read_opts)?;
+            var_nply = cont_1.l2 as f64;
             Ok(((var_lfc as f64 as i64) == (1_f64 as i64)) && ((var_nply as f64 as i64) == (0_f64 as i64)))
         })().unwrap_or(false);
         ok
@@ -1158,7 +1189,10 @@ pub fn parse_mf1_mt458(
                 tab_section.insert("INT", list_from_i64(&body.int));
                 tab_section.insert("Eint", list_from_f64(&body.x));
                 tab_section.insert("EIFC", list_from_f64(&body.y));
-                result.insert("fiscomp", tab_section);
+                if !result.contains_key("fiscomp") {
+                    result.insert("fiscomp", EndfValue::new_dict());
+                }
+                result.get_mut("fiscomp").unwrap().insert(EndfKey::Int(var_k as f64 as i64), tab_section);
             }
         }
     }
@@ -1173,12 +1207,6 @@ pub fn parse_mf1_mt460(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_e: f64 = 0.0;
     let mut var_i: f64 = 0.0;
@@ -1193,11 +1221,21 @@ pub fn parse_mf1_mt460(
     let mut var_tint: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     let lookahead_ok_0 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
-            if ofs >= lines.len() { return Ok(false); }
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            if ofs + 0 >= lines.len() { return Ok(false); }
+            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+            var_za = cont_0.c1;
+            var_awr = cont_0.c2;
+            var_lo = cont_0.l1 as f64;
+            var_ng = cont_0.n1 as f64;
             Ok((var_lo as f64 as i64) == (1_f64 as i64))
         })().unwrap_or(false);
         ok
@@ -1205,8 +1243,11 @@ pub fn parse_mf1_mt460(
     let lookahead_ok_1 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
-            if ofs >= lines.len() { return Ok(false); }
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            if ofs + 0 >= lines.len() { return Ok(false); }
+            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+            var_za = cont_0.c1;
+            var_awr = cont_0.c2;
+            var_lo = cont_0.l1 as f64;
             Ok((var_lo as f64 as i64) == (2_f64 as i64))
         })().unwrap_or(false);
         ok
@@ -1249,7 +1290,10 @@ pub fn parse_mf1_mt460(
                 tab_section.insert("INT", list_from_i64(&body.int));
                 tab_section.insert("tint", list_from_f64(&body.x));
                 tab_section.insert("T", list_from_f64(&body.y));
-                result.insert("table", tab_section);
+                if !result.contains_key("table") {
+                    result.insert("table", EndfValue::new_dict());
+                }
+                result.get_mut("table").unwrap().insert(EndfKey::Int(var_i as f64 as i64), tab_section);
             }
         }
     } else if lookahead_ok_1 {
@@ -1304,12 +1348,6 @@ pub fn parse_mf2_mt151(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_abn: f64 = 0.0;
     let mut var_ac: f64 = 0.0;
     let mut var_af: f64 = 0.0;
@@ -1435,6 +1473,13 @@ pub fn parse_mf2_mt151(
     let mut var_zai: f64 = 0.0;
     let mut var_zb: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+        var_mt = ctrl.mt as f64;
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -1579,9 +1624,9 @@ pub fn parse_mf2_mt151(
                                         result.insert("L", EndfValue::Int(var_l as i64));
                                         var_lrx = cont.l2 as f64;
                                         result.insert("LRX", EndfValue::Int(var_lrx as i64));
-                                        // field n1 complex expression (validation skipped in compiled mode)
                                         var_nrs = cont.n2 as f64;
                                         result.insert("NRS", EndfValue::Int(var_nrs as i64));
+                                        // field n1 complex expression (validation skipped in compiled mode)
 
                                         let mut vi: usize = 0;
                                         for var_k_loop_ in (1_f64 as i64)..=(var_nrs as f64 as i64) {
@@ -1705,9 +1750,9 @@ pub fn parse_mf2_mt151(
                                         var_l = cont.l1 as f64;
                                         result.insert("L", EndfValue::Int(var_l as i64));
                                         // field l2 expected 0 (validation skipped in compiled mode)
-                                        // field n1 complex expression (validation skipped in compiled mode)
                                         var_nrs = cont.n2 as f64;
                                         result.insert("NRS", EndfValue::Int(var_nrs as i64));
+                                        // field n1 complex expression (validation skipped in compiled mode)
 
                                         let mut vi: usize = 0;
                                         for var_k_loop_ in (1_f64 as i64)..=(var_nrs as f64 as i64) {
@@ -1811,8 +1856,11 @@ pub fn parse_mf2_mt151(
                             let lookahead_ok_0 = {
                                 let saved_ofs = ofs;
                                 let ok = (|| -> Result<bool, EndfError> {
-                                    if ofs >= lines.len() { return Ok(false); }
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    if ofs + 0 >= lines.len() { return Ok(false); }
+                                    let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                    var_awri = cont_0.c1;
+                                    var_li = cont_0.l1 as f64;
+                                    var_nx = cont_0.n2 as f64;
                                     Ok((var_nx as f64 as i64) == (1_f64 as i64))
                                 })().unwrap_or(false);
                                 ok
@@ -1820,8 +1868,11 @@ pub fn parse_mf2_mt151(
                             let lookahead_ok_1 = {
                                 let saved_ofs = ofs;
                                 let ok = (|| -> Result<bool, EndfError> {
-                                    if ofs >= lines.len() { return Ok(false); }
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    if ofs + 0 >= lines.len() { return Ok(false); }
+                                    let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                    var_awri = cont_0.c1;
+                                    var_li = cont_0.l1 as f64;
+                                    var_nx = cont_0.n2 as f64;
                                     Ok((var_nx as f64 as i64) == (2_f64 as i64))
                                 })().unwrap_or(false);
                                 ok
@@ -1829,8 +1880,11 @@ pub fn parse_mf2_mt151(
                             let lookahead_ok_2 = {
                                 let saved_ofs = ofs;
                                 let ok = (|| -> Result<bool, EndfError> {
-                                    if ofs >= lines.len() { return Ok(false); }
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    if ofs + 0 >= lines.len() { return Ok(false); }
+                                    let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                    var_awri = cont_0.c1;
+                                    var_li = cont_0.l1 as f64;
+                                    var_nx = cont_0.n2 as f64;
                                     Ok((var_nx as f64 as i64) == (3_f64 as i64))
                                 })().unwrap_or(false);
                                 ok
@@ -1848,9 +1902,9 @@ pub fn parse_mf2_mt151(
                                     var_li = cont.l1 as f64;
                                     result.insert("LI", EndfValue::Int(var_li as i64));
                                     // field l2 expected 0 (validation skipped in compiled mode)
-                                    // field n1 complex expression (validation skipped in compiled mode)
                                     var_nx = cont.n2 as f64;
                                     result.insert("NX", EndfValue::Int(var_nx as i64));
+                                    // field n1 complex expression (validation skipped in compiled mode)
 
                                     let mut vi: usize = 0;
                                     for var_k_loop_ in (1_f64 as i64)..=(4_f64 as i64) {
@@ -1885,9 +1939,9 @@ pub fn parse_mf2_mt151(
                                     var_li = cont.l1 as f64;
                                     result.insert("LI", EndfValue::Int(var_li as i64));
                                     // field l2 expected 0 (validation skipped in compiled mode)
-                                    // field n1 complex expression (validation skipped in compiled mode)
                                     var_nx = cont.n2 as f64;
                                     result.insert("NX", EndfValue::Int(var_nx as i64));
+                                    // field n1 complex expression (validation skipped in compiled mode)
 
                                     let mut vi: usize = 0;
                                     for var_k_loop_ in (1_f64 as i64)..=(4_f64 as i64) {
@@ -1940,9 +1994,9 @@ pub fn parse_mf2_mt151(
                                     var_li = cont.l1 as f64;
                                     result.insert("LI", EndfValue::Int(var_li as i64));
                                     // field l2 expected 0 (validation skipped in compiled mode)
-                                    // field n1 complex expression (validation skipped in compiled mode)
                                     var_nx = cont.n2 as f64;
                                     result.insert("NX", EndfValue::Int(var_nx as i64));
+                                    // field n1 complex expression (validation skipped in compiled mode)
 
                                     let mut vi: usize = 0;
                                     for var_k_loop_ in (1_f64 as i64)..=(4_f64 as i64) {
@@ -2039,9 +2093,9 @@ pub fn parse_mf2_mt151(
                                                 // field c2 expected 0 (validation skipped in compiled mode)
                                                 // field l1 expected 0 (validation skipped in compiled mode)
                                                 // field l2 expected 0 (validation skipped in compiled mode)
-                                                // field n1 complex expression (validation skipped in compiled mode)
                                                 var_nlj = cont.n2 as f64;
                                                 result.insert("NLJ", EndfValue::Int(var_nlj as i64));
+                                                // field n1 complex expression (validation skipped in compiled mode)
 
                                                 let mut vi: usize = 0;
                                                 for var_k_loop_ in (1_f64 as i64)..=(var_nlj as f64 as i64) {
@@ -2261,9 +2315,9 @@ pub fn parse_mf2_mt151(
                                         result.insert("KBK", EndfValue::Int(var_kbk as i64));
                                         var_kps = cont.l2 as f64;
                                         result.insert("KPS", EndfValue::Int(var_kps as i64));
-                                        // field n1 complex expression (validation skipped in compiled mode)
                                         var_nch = cont.n2 as f64;
                                         result.insert("NCH", EndfValue::Int(var_nch as i64));
+                                        // field n1 complex expression (validation skipped in compiled mode)
 
                                         let mut vi: usize = 0;
                                         for var_l_loop_ in (1_f64 as i64)..=(var_nch as f64 as i64) {
@@ -2309,8 +2363,10 @@ pub fn parse_mf2_mt151(
                                     let lookahead_ok_0 = {
                                         let saved_ofs = ofs;
                                         let ok = (|| -> Result<bool, EndfError> {
-                                            if ofs >= lines.len() { return Ok(false); }
-                                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                            if ofs + 0 >= lines.len() { return Ok(false); }
+                                            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                            var_nrs = cont_0.l2 as f64;
+                                            var_nx = cont_0.n2 as f64;
                                             Ok((var_nrs as f64 as i64) > (0_f64 as i64))
                                         })().unwrap_or(false);
                                         ok
@@ -2318,8 +2374,10 @@ pub fn parse_mf2_mt151(
                                     let lookahead_ok_1 = {
                                         let saved_ofs = ofs;
                                         let ok = (|| -> Result<bool, EndfError> {
-                                            if ofs >= lines.len() { return Ok(false); }
-                                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                            if ofs + 0 >= lines.len() { return Ok(false); }
+                                            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                            var_nrs = cont_0.l2 as f64;
+                                            var_nx = cont_0.n2 as f64;
                                             Ok(((var_nrs as f64 as i64) == (0_f64 as i64)) && ((var_nx as f64 as i64) == (1_f64 as i64)))
                                         })().unwrap_or(false);
                                         ok
@@ -2337,7 +2395,7 @@ pub fn parse_mf2_mt151(
                                             var_nrs = cont.l2 as f64;
                                             result.insert("NRS", EndfValue::Int(var_nrs as i64));
                                             // field n1 complex expression (validation skipped in compiled mode)
-                                            // field n2 = abbreviation NX (validation skipped in compiled mode)
+                                            // field n2 complex expression (validation skipped in compiled mode)
 
                                             let mut vi: usize = 0;
                                             for var_n_loop_ in (1_f64 as i64)..=(var_nrs as f64 as i64) {
@@ -2380,8 +2438,9 @@ pub fn parse_mf2_mt151(
                                             // field l1 expected 0 (validation skipped in compiled mode)
                                             var_nrs = cont.l2 as f64;
                                             result.insert("NRS", EndfValue::Int(var_nrs as i64));
+                                            var_nx = cont.n2 as f64;
+                                            result.insert("NX", EndfValue::Int(var_nx as i64));
                                             // field n1 complex expression (validation skipped in compiled mode)
-                                            // field n2 = abbreviation NX (validation skipped in compiled mode)
 
                                             let mut vi: usize = 0;
                                             for var_m_loop_ in (1_f64 as i64)..=(6_f64 as i64) {
@@ -2437,7 +2496,10 @@ pub fn parse_mf2_mt151(
                                                     tab_section.insert("INT", list_from_i64(&body.int));
                                                     tab_section.insert("E", list_from_f64(&body.x));
                                                     tab_section.insert("RBR", list_from_f64(&body.y));
-                                                    result.insert("real_part", tab_section);
+                                                    if !result.contains_key("real_part") {
+                                                        result.insert("real_part", EndfValue::new_dict());
+                                                    }
+                                                    result.get_mut("real_part").unwrap().insert(EndfKey::Int(var_n as f64 as i64), tab_section);
                                                 }
                                                 // TAB1 record
                                                 {
@@ -2455,7 +2517,10 @@ pub fn parse_mf2_mt151(
                                                     tab_section.insert("INT", list_from_i64(&body.int));
                                                     tab_section.insert("E", list_from_f64(&body.x));
                                                     tab_section.insert("RBI", list_from_f64(&body.y));
-                                                    result.insert("imag_part", tab_section);
+                                                    if !result.contains_key("imag_part") {
+                                                        result.insert("imag_part", EndfValue::new_dict());
+                                                    }
+                                                    result.get_mut("imag_part").unwrap().insert(EndfKey::Int(var_n as f64 as i64), tab_section);
                                                 }
                                             } else if (var_lbk as f64 as i64) == (2_f64 as i64) {
                                                 // LIST record
@@ -2576,7 +2641,10 @@ pub fn parse_mf2_mt151(
                                                     tab_section.insert("INT", list_from_i64(&body.int));
                                                     tab_section.insert("E", list_from_f64(&body.x));
                                                     tab_section.insert("PSR", list_from_f64(&body.y));
-                                                    result.insert("real_part", tab_section);
+                                                    if !result.contains_key("real_part") {
+                                                        result.insert("real_part", EndfValue::new_dict());
+                                                    }
+                                                    result.get_mut("real_part").unwrap().insert(EndfKey::Int(var_n as f64 as i64), tab_section);
                                                 }
                                                 // TAB1 record
                                                 {
@@ -2594,7 +2662,10 @@ pub fn parse_mf2_mt151(
                                                     tab_section.insert("INT", list_from_i64(&body.int));
                                                     tab_section.insert("E", list_from_f64(&body.x));
                                                     tab_section.insert("PSI", list_from_f64(&body.y));
-                                                    result.insert("imag_part", tab_section);
+                                                    if !result.contains_key("imag_part") {
+                                                        result.insert("imag_part", EndfValue::new_dict());
+                                                    }
+                                                    result.get_mut("imag_part").unwrap().insert(EndfKey::Int(var_n as f64 as i64), tab_section);
                                                 }
                                             }
                                         }
@@ -2679,9 +2750,9 @@ pub fn parse_mf2_mt151(
                                         var_l = cont.l1 as f64;
                                         result.insert("L", EndfValue::Int(var_l as i64));
                                         // field l2 expected 0 (validation skipped in compiled mode)
-                                        // field n1 complex expression (validation skipped in compiled mode)
                                         var_njs = cont.n2 as f64;
                                         result.insert("NJS", EndfValue::Int(var_njs as i64));
+                                        // field n1 complex expression (validation skipped in compiled mode)
 
                                         let mut vi: usize = 0;
                                         for var_m_loop_ in (1_f64 as i64)..=(var_njs as f64 as i64) {
@@ -2846,8 +2917,9 @@ pub fn parse_mf2_mt151(
                                                 result.insert("L", EndfValue::Int(var_l as i64));
                                                 var_muf = cont.l2 as f64;
                                                 result.insert("MUF", EndfValue::Int(var_muf as i64));
-                                                // field n1 complex expression (validation skipped in compiled mode)
                                                 // field n2 expected 0 (validation skipped in compiled mode)
+                                                var_ne = (cont.n1 as f64 - 6_f64);
+                                                result.insert("NE", EndfValue::Int(var_ne as i64));
 
                                                 let mut vi: usize = 0;
                                                 let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
@@ -2987,9 +3059,9 @@ pub fn parse_mf2_mt151(
                                                 var_int = cont.l1 as f64;
                                                 result.insert("INT", EndfValue::Int(var_int as i64));
                                                 // field l2 expected 0 (validation skipped in compiled mode)
-                                                // field n1 complex expression (validation skipped in compiled mode)
                                                 var_ne = cont.n2 as f64;
                                                 result.insert("NE", EndfValue::Int(var_ne as i64));
+                                                // field n1 complex expression (validation skipped in compiled mode)
 
                                                 let mut vi: usize = 0;
                                                 // list body constant 0 (validation skipped)
@@ -3093,12 +3165,6 @@ pub fn parse_mf3_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_e: f64 = 0.0;
     let mut var_lr: f64 = 0.0;
@@ -3110,6 +3176,12 @@ pub fn parse_mf3_wildcard(
     let mut var_xstable: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -3155,12 +3227,6 @@ pub fn parse_mf4_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_a: f64 = 0.0;
     let mut var_al: f64 = 0.0;
     let mut var_ang_int: f64 = 0.0;
@@ -3189,6 +3255,12 @@ pub fn parse_mf4_wildcard(
     let mut var_t: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -3206,8 +3278,12 @@ pub fn parse_mf4_wildcard(
     let lookahead_ok_0 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
-            if ofs >= lines.len() { return Ok(false); }
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            if ofs + 0 >= lines.len() { return Ok(false); }
+            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+            var_awr = cont_0.c2;
+            var_li = cont_0.l1 as f64;
+            var_lct = cont_0.l2 as f64;
+            var_nm = cont_0.n2 as f64;
             Ok(((var_ltt as f64 as i64) == (3_f64 as i64)) && ((var_li as f64 as i64) == (0_f64 as i64)))
         })().unwrap_or(false);
         ok
@@ -3255,6 +3331,8 @@ pub fn parse_mf4_wildcard(
             // field c2 expected 0 (validation skipped in compiled mode)
             // field l1 expected 0 (validation skipped in compiled mode)
             // field l2 expected 0 (validation skipped in compiled mode)
+            var_ne = cont.n2 as f64;
+            result.insert("NE", EndfValue::Int(var_ne as i64));
 
             result.insert("NBT", list_from_i64(&body.nbt));
             result.insert("INT", list_from_i64(&body.int));
@@ -3309,6 +3387,8 @@ pub fn parse_mf4_wildcard(
             // field c2 expected 0 (validation skipped in compiled mode)
             // field l1 expected 0 (validation skipped in compiled mode)
             // field l2 expected 0 (validation skipped in compiled mode)
+            var_ne = cont.n2 as f64;
+            result.insert("NE", EndfValue::Int(var_ne as i64));
 
             let mut tab_section = EndfValue::new_dict();
             tab_section.insert("NBT", list_from_i64(&body.nbt));
@@ -3338,7 +3418,10 @@ pub fn parse_mf4_wildcard(
                 tab_section.insert("INT", list_from_i64(&body.int));
                 tab_section.insert("mu", list_from_f64(&body.x));
                 tab_section.insert("f", list_from_f64(&body.y));
-                result.insert("angtable", tab_section);
+                if !result.contains_key("angtable") {
+                    result.insert("angtable", EndfValue::new_dict());
+                }
+                result.get_mut("angtable").unwrap().insert(EndfKey::Int(var_i as f64 as i64), tab_section);
             }
         }
     } else if ((var_ltt as f64 as i64) == (3_f64 as i64)) && ((var_li as f64 as i64) == (0_f64 as i64)) {
@@ -3352,6 +3435,8 @@ pub fn parse_mf4_wildcard(
             // field c2 expected 0 (validation skipped in compiled mode)
             // field l1 expected 0 (validation skipped in compiled mode)
             // field l2 expected 0 (validation skipped in compiled mode)
+            var_ne1 = cont.n2 as f64;
+            result.insert("NE1", EndfValue::Int(var_ne1 as i64));
 
             let mut tab_section = EndfValue::new_dict();
             tab_section.insert("NBT", list_from_i64(&body.nbt));
@@ -3407,6 +3492,8 @@ pub fn parse_mf4_wildcard(
             // field c2 expected 0 (validation skipped in compiled mode)
             // field l1 expected 0 (validation skipped in compiled mode)
             // field l2 expected 0 (validation skipped in compiled mode)
+            var_ne2 = cont.n2 as f64;
+            result.insert("NE2", EndfValue::Int(var_ne2 as i64));
 
             let mut tab_section = EndfValue::new_dict();
             tab_section.insert("NBT", list_from_i64(&body.nbt));
@@ -3436,7 +3523,10 @@ pub fn parse_mf4_wildcard(
                 tab_section.insert("INT", list_from_i64(&body.int));
                 tab_section.insert("mu", list_from_f64(&body.x));
                 tab_section.insert("f", list_from_f64(&body.y));
-                result.insert("angtable", tab_section);
+                if !result.contains_key("angtable") {
+                    result.insert("angtable", EndfValue::new_dict());
+                }
+                result.get_mut("angtable").unwrap().insert(EndfKey::Int(var_i as f64 as i64), tab_section);
             }
         }
     }
@@ -3451,12 +3541,6 @@ pub fn parse_mf5_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_contribution: f64 = 0.0;
     let mut var_e: f64 = 0.0;
@@ -3485,6 +3569,12 @@ pub fn parse_mf5_wildcard(
     let mut var_x: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -3508,8 +3598,11 @@ pub fn parse_mf5_wildcard(
             let lookahead_ok_0 = {
                 let saved_ofs = ofs;
                 let ok = (|| -> Result<bool, EndfError> {
-                    if ofs >= lines.len() { return Ok(false); }
-                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    if ofs + 0 >= lines.len() { return Ok(false); }
+                    let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                    var_lf = cont_0.l2 as f64;
+                    var_nr = cont_0.n1 as f64;
+                    var_np = cont_0.n2 as f64;
                     Ok((var_lf as f64 as i64) == (1_f64 as i64))
                 })().unwrap_or(false);
                 ok
@@ -3517,8 +3610,12 @@ pub fn parse_mf5_wildcard(
             let lookahead_ok_1 = {
                 let saved_ofs = ofs;
                 let ok = (|| -> Result<bool, EndfError> {
-                    if ofs >= lines.len() { return Ok(false); }
-                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    if ofs + 0 >= lines.len() { return Ok(false); }
+                    let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                    var_u = cont_0.c1;
+                    var_lf = cont_0.l2 as f64;
+                    var_nr = cont_0.n1 as f64;
+                    var_np = cont_0.n2 as f64;
                     Ok((var_lf as f64 as i64) == (5_f64 as i64))
                 })().unwrap_or(false);
                 ok
@@ -3526,8 +3623,12 @@ pub fn parse_mf5_wildcard(
             let lookahead_ok_2 = {
                 let saved_ofs = ofs;
                 let ok = (|| -> Result<bool, EndfError> {
-                    if ofs >= lines.len() { return Ok(false); }
-                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    if ofs + 0 >= lines.len() { return Ok(false); }
+                    let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                    var_u = cont_0.c1;
+                    var_lf = cont_0.l2 as f64;
+                    var_nr = cont_0.n1 as f64;
+                    var_np = cont_0.n2 as f64;
                     Ok((var_lf as f64 as i64) == (7_f64 as i64))
                 })().unwrap_or(false);
                 ok
@@ -3535,8 +3636,12 @@ pub fn parse_mf5_wildcard(
             let lookahead_ok_3 = {
                 let saved_ofs = ofs;
                 let ok = (|| -> Result<bool, EndfError> {
-                    if ofs >= lines.len() { return Ok(false); }
-                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    if ofs + 0 >= lines.len() { return Ok(false); }
+                    let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                    var_u = cont_0.c1;
+                    var_lf = cont_0.l2 as f64;
+                    var_nr = cont_0.n1 as f64;
+                    var_np = cont_0.n2 as f64;
                     Ok((var_lf as f64 as i64) == (9_f64 as i64))
                 })().unwrap_or(false);
                 ok
@@ -3544,8 +3649,12 @@ pub fn parse_mf5_wildcard(
             let lookahead_ok_4 = {
                 let saved_ofs = ofs;
                 let ok = (|| -> Result<bool, EndfError> {
-                    if ofs >= lines.len() { return Ok(false); }
-                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    if ofs + 0 >= lines.len() { return Ok(false); }
+                    let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                    var_u = cont_0.c1;
+                    var_lf = cont_0.l2 as f64;
+                    var_nr = cont_0.n1 as f64;
+                    var_np = cont_0.n2 as f64;
                     Ok((var_lf as f64 as i64) == (11_f64 as i64))
                 })().unwrap_or(false);
                 ok
@@ -3553,8 +3662,11 @@ pub fn parse_mf5_wildcard(
             let lookahead_ok_5 = {
                 let saved_ofs = ofs;
                 let ok = (|| -> Result<bool, EndfError> {
-                    if ofs >= lines.len() { return Ok(false); }
-                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    if ofs + 0 >= lines.len() { return Ok(false); }
+                    let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                    var_lf = cont_0.l2 as f64;
+                    var_nr = cont_0.n1 as f64;
+                    var_np = cont_0.n2 as f64;
                     Ok((var_lf as f64 as i64) == (12_f64 as i64))
                 })().unwrap_or(false);
                 ok
@@ -3589,6 +3701,8 @@ pub fn parse_mf5_wildcard(
                     // field c2 expected 0 (validation skipped in compiled mode)
                     // field l1 expected 0 (validation skipped in compiled mode)
                     // field l2 expected 0 (validation skipped in compiled mode)
+                    var_ne = cont.n2 as f64;
+                    result.insert("NE", EndfValue::Int(var_ne as i64));
 
                     let mut tab_section = EndfValue::new_dict();
                     tab_section.insert("NBT", list_from_i64(&body.nbt));
@@ -3616,7 +3730,10 @@ pub fn parse_mf5_wildcard(
                         tab_section.insert("INT", list_from_i64(&body.int));
                         tab_section.insert("Eout", list_from_f64(&body.x));
                         tab_section.insert("g", list_from_f64(&body.y));
-                        result.insert("spectrum", tab_section);
+                        if !result.contains_key("spectrum") {
+                            result.insert("spectrum", EndfValue::new_dict());
+                        }
+                        result.get_mut("spectrum").unwrap().insert(EndfKey::Int(var_l as f64 as i64), tab_section);
                     }
                 }
             } else if lookahead_ok_1 {
@@ -3833,12 +3950,6 @@ pub fn parse_mf6_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_a: f64 = 0.0;
     let mut var_apsx: f64 = 0.0;
     let mut var_awp: f64 = 0.0;
@@ -3886,6 +3997,12 @@ pub fn parse_mf6_wildcard(
     let mut var_za: f64 = 0.0;
     let mut var_zap: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -3943,6 +4060,8 @@ pub fn parse_mf6_wildcard(
                     result.insert("LANG", EndfValue::Int(var_lang as i64));
                     var_lep = cont.l2 as f64;
                     result.insert("LEP", EndfValue::Int(var_lep as i64));
+                    var_ne = cont.n2 as f64;
+                    result.insert("NE", EndfValue::Int(var_ne as i64));
 
                     result.insert("NBT", list_from_i64(&body.nbt));
                     result.insert("INT", list_from_i64(&body.int));
@@ -3968,11 +4087,11 @@ pub fn parse_mf6_wildcard(
                             result.insert("NA", EndfValue::new_dict());
                         }
                         result.get_mut("NA").unwrap().insert(EndfKey::Int(var_j as f64 as i64), EndfValue::Int(cont.l2 as i64));
-                        // field n1 = abbreviation NW (validation skipped in compiled mode)
                         if !result.contains_key("NEP") {
                             result.insert("NEP", EndfValue::new_dict());
                         }
                         result.get_mut("NEP").unwrap().insert(EndfKey::Int(var_j as f64 as i64), EndfValue::Int(cont.n2 as i64));
+                        // field n1 complex expression (validation skipped in compiled mode)
 
                         let mut vi: usize = 0;
                         for var_k_loop_ in (1_f64 as i64)..=(result.get("NEP").and_then(|d| d.get(EndfKey::Int(var_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
@@ -4018,6 +4137,8 @@ pub fn parse_mf6_wildcard(
                     // field c2 expected 0 (validation skipped in compiled mode)
                     // field l1 expected 0 (validation skipped in compiled mode)
                     // field l2 expected 0 (validation skipped in compiled mode)
+                    var_ne = cont.n2 as f64;
+                    result.insert("NE", EndfValue::Int(var_ne as i64));
 
                     result.insert("NBT", list_from_i64(&body.nbt));
                     result.insert("INT", list_from_i64(&body.int));
@@ -4076,6 +4197,8 @@ pub fn parse_mf6_wildcard(
                     var_lidp = cont.l1 as f64;
                     result.insert("LIDP", EndfValue::Int(var_lidp as i64));
                     // field l2 expected 0 (validation skipped in compiled mode)
+                    var_ne = cont.n2 as f64;
+                    result.insert("NE", EndfValue::Int(var_ne as i64));
 
                     result.insert("NBT", list_from_i64(&body.nbt));
                     result.insert("INT", list_from_i64(&body.int));
@@ -4148,6 +4271,8 @@ pub fn parse_mf6_wildcard(
                     // field c2 expected 0 (validation skipped in compiled mode)
                     // field l1 expected 0 (validation skipped in compiled mode)
                     // field l2 expected 0 (validation skipped in compiled mode)
+                    var_ne = cont.n2 as f64;
+                    result.insert("NE", EndfValue::Int(var_ne as i64));
 
                     let mut tab_section = EndfValue::new_dict();
                     tab_section.insert("NBT", list_from_i64(&body.nbt));
@@ -4169,11 +4294,18 @@ pub fn parse_mf6_wildcard(
                         result.get_mut("E").unwrap().insert(EndfKey::Int(var_j as f64 as i64), f64_to_endf_value(cont.c2));
                         // field l1 expected 0 (validation skipped in compiled mode)
                         // field l2 expected 0 (validation skipped in compiled mode)
+                        if !result.contains_key("NMU") {
+                            result.insert("NMU", EndfValue::new_dict());
+                        }
+                        result.get_mut("NMU").unwrap().insert(EndfKey::Int(var_j as f64 as i64), EndfValue::Int(cont.n2 as i64));
 
                         let mut tab_section = EndfValue::new_dict();
                         tab_section.insert("NBT", list_from_i64(&body.nbt));
                         tab_section.insert("INT", list_from_i64(&body.int));
-                        result.insert("mu_interpol", tab_section);
+                        if !result.contains_key("mu_interpol") {
+                            result.insert("mu_interpol", EndfValue::new_dict());
+                        }
+                        result.get_mut("mu_interpol").unwrap().insert(EndfKey::Int(var_j as f64 as i64), tab_section);
                     }
                     for var_k_loop_ in (1_f64 as i64)..=(result.get("NMU").and_then(|d| d.get(EndfKey::Int(var_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
                         var_k = var_k_loop_ as f64;
@@ -4200,7 +4332,14 @@ pub fn parse_mf6_wildcard(
                             tab_section.insert("INT", list_from_i64(&body.int));
                             tab_section.insert("Ep", list_from_f64(&body.x));
                             tab_section.insert("f", list_from_f64(&body.y));
-                            result.insert("table", tab_section);
+                            if !result.contains_key("table") {
+                                result.insert("table", EndfValue::new_dict());
+                            }
+                            if !result.get_mut("table").unwrap().contains_key(EndfKey::Int(var_j as f64 as i64).clone()) {
+                                result.get_mut("table").unwrap().insert(EndfKey::Int(var_j as f64 as i64).clone(), EndfValue::new_dict());
+                            }
+                            let _nav_0 = result.get_mut("table").unwrap().get_mut(EndfKey::Int(var_j as f64 as i64)).unwrap();
+                            _nav_0.insert(EndfKey::Int(var_k as f64 as i64), tab_section);
                         }
                     }
                 }
@@ -4223,12 +4362,6 @@ pub fn parse_mf7_mt2(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_eint: f64 = 0.0;
     let mut var_i: f64 = 0.0;
@@ -4247,6 +4380,12 @@ pub fn parse_mf7_mt2(
     let mut var_wp: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -4422,12 +4561,6 @@ pub fn parse_mf7_mt4(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_alpha: f64 = 0.0;
     let mut var_awr: f64 = 0.0;
     let mut var_b: f64 = 0.0;
@@ -4464,6 +4597,12 @@ pub fn parse_mf7_mt4(
     let mut var_tint: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -4516,6 +4655,8 @@ pub fn parse_mf7_mt4(
         // field c2 expected 0 (validation skipped in compiled mode)
         // field l1 expected 0 (validation skipped in compiled mode)
         // field l2 expected 0 (validation skipped in compiled mode)
+        var_nb = cont.n2 as f64;
+        result.insert("NB", EndfValue::Int(var_nb as i64));
 
         let mut tab_section = EndfValue::new_dict();
         tab_section.insert("NBT", list_from_i64(&body.nbt));
@@ -4547,7 +4688,10 @@ pub fn parse_mf7_mt4(
             tab_section.insert("INT", list_from_i64(&body.int));
             tab_section.insert("alpha", list_from_f64(&body.x));
             tab_section.insert("S", list_from_f64(&body.y));
-            result.insert("S_table", tab_section);
+            if !result.contains_key("S_table") {
+                result.insert("S_table", EndfValue::new_dict());
+            }
+            result.get_mut("S_table").unwrap().insert(EndfKey::Int(var_i as f64 as i64), tab_section);
         }
         for var_j_loop_ in (1_f64 as i64)..=(result.get("LT").and_then(|d| d.get(EndfKey::Int(var_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
             var_j = var_j_loop_ as f64;
@@ -4684,12 +4828,6 @@ pub fn parse_mf7_mt451(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_afi: f64 = 0.0;
     let mut var_awr: f64 = 0.0;
     let mut var_awri: f64 = 0.0;
@@ -4703,6 +4841,12 @@ pub fn parse_mf7_mt451(
     let mut var_za: f64 = 0.0;
     let mut var_zai: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -4730,11 +4874,11 @@ pub fn parse_mf7_mt451(
             var_nas = cont.l1 as f64;
             result.insert("NAS", EndfValue::Int(var_nas as i64));
             // field l2 expected 0 (validation skipped in compiled mode)
-            // field n1 complex expression (validation skipped in compiled mode)
             if !result.contains_key("NI") {
                 result.insert("NI", EndfValue::new_dict());
             }
             result.get_mut("NI").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Int(cont.n2 as i64));
+            // field n1 complex expression (validation skipped in compiled mode)
 
             let mut vi: usize = 0;
             for var_j_loop_ in (1_f64 as i64)..=(result.get("NI").and_then(|d| d.get(EndfKey::Int(var_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
@@ -4805,12 +4949,6 @@ pub fn parse_mf8_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_br: f64 = 0.0;
     let mut var_ct: f64 = 0.0;
@@ -4832,6 +4970,12 @@ pub fn parse_mf8_wildcard(
     let mut var_zan: f64 = 0.0;
     let mut var_zap: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -4870,8 +5014,9 @@ pub fn parse_mf8_wildcard(
                     result.insert("LMF", EndfValue::Int(var_lmf as i64));
                     var_lfs = cont.l2 as f64;
                     result.insert("LFS", EndfValue::Int(var_lfs as i64));
-                    // field n1 complex expression (validation skipped in compiled mode)
                     // field n2 expected 0 (validation skipped in compiled mode)
+                    var_nd = (cont.n1 as f64 / (6_f64));
+                    result.insert("ND", EndfValue::Int(var_nd as i64));
 
                     let mut vi: usize = 0;
                     for var_l_loop_ in (1_f64 as i64)..=(var_nd as f64 as i64) {
@@ -4962,12 +5107,6 @@ pub fn parse_mf8_mt454(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_dyi: f64 = 0.0;
     let mut var_e: f64 = 0.0;
@@ -4982,6 +5121,12 @@ pub fn parse_mf8_mt454(
     let mut var_za: f64 = 0.0;
     let mut var_zafp: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -4990,10 +5135,11 @@ pub fn parse_mf8_mt454(
         result.insert("ZA", f64_to_endf_value(var_za));
         var_awr = cont.c2;
         result.insert("AWR", f64_to_endf_value(var_awr));
-        // field l1 complex expression (validation skipped in compiled mode)
         // field l2 expected 0 (validation skipped in compiled mode)
         // field n1 expected 0 (validation skipped in compiled mode)
         // field n2 expected 0 (validation skipped in compiled mode)
+        var_le = (cont.l1 as f64 - 1_f64);
+        result.insert("LE", EndfValue::Int(var_le as i64));
     }
     // LIST record
     {
@@ -5147,12 +5293,6 @@ pub fn parse_mf8_mt457(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_br: f64 = 0.0;
     let mut var_continuous: f64 = 0.0;
@@ -5217,11 +5357,23 @@ pub fn parse_mf8_mt457(
     let mut var_type: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     let lookahead_ok_0 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
-            if ofs >= lines.len() { return Ok(false); }
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            if ofs + 0 >= lines.len() { return Ok(false); }
+            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+            var_za = cont_0.c1;
+            var_awr = cont_0.c2;
+            var_lis = cont_0.l1 as f64;
+            var_liso = cont_0.l2 as f64;
+            var_nst = cont_0.n1 as f64;
+            var_nsp = cont_0.n2 as f64;
             Ok((var_nst as f64 as i64) == (0_f64 as i64))
         })().unwrap_or(false);
         ok
@@ -5229,8 +5381,13 @@ pub fn parse_mf8_mt457(
     let lookahead_ok_1 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
-            if ofs >= lines.len() { return Ok(false); }
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            if ofs + 0 >= lines.len() { return Ok(false); }
+            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+            var_za = cont_0.c1;
+            var_awr = cont_0.c2;
+            var_lis = cont_0.l1 as f64;
+            var_liso = cont_0.l2 as f64;
+            var_nst = cont_0.n1 as f64;
             Ok((var_nst as f64 as i64) == (1_f64 as i64))
         })().unwrap_or(false);
         ok
@@ -5265,8 +5422,9 @@ pub fn parse_mf8_mt457(
             result.insert("dThalf", f64_to_endf_value(var_dthalf));
             // field l1 expected 0 (validation skipped in compiled mode)
             // field l2 expected 0 (validation skipped in compiled mode)
-            // field n1 complex expression (validation skipped in compiled mode)
             // field n2 expected 0 (validation skipped in compiled mode)
+            var_nc = (cont.n1 as f64 / (2_f64));
+            result.insert("NC", EndfValue::Int(var_nc as i64));
 
             let mut vi: usize = 0;
             for var_k_loop_ in (1_f64 as i64)..=(var_nc as f64 as i64) {
@@ -5297,9 +5455,9 @@ pub fn parse_mf8_mt457(
             result.insert("PAR", f64_to_endf_value(var_par));
             // field l1 expected 0 (validation skipped in compiled mode)
             // field l2 expected 0 (validation skipped in compiled mode)
-            // field n1 complex expression (validation skipped in compiled mode)
             var_ndk = cont.n2 as f64;
             result.insert("NDK", EndfValue::Int(var_ndk as i64));
+            // field n1 complex expression (validation skipped in compiled mode)
 
             let mut vi: usize = 0;
             for var_k_loop_ in (1_f64 as i64)..=(var_ndk as f64 as i64) {
@@ -5407,8 +5565,11 @@ pub fn parse_mf8_mt457(
                                 let lookahead_ok_0 = {
                                     let saved_ofs = ofs;
                                     let ok = (|| -> Result<bool, EndfError> {
-                                        if ofs >= lines.len() { return Ok(false); }
-                                        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                        if ofs + 0 >= lines.len() { return Ok(false); }
+                                        let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                        var_er = cont_0.c1;
+                                        var_der = cont_0.c2;
+                                        var_nt = cont_0.n1 as f64;
                                         Ok((var_nt as f64 as i64) == (6_f64 as i64))
                                     })().unwrap_or(false);
                                     ok
@@ -5416,8 +5577,11 @@ pub fn parse_mf8_mt457(
                                 let lookahead_ok_1 = {
                                     let saved_ofs = ofs;
                                     let ok = (|| -> Result<bool, EndfError> {
-                                        if ofs >= lines.len() { return Ok(false); }
-                                        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                        if ofs + 0 >= lines.len() { return Ok(false); }
+                                        let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                        var_er = cont_0.c1;
+                                        var_der = cont_0.c2;
+                                        var_nt = cont_0.n1 as f64;
                                         Ok((var_nt as f64 as i64) == (8_f64 as i64))
                                     })().unwrap_or(false);
                                     ok
@@ -5425,8 +5589,11 @@ pub fn parse_mf8_mt457(
                                 let lookahead_ok_2 = {
                                     let saved_ofs = ofs;
                                     let ok = (|| -> Result<bool, EndfError> {
-                                        if ofs >= lines.len() { return Ok(false); }
-                                        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                        if ofs + 0 >= lines.len() { return Ok(false); }
+                                        let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                        var_er = cont_0.c1;
+                                        var_der = cont_0.c2;
+                                        var_nt = cont_0.n1 as f64;
                                         Ok((var_nt as f64 as i64) == (12_f64 as i64))
                                     })().unwrap_or(false);
                                     ok
@@ -5649,9 +5816,9 @@ pub fn parse_mf8_mt457(
                             // field c2 expected 0 (validation skipped in compiled mode)
                             // field l1 expected 0 (validation skipped in compiled mode)
                             // field l2 expected 2 (validation skipped in compiled mode)
-                            // field n1 complex expression (validation skipped in compiled mode)
                             var_npp = cont.n2 as f64;
                             result.insert("NPP", EndfValue::Int(var_npp as i64));
+                            // field n1 complex expression (validation skipped in compiled mode)
 
                             let mut vi: usize = 0;
                             for var_m_loop_ in (1_f64 as i64)..=(var_npp as f64 as i64) {
@@ -5829,12 +5996,6 @@ pub fn parse_mf8_mt459(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_dyc: f64 = 0.0;
     let mut var_e: f64 = 0.0;
@@ -5849,6 +6010,12 @@ pub fn parse_mf8_mt459(
     let mut var_za: f64 = 0.0;
     let mut var_zafp: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -5857,10 +6024,11 @@ pub fn parse_mf8_mt459(
         result.insert("ZA", f64_to_endf_value(var_za));
         var_awr = cont.c2;
         result.insert("AWR", f64_to_endf_value(var_awr));
-        // field l1 complex expression (validation skipped in compiled mode)
         // field l2 expected 0 (validation skipped in compiled mode)
         // field n1 expected 0 (validation skipped in compiled mode)
         // field n2 expected 0 (validation skipped in compiled mode)
+        var_le = (cont.l1 as f64 - 1_f64);
+        result.insert("LE", EndfValue::Int(var_le as i64));
     }
     // LIST record
     {
@@ -6014,12 +6182,6 @@ pub fn parse_mf9_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_e: f64 = 0.0;
     let mut var_izap: f64 = 0.0;
@@ -6035,6 +6197,12 @@ pub fn parse_mf9_wildcard(
     let mut var_y: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -6094,12 +6262,6 @@ pub fn parse_mf10_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_e: f64 = 0.0;
     let mut var_izap: f64 = 0.0;
@@ -6115,6 +6277,12 @@ pub fn parse_mf10_wildcard(
     let mut var_subsection: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -6174,12 +6342,6 @@ pub fn parse_mf12_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_eg: f64 = 0.0;
     let mut var_eint: f64 = 0.0;
@@ -6202,11 +6364,21 @@ pub fn parse_mf12_wildcard(
     let mut var_y: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     let lookahead_ok_0 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
-            if ofs >= lines.len() { return Ok(false); }
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            if ofs + 0 >= lines.len() { return Ok(false); }
+            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+            var_za = cont_0.c1;
+            var_awr = cont_0.c2;
+            var_lo = cont_0.l1 as f64;
+            var_nk = cont_0.n1 as f64;
             Ok((var_lo as f64 as i64) == (1_f64 as i64))
         })().unwrap_or(false);
         ok
@@ -6214,8 +6386,13 @@ pub fn parse_mf12_wildcard(
     let lookahead_ok_1 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
-            if ofs >= lines.len() { return Ok(false); }
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            if ofs + 0 >= lines.len() { return Ok(false); }
+            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+            var_za = cont_0.c1;
+            var_awr = cont_0.c2;
+            var_lo = cont_0.l1 as f64;
+            var_lg = cont_0.l2 as f64;
+            var_ns = cont_0.n1 as f64;
             Ok((var_lo as f64 as i64) == (2_f64 as i64))
         })().unwrap_or(false);
         ok
@@ -6284,7 +6461,10 @@ pub fn parse_mf12_wildcard(
                 tab_section.insert("INT", list_from_i64(&body.int));
                 tab_section.insert("Eint", list_from_f64(&body.x));
                 tab_section.insert("y", list_from_f64(&body.y));
-                result.insert("table", tab_section);
+                if !result.contains_key("table") {
+                    result.insert("table", EndfValue::new_dict());
+                }
+                result.get_mut("table").unwrap().insert(EndfKey::Int(var_k as f64 as i64), tab_section);
             }
         }
     } else if lookahead_ok_1 {
@@ -6317,9 +6497,9 @@ pub fn parse_mf12_wildcard(
                 var_lp = cont.l1 as f64;
                 result.insert("LP", EndfValue::Int(var_lp as i64));
                 // field l2 expected 0 (validation skipped in compiled mode)
-                // field n1 complex expression (validation skipped in compiled mode)
                 var_nt = cont.n2 as f64;
                 result.insert("NT", EndfValue::Int(var_nt as i64));
+                // field n1 complex expression (validation skipped in compiled mode)
 
                 let mut vi: usize = 0;
                 for var_i_loop_ in (1_f64 as i64)..=(var_nt as f64 as i64) {
@@ -6351,9 +6531,9 @@ pub fn parse_mf12_wildcard(
                 var_lp = cont.l1 as f64;
                 result.insert("LP", EndfValue::Int(var_lp as i64));
                 // field l2 expected 0 (validation skipped in compiled mode)
-                // field n1 complex expression (validation skipped in compiled mode)
                 var_nt = cont.n2 as f64;
                 result.insert("NT", EndfValue::Int(var_nt as i64));
+                // field n1 complex expression (validation skipped in compiled mode)
 
                 let mut vi: usize = 0;
                 for var_i_loop_ in (1_f64 as i64)..=(var_nt as f64 as i64) {
@@ -6391,12 +6571,6 @@ pub fn parse_mf13_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_e: f64 = 0.0;
     let mut var_eg: f64 = 0.0;
@@ -6412,6 +6586,12 @@ pub fn parse_mf13_wildcard(
     let mut var_subsection: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -6488,12 +6668,6 @@ pub fn parse_mf14_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_a: f64 = 0.0;
     let mut var_awr: f64 = 0.0;
     let mut var_e: f64 = 0.0;
@@ -6512,11 +6686,21 @@ pub fn parse_mf14_wildcard(
     let mut var_nr: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     let lookahead_ok_0 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
-            if ofs >= lines.len() { return Ok(false); }
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            if ofs + 0 >= lines.len() { return Ok(false); }
+            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+            var_za = cont_0.c1;
+            var_awr = cont_0.c2;
+            var_li = cont_0.l1 as f64;
+            var_nk = cont_0.n1 as f64;
             Ok((var_li as f64 as i64) == (1_f64 as i64))
         })().unwrap_or(false);
         ok
@@ -6524,8 +6708,14 @@ pub fn parse_mf14_wildcard(
     let lookahead_ok_1 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
-            if ofs >= lines.len() { return Ok(false); }
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            if ofs + 0 >= lines.len() { return Ok(false); }
+            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+            var_za = cont_0.c1;
+            var_awr = cont_0.c2;
+            var_li = cont_0.l1 as f64;
+            var_ltt = cont_0.l2 as f64;
+            var_nk = cont_0.n1 as f64;
+            var_ni = cont_0.n2 as f64;
             Ok(((var_li as f64 as i64) == (0_f64 as i64)) && ((var_ltt as f64 as i64) == (1_f64 as i64)))
         })().unwrap_or(false);
         ok
@@ -6533,8 +6723,14 @@ pub fn parse_mf14_wildcard(
     let lookahead_ok_2 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
-            if ofs >= lines.len() { return Ok(false); }
-            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+            if ofs + 0 >= lines.len() { return Ok(false); }
+            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+            var_za = cont_0.c1;
+            var_awr = cont_0.c2;
+            var_li = cont_0.l1 as f64;
+            var_ltt = cont_0.l2 as f64;
+            var_nk = cont_0.n1 as f64;
+            var_ni = cont_0.n2 as f64;
             Ok(((var_li as f64 as i64) == (0_f64 as i64)) && ((var_ltt as f64 as i64) == (2_f64 as i64)))
         })().unwrap_or(false);
         ok
@@ -6611,11 +6807,18 @@ pub fn parse_mf14_wildcard(
                 result.get_mut("ES").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(cont.c2));
                 // field l1 expected 0 (validation skipped in compiled mode)
                 // field l2 expected 0 (validation skipped in compiled mode)
+                if !result.contains_key("NE") {
+                    result.insert("NE", EndfValue::new_dict());
+                }
+                result.get_mut("NE").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Int(cont.n2 as i64));
 
                 let mut tab_section = EndfValue::new_dict();
                 tab_section.insert("NBT", list_from_i64(&body.nbt));
                 tab_section.insert("INT", list_from_i64(&body.int));
-                result.insert("E_interpol", tab_section);
+                if !result.contains_key("E_interpol") {
+                    result.insert("E_interpol", EndfValue::new_dict());
+                }
+                result.get_mut("E_interpol").unwrap().insert(EndfKey::Int(var_k as f64 as i64), tab_section);
             }
             for var_l_loop_ in (1_f64 as i64)..=(result.get("NE").and_then(|d| d.get(EndfKey::Int(var_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
                 var_l = var_l_loop_ as f64;
@@ -6698,12 +6901,6 @@ pub fn parse_mf15_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_e: f64 = 0.0;
     let mut var_egamma: f64 = 0.0;
@@ -6722,6 +6919,12 @@ pub fn parse_mf15_wildcard(
     let mut var_subsection: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -6745,8 +6948,11 @@ pub fn parse_mf15_wildcard(
             let lookahead_ok_0 = {
                 let saved_ofs = ofs;
                 let ok = (|| -> Result<bool, EndfError> {
-                    if ofs >= lines.len() { return Ok(false); }
-                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    if ofs + 0 >= lines.len() { return Ok(false); }
+                    let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                    var_lf = cont_0.l2 as f64;
+                    var_nr = cont_0.n1 as f64;
+                    var_np = cont_0.n2 as f64;
                     Ok((var_lf as f64 as i64) == (1_f64 as i64))
                 })().unwrap_or(false);
                 ok
@@ -6781,6 +6987,8 @@ pub fn parse_mf15_wildcard(
                     // field c2 expected 0 (validation skipped in compiled mode)
                     // field l1 expected 0 (validation skipped in compiled mode)
                     // field l2 expected 0 (validation skipped in compiled mode)
+                    var_ne = cont.n2 as f64;
+                    result.insert("NE", EndfValue::Int(var_ne as i64));
 
                     result.insert("NBT", list_from_i64(&body.nbt));
                     result.insert("INT", list_from_i64(&body.int));
@@ -6806,7 +7014,10 @@ pub fn parse_mf15_wildcard(
                         tab_section.insert("INT", list_from_i64(&body.int));
                         tab_section.insert("Egamma", list_from_f64(&body.x));
                         tab_section.insert("g", list_from_f64(&body.y));
-                        result.insert("rtfm1_tab", tab_section);
+                        if !result.contains_key("rtfm1_tab") {
+                            result.insert("rtfm1_tab", EndfValue::new_dict());
+                        }
+                        result.get_mut("rtfm1_tab").unwrap().insert(EndfKey::Int(var_k as f64 as i64), tab_section);
                     }
                 }
             }
@@ -6828,12 +7039,6 @@ pub fn parse_mf23_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_efl: f64 = 0.0;
     let mut var_eint: f64 = 0.0;
@@ -6843,6 +7048,12 @@ pub fn parse_mf23_wildcard(
     let mut var_sigma: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -6903,12 +7114,6 @@ pub fn parse_mf27_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_h: f64 = 0.0;
     let mut var_np: f64 = 0.0;
@@ -6917,6 +7122,12 @@ pub fn parse_mf27_wildcard(
     let mut var_z: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -6976,12 +7187,6 @@ pub fn parse_mf31_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_ci: f64 = 0.0;
     let mut var_k: f64 = 0.0;
     let mut var_lty: f64 = 0.0;
@@ -6993,6 +7198,12 @@ pub fn parse_mf31_wildcard(
     let mut var_xmfs: f64 = 0.0;
     let mut var_xmti: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -7016,9 +7227,9 @@ pub fn parse_mf31_wildcard(
             // field c2 expected 0 (validation skipped in compiled mode)
             // field l1 expected 0 (validation skipped in compiled mode)
             // field l2 expected 0 (validation skipped in compiled mode)
-            // field n1 complex expression (validation skipped in compiled mode)
             var_nci = cont.n2 as f64;
             result.insert("NCI", EndfValue::Int(var_nci as i64));
+            // field n1 complex expression (validation skipped in compiled mode)
 
             let mut vi: usize = 0;
             for var_k_loop_ in (1_f64 as i64)..=(var_nci as f64 as i64) {
@@ -7083,12 +7294,6 @@ pub fn parse_mf31_mt452(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_c: f64 = 0.0;
     let mut var_e: f64 = 0.0;
@@ -7137,6 +7342,12 @@ pub fn parse_mf31_mt452(
     let mut var_xmt: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -7207,9 +7418,9 @@ pub fn parse_mf31_mt452(
                                 result.insert("E2", f64_to_endf_value(var_e2));
                                 // field l1 expected 0 (validation skipped in compiled mode)
                                 // field l2 expected 0 (validation skipped in compiled mode)
-                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_nci = cont.n2 as f64;
                                 result.insert("NCI", EndfValue::Int(var_nci as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_i_loop_ in (1_f64 as i64)..=(var_nci as f64 as i64) {
@@ -7243,9 +7454,9 @@ pub fn parse_mf31_mt452(
                                 result.insert("MATS", EndfValue::Int(var_mats as i64));
                                 var_mts = cont.l2 as f64;
                                 result.insert("MTS", EndfValue::Int(var_mts as i64));
-                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_nei = cont.n2 as f64;
                                 result.insert("NEI", EndfValue::Int(var_nei as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
@@ -7289,8 +7500,11 @@ pub fn parse_mf31_mt452(
                         let lookahead_ok_0 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
-                                if ofs >= lines.len() { return Ok(false); }
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                if ofs + 0 >= lines.len() { return Ok(false); }
+                                let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                var_lt = cont_0.l1 as f64;
+                                var_lb = cont_0.l2 as f64;
+                                var_np = cont_0.n2 as f64;
                                 Ok(((var_lb as f64 as i64) >= (0_f64 as i64)) && ((var_lb as f64 as i64) <= (4_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -7298,8 +7512,12 @@ pub fn parse_mf31_mt452(
                         let lookahead_ok_1 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
-                                if ofs >= lines.len() { return Ok(false); }
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                if ofs + 0 >= lines.len() { return Ok(false); }
+                                let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                var_ls = cont_0.l1 as f64;
+                                var_lb = cont_0.l2 as f64;
+                                var_nt = cont_0.n1 as f64;
+                                var_ne = cont_0.n2 as f64;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -7307,8 +7525,12 @@ pub fn parse_mf31_mt452(
                         let lookahead_ok_2 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
-                                if ofs >= lines.len() { return Ok(false); }
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                if ofs + 0 >= lines.len() { return Ok(false); }
+                                let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                var_ls = cont_0.l1 as f64;
+                                var_lb = cont_0.l2 as f64;
+                                var_nt = cont_0.n1 as f64;
+                                var_ne = cont_0.n2 as f64;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (1_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -7316,8 +7538,11 @@ pub fn parse_mf31_mt452(
                         let lookahead_ok_3 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
-                                if ofs >= lines.len() { return Ok(false); }
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                if ofs + 0 >= lines.len() { return Ok(false); }
+                                let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                var_lb = cont_0.l2 as f64;
+                                var_nt = cont_0.n1 as f64;
+                                var_ner = cont_0.n2 as f64;
                                 Ok((var_lb as f64 as i64) == (6_f64 as i64))
                             })().unwrap_or(false);
                             ok
@@ -7325,8 +7550,11 @@ pub fn parse_mf31_mt452(
                         let lookahead_ok_4 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
-                                if ofs >= lines.len() { return Ok(false); }
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                if ofs + 0 >= lines.len() { return Ok(false); }
+                                let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                var_lt = cont_0.l1 as f64;
+                                var_lb = cont_0.l2 as f64;
+                                var_np = cont_0.n2 as f64;
                                 Ok((((var_lb as f64 as i64) == (8_f64 as i64)) || ((var_lb as f64 as i64) == (9_f64 as i64))) && ((var_lt as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -7344,9 +7572,9 @@ pub fn parse_mf31_mt452(
                                 result.insert("LT", EndfValue::Int(var_lt as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_np = cont.n2 as f64;
                                 result.insert("NP", EndfValue::Int(var_np as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(((var_np as f64 - var_lt as f64)) as i64) {
@@ -7393,9 +7621,9 @@ pub fn parse_mf31_mt452(
                                 result.insert("LS", EndfValue::Int(var_ls as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ne = cont.n2 as f64;
                                 result.insert("NE", EndfValue::Int(var_ne as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
@@ -7437,9 +7665,9 @@ pub fn parse_mf31_mt452(
                                 result.insert("LS", EndfValue::Int(var_ls as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ne = cont.n2 as f64;
                                 result.insert("NE", EndfValue::Int(var_ne as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
@@ -7480,9 +7708,10 @@ pub fn parse_mf31_mt452(
                                 // field l1 expected 0 (validation skipped in compiled mode)
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ner = cont.n2 as f64;
                                 result.insert("NER", EndfValue::Int(var_ner as i64));
+                                var_nec = ((cont.n1 as f64 - 1_f64) / (var_ner as f64));
+                                result.insert("NEC", EndfValue::Int(var_nec as i64));
 
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ner as f64 as i64) {
@@ -7533,9 +7762,9 @@ pub fn parse_mf31_mt452(
                                 result.insert("LT", EndfValue::Int(var_lt as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_np = cont.n2 as f64;
                                 result.insert("NP", EndfValue::Int(var_np as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_np as f64 as i64) {
@@ -7581,12 +7810,6 @@ pub fn parse_mf31_mt455(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_c: f64 = 0.0;
     let mut var_e: f64 = 0.0;
@@ -7635,6 +7858,12 @@ pub fn parse_mf31_mt455(
     let mut var_xmt: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -7705,9 +7934,9 @@ pub fn parse_mf31_mt455(
                                 result.insert("E2", f64_to_endf_value(var_e2));
                                 // field l1 expected 0 (validation skipped in compiled mode)
                                 // field l2 expected 0 (validation skipped in compiled mode)
-                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_nci = cont.n2 as f64;
                                 result.insert("NCI", EndfValue::Int(var_nci as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_i_loop_ in (1_f64 as i64)..=(var_nci as f64 as i64) {
@@ -7741,9 +7970,9 @@ pub fn parse_mf31_mt455(
                                 result.insert("MATS", EndfValue::Int(var_mats as i64));
                                 var_mts = cont.l2 as f64;
                                 result.insert("MTS", EndfValue::Int(var_mts as i64));
-                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_nei = cont.n2 as f64;
                                 result.insert("NEI", EndfValue::Int(var_nei as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
@@ -7787,8 +8016,11 @@ pub fn parse_mf31_mt455(
                         let lookahead_ok_0 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
-                                if ofs >= lines.len() { return Ok(false); }
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                if ofs + 0 >= lines.len() { return Ok(false); }
+                                let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                var_lt = cont_0.l1 as f64;
+                                var_lb = cont_0.l2 as f64;
+                                var_np = cont_0.n2 as f64;
                                 Ok(((var_lb as f64 as i64) >= (0_f64 as i64)) && ((var_lb as f64 as i64) <= (4_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -7796,8 +8028,12 @@ pub fn parse_mf31_mt455(
                         let lookahead_ok_1 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
-                                if ofs >= lines.len() { return Ok(false); }
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                if ofs + 0 >= lines.len() { return Ok(false); }
+                                let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                var_ls = cont_0.l1 as f64;
+                                var_lb = cont_0.l2 as f64;
+                                var_nt = cont_0.n1 as f64;
+                                var_ne = cont_0.n2 as f64;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -7805,8 +8041,12 @@ pub fn parse_mf31_mt455(
                         let lookahead_ok_2 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
-                                if ofs >= lines.len() { return Ok(false); }
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                if ofs + 0 >= lines.len() { return Ok(false); }
+                                let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                var_ls = cont_0.l1 as f64;
+                                var_lb = cont_0.l2 as f64;
+                                var_nt = cont_0.n1 as f64;
+                                var_ne = cont_0.n2 as f64;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (1_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -7814,8 +8054,11 @@ pub fn parse_mf31_mt455(
                         let lookahead_ok_3 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
-                                if ofs >= lines.len() { return Ok(false); }
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                if ofs + 0 >= lines.len() { return Ok(false); }
+                                let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                var_lb = cont_0.l2 as f64;
+                                var_nt = cont_0.n1 as f64;
+                                var_ner = cont_0.n2 as f64;
                                 Ok((var_lb as f64 as i64) == (6_f64 as i64))
                             })().unwrap_or(false);
                             ok
@@ -7823,8 +8066,11 @@ pub fn parse_mf31_mt455(
                         let lookahead_ok_4 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
-                                if ofs >= lines.len() { return Ok(false); }
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                if ofs + 0 >= lines.len() { return Ok(false); }
+                                let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                var_lt = cont_0.l1 as f64;
+                                var_lb = cont_0.l2 as f64;
+                                var_np = cont_0.n2 as f64;
                                 Ok((((var_lb as f64 as i64) == (8_f64 as i64)) || ((var_lb as f64 as i64) == (9_f64 as i64))) && ((var_lt as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -7842,9 +8088,9 @@ pub fn parse_mf31_mt455(
                                 result.insert("LT", EndfValue::Int(var_lt as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_np = cont.n2 as f64;
                                 result.insert("NP", EndfValue::Int(var_np as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(((var_np as f64 - var_lt as f64)) as i64) {
@@ -7891,9 +8137,9 @@ pub fn parse_mf31_mt455(
                                 result.insert("LS", EndfValue::Int(var_ls as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ne = cont.n2 as f64;
                                 result.insert("NE", EndfValue::Int(var_ne as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
@@ -7935,9 +8181,9 @@ pub fn parse_mf31_mt455(
                                 result.insert("LS", EndfValue::Int(var_ls as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ne = cont.n2 as f64;
                                 result.insert("NE", EndfValue::Int(var_ne as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
@@ -7978,9 +8224,10 @@ pub fn parse_mf31_mt455(
                                 // field l1 expected 0 (validation skipped in compiled mode)
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ner = cont.n2 as f64;
                                 result.insert("NER", EndfValue::Int(var_ner as i64));
+                                var_nec = ((cont.n1 as f64 - 1_f64) / (var_ner as f64));
+                                result.insert("NEC", EndfValue::Int(var_nec as i64));
 
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ner as f64 as i64) {
@@ -8031,9 +8278,9 @@ pub fn parse_mf31_mt455(
                                 result.insert("LT", EndfValue::Int(var_lt as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_np = cont.n2 as f64;
                                 result.insert("NP", EndfValue::Int(var_np as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_np as f64 as i64) {
@@ -8079,12 +8326,6 @@ pub fn parse_mf31_mt456(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_c: f64 = 0.0;
     let mut var_e: f64 = 0.0;
@@ -8133,6 +8374,12 @@ pub fn parse_mf31_mt456(
     let mut var_xmt: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -8203,9 +8450,9 @@ pub fn parse_mf31_mt456(
                                 result.insert("E2", f64_to_endf_value(var_e2));
                                 // field l1 expected 0 (validation skipped in compiled mode)
                                 // field l2 expected 0 (validation skipped in compiled mode)
-                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_nci = cont.n2 as f64;
                                 result.insert("NCI", EndfValue::Int(var_nci as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_i_loop_ in (1_f64 as i64)..=(var_nci as f64 as i64) {
@@ -8239,9 +8486,9 @@ pub fn parse_mf31_mt456(
                                 result.insert("MATS", EndfValue::Int(var_mats as i64));
                                 var_mts = cont.l2 as f64;
                                 result.insert("MTS", EndfValue::Int(var_mts as i64));
-                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_nei = cont.n2 as f64;
                                 result.insert("NEI", EndfValue::Int(var_nei as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
@@ -8285,8 +8532,11 @@ pub fn parse_mf31_mt456(
                         let lookahead_ok_0 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
-                                if ofs >= lines.len() { return Ok(false); }
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                if ofs + 0 >= lines.len() { return Ok(false); }
+                                let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                var_lt = cont_0.l1 as f64;
+                                var_lb = cont_0.l2 as f64;
+                                var_np = cont_0.n2 as f64;
                                 Ok(((var_lb as f64 as i64) >= (0_f64 as i64)) && ((var_lb as f64 as i64) <= (4_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -8294,8 +8544,12 @@ pub fn parse_mf31_mt456(
                         let lookahead_ok_1 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
-                                if ofs >= lines.len() { return Ok(false); }
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                if ofs + 0 >= lines.len() { return Ok(false); }
+                                let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                var_ls = cont_0.l1 as f64;
+                                var_lb = cont_0.l2 as f64;
+                                var_nt = cont_0.n1 as f64;
+                                var_ne = cont_0.n2 as f64;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -8303,8 +8557,12 @@ pub fn parse_mf31_mt456(
                         let lookahead_ok_2 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
-                                if ofs >= lines.len() { return Ok(false); }
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                if ofs + 0 >= lines.len() { return Ok(false); }
+                                let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                var_ls = cont_0.l1 as f64;
+                                var_lb = cont_0.l2 as f64;
+                                var_nt = cont_0.n1 as f64;
+                                var_ne = cont_0.n2 as f64;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (1_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -8312,8 +8570,11 @@ pub fn parse_mf31_mt456(
                         let lookahead_ok_3 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
-                                if ofs >= lines.len() { return Ok(false); }
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                if ofs + 0 >= lines.len() { return Ok(false); }
+                                let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                var_lb = cont_0.l2 as f64;
+                                var_nt = cont_0.n1 as f64;
+                                var_ner = cont_0.n2 as f64;
                                 Ok((var_lb as f64 as i64) == (6_f64 as i64))
                             })().unwrap_or(false);
                             ok
@@ -8321,8 +8582,11 @@ pub fn parse_mf31_mt456(
                         let lookahead_ok_4 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
-                                if ofs >= lines.len() { return Ok(false); }
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                if ofs + 0 >= lines.len() { return Ok(false); }
+                                let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                var_lt = cont_0.l1 as f64;
+                                var_lb = cont_0.l2 as f64;
+                                var_np = cont_0.n2 as f64;
                                 Ok((((var_lb as f64 as i64) == (8_f64 as i64)) || ((var_lb as f64 as i64) == (9_f64 as i64))) && ((var_lt as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -8340,9 +8604,9 @@ pub fn parse_mf31_mt456(
                                 result.insert("LT", EndfValue::Int(var_lt as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_np = cont.n2 as f64;
                                 result.insert("NP", EndfValue::Int(var_np as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(((var_np as f64 - var_lt as f64)) as i64) {
@@ -8389,9 +8653,9 @@ pub fn parse_mf31_mt456(
                                 result.insert("LS", EndfValue::Int(var_ls as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ne = cont.n2 as f64;
                                 result.insert("NE", EndfValue::Int(var_ne as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
@@ -8433,9 +8697,9 @@ pub fn parse_mf31_mt456(
                                 result.insert("LS", EndfValue::Int(var_ls as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ne = cont.n2 as f64;
                                 result.insert("NE", EndfValue::Int(var_ne as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
@@ -8476,9 +8740,10 @@ pub fn parse_mf31_mt456(
                                 // field l1 expected 0 (validation skipped in compiled mode)
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ner = cont.n2 as f64;
                                 result.insert("NER", EndfValue::Int(var_ner as i64));
+                                var_nec = ((cont.n1 as f64 - 1_f64) / (var_ner as f64));
+                                result.insert("NEC", EndfValue::Int(var_nec as i64));
 
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ner as f64 as i64) {
@@ -8529,9 +8794,9 @@ pub fn parse_mf31_mt456(
                                 result.insert("LT", EndfValue::Int(var_lt as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_np = cont.n2 as f64;
                                 result.insert("NP", EndfValue::Int(var_np as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_np as f64 as i64) {
@@ -8577,12 +8842,6 @@ pub fn parse_mf32_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_abn: f64 = 0.0;
     let mut var_aj: f64 = 0.0;
     let mut var_ap: f64 = 0.0;
@@ -8723,6 +8982,13 @@ pub fn parse_mf32_wildcard(
     let mut var_zai: f64 = 0.0;
     let mut var_zb: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+        var_mt = ctrl.mt as f64;
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -8803,8 +9069,11 @@ pub fn parse_mf32_wildcard(
                                 let lookahead_ok_0 = {
                                     let saved_ofs = ofs;
                                     let ok = (|| -> Result<bool, EndfError> {
-                                        if ofs >= lines.len() { return Ok(false); }
-                                        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                        if ofs + 0 >= lines.len() { return Ok(false); }
+                                        let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                        var_lt = cont_0.l1 as f64;
+                                        var_lb = cont_0.l2 as f64;
+                                        var_np = cont_0.n2 as f64;
                                         Ok(((var_lb as f64 as i64) >= (0_f64 as i64)) && ((var_lb as f64 as i64) <= (4_f64 as i64)))
                                     })().unwrap_or(false);
                                     ok
@@ -8812,8 +9081,12 @@ pub fn parse_mf32_wildcard(
                                 let lookahead_ok_1 = {
                                     let saved_ofs = ofs;
                                     let ok = (|| -> Result<bool, EndfError> {
-                                        if ofs >= lines.len() { return Ok(false); }
-                                        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                        if ofs + 0 >= lines.len() { return Ok(false); }
+                                        let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                        var_ls = cont_0.l1 as f64;
+                                        var_lb = cont_0.l2 as f64;
+                                        var_nt = cont_0.n1 as f64;
+                                        var_ne = cont_0.n2 as f64;
                                         Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (0_f64 as i64)))
                                     })().unwrap_or(false);
                                     ok
@@ -8821,8 +9094,12 @@ pub fn parse_mf32_wildcard(
                                 let lookahead_ok_2 = {
                                     let saved_ofs = ofs;
                                     let ok = (|| -> Result<bool, EndfError> {
-                                        if ofs >= lines.len() { return Ok(false); }
-                                        let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                        if ofs + 0 >= lines.len() { return Ok(false); }
+                                        let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                        var_ls = cont_0.l1 as f64;
+                                        var_lb = cont_0.l2 as f64;
+                                        var_nt = cont_0.n1 as f64;
+                                        var_ne = cont_0.n2 as f64;
                                         Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (1_f64 as i64)))
                                     })().unwrap_or(false);
                                     ok
@@ -8840,9 +9117,9 @@ pub fn parse_mf32_wildcard(
                                         result.insert("LT", EndfValue::Int(var_lt as i64));
                                         var_lb = cont.l2 as f64;
                                         result.insert("LB", EndfValue::Int(var_lb as i64));
-                                        // field n1 complex expression (validation skipped in compiled mode)
                                         var_np = cont.n2 as f64;
                                         result.insert("NP", EndfValue::Int(var_np as i64));
+                                        // field n1 complex expression (validation skipped in compiled mode)
 
                                         let mut vi: usize = 0;
                                         for var_k_loop_ in (1_f64 as i64)..=(((var_np as f64 - var_lt as f64)) as i64) {
@@ -8889,9 +9166,9 @@ pub fn parse_mf32_wildcard(
                                         result.insert("LS", EndfValue::Int(var_ls as i64));
                                         var_lb = cont.l2 as f64;
                                         result.insert("LB", EndfValue::Int(var_lb as i64));
-                                        // field n1 = abbreviation NT (validation skipped in compiled mode)
                                         var_ne = cont.n2 as f64;
                                         result.insert("NE", EndfValue::Int(var_ne as i64));
+                                        // field n1 complex expression (validation skipped in compiled mode)
 
                                         let mut vi: usize = 0;
                                         for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
@@ -8933,9 +9210,9 @@ pub fn parse_mf32_wildcard(
                                         result.insert("LS", EndfValue::Int(var_ls as i64));
                                         var_lb = cont.l2 as f64;
                                         result.insert("LB", EndfValue::Int(var_lb as i64));
-                                        // field n1 = abbreviation NT (validation skipped in compiled mode)
                                         var_ne = cont.n2 as f64;
                                         result.insert("NE", EndfValue::Int(var_ne as i64));
+                                        // field n1 complex expression (validation skipped in compiled mode)
 
                                         let mut vi: usize = 0;
                                         for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
@@ -8978,8 +9255,13 @@ pub fn parse_mf32_wildcard(
                     let lookahead_ok_0 = {
                         let saved_ofs = ofs;
                         let ok = (|| -> Result<bool, EndfError> {
-                            if ofs >= lines.len() { return Ok(false); }
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            if ofs + 0 >= lines.len() { return Ok(false); }
+                            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                            var_spi = cont_0.c1;
+                            var_ap = cont_0.c2;
+                            var_lcomp = cont_0.l2 as f64;
+                            var_nls = cont_0.n1 as f64;
+                            var_isr = cont_0.n2 as f64;
                             Ok((((var_lcomp as f64 as i64) == (0_f64 as i64)) && ((var_lru as f64 as i64) == (1_f64 as i64))) && (((var_lrf as f64 as i64) == (1_f64 as i64)) || ((var_lrf as f64 as i64) == (2_f64 as i64))))
                         })().unwrap_or(false);
                         ok
@@ -8987,8 +9269,13 @@ pub fn parse_mf32_wildcard(
                     let lookahead_ok_1 = {
                         let saved_ofs = ofs;
                         let ok = (|| -> Result<bool, EndfError> {
-                            if ofs >= lines.len() { return Ok(false); }
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            if ofs + 0 >= lines.len() { return Ok(false); }
+                            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                            var_spi = cont_0.c1;
+                            var_ap = cont_0.c2;
+                            var_lcomp = cont_0.l2 as f64;
+                            var_nls = cont_0.n1 as f64;
+                            var_isr = cont_0.n2 as f64;
                             Ok((((var_lcomp as f64 as i64) == (1_f64 as i64)) && ((var_lru as f64 as i64) == (1_f64 as i64))) && ((var_lrf as f64 as i64) != (7_f64 as i64)))
                         })().unwrap_or(false);
                         ok
@@ -8996,8 +9283,10 @@ pub fn parse_mf32_wildcard(
                     let lookahead_ok_2 = {
                         let saved_ofs = ofs;
                         let ok = (|| -> Result<bool, EndfError> {
-                            if ofs >= lines.len() { return Ok(false); }
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            if ofs + 0 >= lines.len() { return Ok(false); }
+                            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                            var_lcomp = cont_0.l2 as f64;
+                            var_isr = cont_0.n2 as f64;
                             Ok((((var_lcomp as f64 as i64) == (1_f64 as i64)) && ((var_lru as f64 as i64) == (1_f64 as i64))) && ((var_lrf as f64 as i64) == (7_f64 as i64)))
                         })().unwrap_or(false);
                         ok
@@ -9005,8 +9294,12 @@ pub fn parse_mf32_wildcard(
                     let lookahead_ok_3 = {
                         let saved_ofs = ofs;
                         let ok = (|| -> Result<bool, EndfError> {
-                            if ofs >= lines.len() { return Ok(false); }
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            if ofs + 0 >= lines.len() { return Ok(false); }
+                            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                            var_spi = cont_0.c1;
+                            var_ap = cont_0.c2;
+                            var_lcomp = cont_0.l2 as f64;
+                            var_isr = cont_0.n2 as f64;
                             Ok((((var_lcomp as f64 as i64) == (2_f64 as i64)) && ((var_lru as f64 as i64) == (1_f64 as i64))) && (((var_lrf as f64 as i64) == (1_f64 as i64)) || ((var_lrf as f64 as i64) == (2_f64 as i64))))
                         })().unwrap_or(false);
                         ok
@@ -9014,8 +9307,13 @@ pub fn parse_mf32_wildcard(
                     let lookahead_ok_4 = {
                         let saved_ofs = ofs;
                         let ok = (|| -> Result<bool, EndfError> {
-                            if ofs >= lines.len() { return Ok(false); }
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            if ofs + 0 >= lines.len() { return Ok(false); }
+                            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                            var_spi = cont_0.c1;
+                            var_ap = cont_0.c2;
+                            var_lad = cont_0.l1 as f64;
+                            var_lcomp = cont_0.l2 as f64;
+                            var_isr = cont_0.n2 as f64;
                             Ok((((var_lcomp as f64 as i64) == (2_f64 as i64)) && ((var_lru as f64 as i64) == (1_f64 as i64))) && ((var_lrf as f64 as i64) == (3_f64 as i64)))
                         })().unwrap_or(false);
                         ok
@@ -9023,8 +9321,12 @@ pub fn parse_mf32_wildcard(
                     let lookahead_ok_5 = {
                         let saved_ofs = ofs;
                         let ok = (|| -> Result<bool, EndfError> {
-                            if ofs >= lines.len() { return Ok(false); }
-                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                            if ofs + 0 >= lines.len() { return Ok(false); }
+                            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                            var_ifg = cont_0.l1 as f64;
+                            var_lcomp = cont_0.l2 as f64;
+                            var_njs = cont_0.n1 as f64;
+                            var_isr = cont_0.n2 as f64;
                             Ok((((var_lcomp as f64 as i64) == (2_f64 as i64)) && ((var_lru as f64 as i64) == (1_f64 as i64))) && ((var_lrf as f64 as i64) == (7_f64 as i64)))
                         })().unwrap_or(false);
                         ok
@@ -9078,9 +9380,9 @@ pub fn parse_mf32_wildcard(
                                     var_l = cont.l1 as f64;
                                     result.insert("L", EndfValue::Int(var_l as i64));
                                     // field l2 expected 0 (validation skipped in compiled mode)
-                                    // field n1 complex expression (validation skipped in compiled mode)
                                     var_nrs = cont.n2 as f64;
                                     result.insert("NRS", EndfValue::Int(var_nrs as i64));
+                                    // field n1 complex expression (validation skipped in compiled mode)
 
                                     let mut vi: usize = 0;
                                     for var_m_loop_ in (1_f64 as i64)..=(var_nrs as f64 as i64) {
@@ -9261,9 +9563,9 @@ pub fn parse_mf32_wildcard(
                                         var_mpar = cont.l1 as f64;
                                         result.insert("MPAR", EndfValue::Int(var_mpar as i64));
                                         // field l2 expected 0 (validation skipped in compiled mode)
-                                        // field n1 complex expression (validation skipped in compiled mode)
                                         var_nrb = cont.n2 as f64;
                                         result.insert("NRB", EndfValue::Int(var_nrb as i64));
+                                        // field n1 complex expression (validation skipped in compiled mode)
 
                                         let mut vi: usize = 0;
                                         for var_k_loop_ in (1_f64 as i64)..=(var_nrb as f64 as i64) {
@@ -9388,9 +9690,9 @@ pub fn parse_mf32_wildcard(
                                         var_mpar = cont.l1 as f64;
                                         result.insert("MPAR", EndfValue::Int(var_mpar as i64));
                                         // field l2 expected 0 (validation skipped in compiled mode)
-                                        // field n1 complex expression (validation skipped in compiled mode)
                                         var_nrb = cont.n2 as f64;
                                         result.insert("NRB", EndfValue::Int(var_nrb as i64));
+                                        // field n1 complex expression (validation skipped in compiled mode)
 
                                         let mut vi: usize = 0;
                                         for var_k_loop_ in (1_f64 as i64)..=(var_nrb as f64 as i64) {
@@ -9502,9 +9804,9 @@ pub fn parse_mf32_wildcard(
                                         var_mpar = cont.l1 as f64;
                                         result.insert("MPAR", EndfValue::Int(var_mpar as i64));
                                         // field l2 expected 0 (validation skipped in compiled mode)
-                                        // field n1 complex expression (validation skipped in compiled mode)
                                         var_nrb = cont.n2 as f64;
                                         result.insert("NRB", EndfValue::Int(var_nrb as i64));
+                                        // field n1 complex expression (validation skipped in compiled mode)
 
                                         let mut vi: usize = 0;
                                         for var_k_loop_ in (1_f64 as i64)..=(var_nrb as f64 as i64) {
@@ -9617,8 +9919,11 @@ pub fn parse_mf32_wildcard(
                                     let lookahead_ok_0 = {
                                         let saved_ofs = ofs;
                                         let ok = (|| -> Result<bool, EndfError> {
-                                            if ofs >= lines.len() { return Ok(false); }
-                                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                            if ofs + 0 >= lines.len() { return Ok(false); }
+                                            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                            var_idp = cont_0.l1 as f64;
+                                            var_lb = cont_0.l2 as f64;
+                                            var_neb = cont_0.n2 as f64;
                                             Ok(((var_lb as f64) >= (-(1_f64))) && ((var_lb as f64 as i64) <= (2_f64 as i64)))
                                         })().unwrap_or(false);
                                         ok
@@ -9626,8 +9931,11 @@ pub fn parse_mf32_wildcard(
                                     let lookahead_ok_1 = {
                                         let saved_ofs = ofs;
                                         let ok = (|| -> Result<bool, EndfError> {
-                                            if ofs >= lines.len() { return Ok(false); }
-                                            let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                            if ofs + 0 >= lines.len() { return Ok(false); }
+                                            let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                            var_idp = cont_0.l1 as f64;
+                                            var_lb = cont_0.l2 as f64;
+                                            var_neb = cont_0.n2 as f64;
                                             Ok((var_lb as f64 as i64) == (5_f64 as i64))
                                         })().unwrap_or(false);
                                         ok
@@ -9645,9 +9953,9 @@ pub fn parse_mf32_wildcard(
                                             result.insert("IDP", EndfValue::Int(var_idp as i64));
                                             var_lb = cont.l2 as f64;
                                             result.insert("LB", EndfValue::Int(var_lb as i64));
-                                            // field n1 complex expression (validation skipped in compiled mode)
                                             var_neb = cont.n2 as f64;
                                             result.insert("NEB", EndfValue::Int(var_neb as i64));
+                                            // field n1 complex expression (validation skipped in compiled mode)
 
                                             let mut vi: usize = 0;
                                             for var_k_loop_ in (1_f64 as i64)..=(var_neb as f64 as i64) {
@@ -9679,9 +9987,9 @@ pub fn parse_mf32_wildcard(
                                             result.insert("IDP", EndfValue::Int(var_idp as i64));
                                             var_lb = cont.l2 as f64;
                                             result.insert("LB", EndfValue::Int(var_lb as i64));
-                                            // field n1 complex expression (validation skipped in compiled mode)
                                             var_neb = cont.n2 as f64;
                                             result.insert("NEB", EndfValue::Int(var_neb as i64));
+                                            // field n1 complex expression (validation skipped in compiled mode)
 
                                             let mut vi: usize = 0;
                                             for var_k_loop_ in (1_f64 as i64)..=(var_neb as f64 as i64) {
@@ -9748,7 +10056,8 @@ pub fn parse_mf32_wildcard(
                                 // field l2 expected 0 (validation skipped in compiled mode)
                                 var_jch = cont.n1 as f64;
                                 result.insert("JCH", EndfValue::Int(var_jch as i64));
-                                // field n2 complex expression (validation skipped in compiled mode)
+                                var_nch = ((cont.n2 as f64 - (1_f64 + (-(1_f64) / (6_f64)))) / ((1_f64 / (6_f64))));
+                                result.insert("NCH", EndfValue::Int(var_nch as i64));
 
                                 let mut vi: usize = 0;
                                 for var_m_loop_ in (1_f64 as i64)..=((var_jch as f64 / var_nch as f64) as i64) {
@@ -9819,7 +10128,7 @@ pub fn parse_mf32_wildcard(
                                             var_nrb = cont.l2 as f64;
                                             result.insert("NRB", EndfValue::Int(var_nrb as i64));
                                             // field n1 complex expression (validation skipped in compiled mode)
-                                            // field n2 = abbreviation NX (validation skipped in compiled mode)
+                                            // field n2 complex expression (validation skipped in compiled mode)
 
                                             let mut vi: usize = 0;
                                             for var_p_loop_ in (1_f64 as i64)..=(var_nrb as f64 as i64) {
@@ -9867,9 +10176,9 @@ pub fn parse_mf32_wildcard(
                                     // field c2 expected 0 (validation skipped in compiled mode)
                                     // field l1 expected 0 (validation skipped in compiled mode)
                                     // field l2 expected 0 (validation skipped in compiled mode)
-                                    // field n1 = abbreviation N (validation skipped in compiled mode)
                                     var_nparb = cont.n2 as f64;
                                     result.insert("NPARB", EndfValue::Int(var_nparb as i64));
+                                    // field n1 complex expression (validation skipped in compiled mode)
 
                                     let mut vi: usize = 0;
                                     for var_p_loop_ in (1_f64 as i64)..=(var_nparb as f64 as i64) {
@@ -9939,9 +10248,9 @@ pub fn parse_mf32_wildcard(
                             // field l1 expected 0 (validation skipped in compiled mode)
                             var_lrx = cont.l2 as f64;
                             result.insert("LRX", EndfValue::Int(var_lrx as i64));
-                            // field n1 complex expression (validation skipped in compiled mode)
                             var_nrsa = cont.n2 as f64;
                             result.insert("NRSA", EndfValue::Int(var_nrsa as i64));
+                            // field n1 complex expression (validation skipped in compiled mode)
 
                             let mut vi: usize = 0;
                             for var_k_loop_ in (1_f64 as i64)..=(var_nrsa as f64 as i64) {
@@ -10105,9 +10414,9 @@ pub fn parse_mf32_wildcard(
                             result.insert("APL", f64_to_endf_value(var_apl));
                             // field l1 expected 0 (validation skipped in compiled mode)
                             // field l2 expected 0 (validation skipped in compiled mode)
-                            // field n1 complex expression (validation skipped in compiled mode)
                             var_nrsa = cont.n2 as f64;
                             result.insert("NRSA", EndfValue::Int(var_nrsa as i64));
+                            // field n1 complex expression (validation skipped in compiled mode)
 
                             let mut vi: usize = 0;
                             for var_k_loop_ in (1_f64 as i64)..=(var_nrsa as f64 as i64) {
@@ -10379,9 +10688,9 @@ pub fn parse_mf32_wildcard(
                                     result.insert("PJ", f64_to_endf_value(var_pj));
                                     // field l1 expected 0 (validation skipped in compiled mode)
                                     // field l2 expected 0 (validation skipped in compiled mode)
-                                    // field n1 complex expression (validation skipped in compiled mode)
                                     var_nch = cont.n2 as f64;
                                     result.insert("NCH", EndfValue::Int(var_nch as i64));
+                                    // field n1 complex expression (validation skipped in compiled mode)
 
                                     let mut vi: usize = 0;
                                     for var_k_loop_ in (1_f64 as i64)..=(var_nch as f64 as i64) {
@@ -10436,7 +10745,7 @@ pub fn parse_mf32_wildcard(
                                     var_nrsa = cont.l2 as f64;
                                     result.insert("NRSA", EndfValue::Int(var_nrsa as i64));
                                     // field n1 complex expression (validation skipped in compiled mode)
-                                    // field n2 = abbreviation NX (validation skipped in compiled mode)
+                                    // field n2 complex expression (validation skipped in compiled mode)
 
                                     let mut vi: usize = 0;
                                     for var_k_loop_ in (1_f64 as i64)..=(var_nrsa as f64 as i64) {
@@ -10568,9 +10877,9 @@ pub fn parse_mf32_wildcard(
                                     var_l = cont.l1 as f64;
                                     result.insert("L", EndfValue::Int(var_l as i64));
                                     // field l2 expected 0 (validation skipped in compiled mode)
-                                    // field n1 complex expression (validation skipped in compiled mode)
                                     var_njs = cont.n2 as f64;
                                     result.insert("NJS", EndfValue::Int(var_njs as i64));
+                                    // field n1 complex expression (validation skipped in compiled mode)
 
                                     let mut vi: usize = 0;
                                     for var_k_loop_ in (1_f64 as i64)..=(var_njs as f64 as i64) {
@@ -10631,9 +10940,9 @@ pub fn parse_mf32_wildcard(
                             var_mpar = cont.l1 as f64;
                             result.insert("MPAR", EndfValue::Int(var_mpar as i64));
                             // field l2 expected 0 (validation skipped in compiled mode)
-                            // field n1 complex expression (validation skipped in compiled mode)
                             var_npar = cont.n2 as f64;
                             result.insert("NPAR", EndfValue::Int(var_npar as i64));
+                            // field n1 complex expression (validation skipped in compiled mode)
 
                             let mut vi: usize = 0;
                             for var_p_loop_ in (1_f64 as i64)..=(var_npar as f64 as i64) {
@@ -10679,12 +10988,6 @@ pub fn parse_mf33_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_c: f64 = 0.0;
     let mut var_e: f64 = 0.0;
@@ -10733,6 +11036,12 @@ pub fn parse_mf33_wildcard(
     let mut var_xmt: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -10803,9 +11112,9 @@ pub fn parse_mf33_wildcard(
                                 result.insert("E2", f64_to_endf_value(var_e2));
                                 // field l1 expected 0 (validation skipped in compiled mode)
                                 // field l2 expected 0 (validation skipped in compiled mode)
-                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_nci = cont.n2 as f64;
                                 result.insert("NCI", EndfValue::Int(var_nci as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_i_loop_ in (1_f64 as i64)..=(var_nci as f64 as i64) {
@@ -10839,9 +11148,9 @@ pub fn parse_mf33_wildcard(
                                 result.insert("MATS", EndfValue::Int(var_mats as i64));
                                 var_mts = cont.l2 as f64;
                                 result.insert("MTS", EndfValue::Int(var_mts as i64));
-                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_nei = cont.n2 as f64;
                                 result.insert("NEI", EndfValue::Int(var_nei as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
@@ -10885,8 +11194,11 @@ pub fn parse_mf33_wildcard(
                         let lookahead_ok_0 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
-                                if ofs >= lines.len() { return Ok(false); }
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                if ofs + 0 >= lines.len() { return Ok(false); }
+                                let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                var_lt = cont_0.l1 as f64;
+                                var_lb = cont_0.l2 as f64;
+                                var_np = cont_0.n2 as f64;
                                 Ok(((var_lb as f64 as i64) >= (0_f64 as i64)) && ((var_lb as f64 as i64) <= (4_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -10894,8 +11206,12 @@ pub fn parse_mf33_wildcard(
                         let lookahead_ok_1 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
-                                if ofs >= lines.len() { return Ok(false); }
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                if ofs + 0 >= lines.len() { return Ok(false); }
+                                let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                var_ls = cont_0.l1 as f64;
+                                var_lb = cont_0.l2 as f64;
+                                var_nt = cont_0.n1 as f64;
+                                var_ne = cont_0.n2 as f64;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -10903,8 +11219,12 @@ pub fn parse_mf33_wildcard(
                         let lookahead_ok_2 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
-                                if ofs >= lines.len() { return Ok(false); }
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                if ofs + 0 >= lines.len() { return Ok(false); }
+                                let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                var_ls = cont_0.l1 as f64;
+                                var_lb = cont_0.l2 as f64;
+                                var_nt = cont_0.n1 as f64;
+                                var_ne = cont_0.n2 as f64;
                                 Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (1_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -10912,8 +11232,11 @@ pub fn parse_mf33_wildcard(
                         let lookahead_ok_3 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
-                                if ofs >= lines.len() { return Ok(false); }
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                if ofs + 0 >= lines.len() { return Ok(false); }
+                                let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                var_lb = cont_0.l2 as f64;
+                                var_nt = cont_0.n1 as f64;
+                                var_ner = cont_0.n2 as f64;
                                 Ok((var_lb as f64 as i64) == (6_f64 as i64))
                             })().unwrap_or(false);
                             ok
@@ -10921,8 +11244,11 @@ pub fn parse_mf33_wildcard(
                         let lookahead_ok_4 = {
                             let saved_ofs = ofs;
                             let ok = (|| -> Result<bool, EndfError> {
-                                if ofs >= lines.len() { return Ok(false); }
-                                let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                if ofs + 0 >= lines.len() { return Ok(false); }
+                                let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                var_lt = cont_0.l1 as f64;
+                                var_lb = cont_0.l2 as f64;
+                                var_np = cont_0.n2 as f64;
                                 Ok((((var_lb as f64 as i64) == (8_f64 as i64)) || ((var_lb as f64 as i64) == (9_f64 as i64))) && ((var_lt as f64 as i64) == (0_f64 as i64)))
                             })().unwrap_or(false);
                             ok
@@ -10940,9 +11266,9 @@ pub fn parse_mf33_wildcard(
                                 result.insert("LT", EndfValue::Int(var_lt as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_np = cont.n2 as f64;
                                 result.insert("NP", EndfValue::Int(var_np as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(((var_np as f64 - var_lt as f64)) as i64) {
@@ -10989,9 +11315,9 @@ pub fn parse_mf33_wildcard(
                                 result.insert("LS", EndfValue::Int(var_ls as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ne = cont.n2 as f64;
                                 result.insert("NE", EndfValue::Int(var_ne as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
@@ -11033,9 +11359,9 @@ pub fn parse_mf33_wildcard(
                                 result.insert("LS", EndfValue::Int(var_ls as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ne = cont.n2 as f64;
                                 result.insert("NE", EndfValue::Int(var_ne as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
@@ -11076,9 +11402,10 @@ pub fn parse_mf33_wildcard(
                                 // field l1 expected 0 (validation skipped in compiled mode)
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ner = cont.n2 as f64;
                                 result.insert("NER", EndfValue::Int(var_ner as i64));
+                                var_nec = ((cont.n1 as f64 - 1_f64) / (var_ner as f64));
+                                result.insert("NEC", EndfValue::Int(var_nec as i64));
 
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ner as f64 as i64) {
@@ -11129,9 +11456,9 @@ pub fn parse_mf33_wildcard(
                                 result.insert("LT", EndfValue::Int(var_lt as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_np = cont.n2 as f64;
                                 result.insert("NP", EndfValue::Int(var_np as i64));
+                                // field n1 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_np as f64 as i64) {
@@ -11177,12 +11504,6 @@ pub fn parse_mf34_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_data: f64 = 0.0;
     let mut var_k: f64 = 0.0;
@@ -11207,6 +11528,13 @@ pub fn parse_mf34_wildcard(
     let mut var_subsection: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+        var_mt = ctrl.mt as f64;
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -11231,8 +11559,12 @@ pub fn parse_mf34_wildcard(
             let lookahead_ok_0 = {
                 let saved_ofs = ofs;
                 let ok = (|| -> Result<bool, EndfError> {
-                    if ofs >= lines.len() { return Ok(false); }
-                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    if ofs + 0 >= lines.len() { return Ok(false); }
+                    let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                    var_mat1 = cont_0.l1 as f64;
+                    var_mt1 = cont_0.l2 as f64;
+                    var_nl = cont_0.n1 as f64;
+                    var_nl = cont_0.n2 as f64;
                     Ok(((var_mt1 as f64 as i64) == (0_f64 as i64)) || ((var_mt as f64) == (var_mt1 as f64)))
                 })().unwrap_or(false);
                 ok
@@ -11508,12 +11840,6 @@ pub fn parse_mf35_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_e: f64 = 0.0;
     let mut var_e1: f64 = 0.0;
@@ -11530,6 +11856,12 @@ pub fn parse_mf35_wildcard(
     let mut var_subsection: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -11553,8 +11885,14 @@ pub fn parse_mf35_wildcard(
             let lookahead_ok_0 = {
                 let saved_ofs = ofs;
                 let ok = (|| -> Result<bool, EndfError> {
-                    if ofs >= lines.len() { return Ok(false); }
-                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    if ofs + 0 >= lines.len() { return Ok(false); }
+                    let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                    var_e1 = cont_0.c1;
+                    var_e2 = cont_0.c2;
+                    var_ls = cont_0.l1 as f64;
+                    var_lb = cont_0.l2 as f64;
+                    var_nt = cont_0.n1 as f64;
+                    var_ne = cont_0.n2 as f64;
                     Ok(((var_ls as f64 as i64) == (1_f64 as i64)) && ((var_lb as f64 as i64) == (7_f64 as i64)))
                 })().unwrap_or(false);
                 ok
@@ -11625,12 +11963,6 @@ pub fn parse_mf40_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_c: f64 = 0.0;
     let mut var_e: f64 = 0.0;
@@ -11684,6 +12016,12 @@ pub fn parse_mf40_wildcard(
     let mut var_xmt: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -11753,8 +12091,9 @@ pub fn parse_mf40_wildcard(
                             let lookahead_ok_0 = {
                                 let saved_ofs = ofs;
                                 let ok = (|| -> Result<bool, EndfError> {
-                                    if ofs >= lines.len() { return Ok(false); }
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    if ofs + 0 >= lines.len() { return Ok(false); }
+                                    let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                    var_lty = cont_0.l2 as f64;
                                     Ok((var_lty as f64 as i64) == (0_f64 as i64))
                                 })().unwrap_or(false);
                                 ok
@@ -11762,8 +12101,9 @@ pub fn parse_mf40_wildcard(
                             let lookahead_ok_1 = {
                                 let saved_ofs = ofs;
                                 let ok = (|| -> Result<bool, EndfError> {
-                                    if ofs >= lines.len() { return Ok(false); }
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    if ofs + 0 >= lines.len() { return Ok(false); }
+                                    let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                    var_lty = cont_0.l2 as f64;
                                     Ok((((var_lty as f64 as i64) == (1_f64 as i64)) || ((var_lty as f64 as i64) == (2_f64 as i64))) || ((var_lty as f64 as i64) == (3_f64 as i64)))
                                 })().unwrap_or(false);
                                 ok
@@ -11793,9 +12133,9 @@ pub fn parse_mf40_wildcard(
                                     result.insert("E2", f64_to_endf_value(var_e2));
                                     // field l1 expected 0 (validation skipped in compiled mode)
                                     // field l2 expected 0 (validation skipped in compiled mode)
-                                    // field n1 complex expression (validation skipped in compiled mode)
                                     var_nci = cont.n2 as f64;
                                     result.insert("NCI", EndfValue::Int(var_nci as i64));
+                                    // field n1 complex expression (validation skipped in compiled mode)
 
                                     let mut vi: usize = 0;
                                     for var_i_loop_ in (1_f64 as i64)..=(var_nci as f64 as i64) {
@@ -11841,9 +12181,9 @@ pub fn parse_mf40_wildcard(
                                     result.insert("MATS", EndfValue::Int(var_mats as i64));
                                     var_mts = cont.l2 as f64;
                                     result.insert("MTS", EndfValue::Int(var_mts as i64));
-                                    // field n1 complex expression (validation skipped in compiled mode)
                                     var_nei = cont.n2 as f64;
                                     result.insert("NEI", EndfValue::Int(var_nei as i64));
+                                    // field n1 complex expression (validation skipped in compiled mode)
 
                                     let mut vi: usize = 0;
                                     let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
@@ -11887,8 +12227,11 @@ pub fn parse_mf40_wildcard(
                             let lookahead_ok_0 = {
                                 let saved_ofs = ofs;
                                 let ok = (|| -> Result<bool, EndfError> {
-                                    if ofs >= lines.len() { return Ok(false); }
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    if ofs + 0 >= lines.len() { return Ok(false); }
+                                    let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                    var_lt = cont_0.l1 as f64;
+                                    var_lb = cont_0.l2 as f64;
+                                    var_np = cont_0.n2 as f64;
                                     Ok(((var_lb as f64 as i64) >= (0_f64 as i64)) && ((var_lb as f64 as i64) <= (4_f64 as i64)))
                                 })().unwrap_or(false);
                                 ok
@@ -11896,8 +12239,12 @@ pub fn parse_mf40_wildcard(
                             let lookahead_ok_1 = {
                                 let saved_ofs = ofs;
                                 let ok = (|| -> Result<bool, EndfError> {
-                                    if ofs >= lines.len() { return Ok(false); }
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    if ofs + 0 >= lines.len() { return Ok(false); }
+                                    let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                    var_ls = cont_0.l1 as f64;
+                                    var_lb = cont_0.l2 as f64;
+                                    var_nt = cont_0.n1 as f64;
+                                    var_ne = cont_0.n2 as f64;
                                     Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (0_f64 as i64)))
                                 })().unwrap_or(false);
                                 ok
@@ -11905,8 +12252,12 @@ pub fn parse_mf40_wildcard(
                             let lookahead_ok_2 = {
                                 let saved_ofs = ofs;
                                 let ok = (|| -> Result<bool, EndfError> {
-                                    if ofs >= lines.len() { return Ok(false); }
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    if ofs + 0 >= lines.len() { return Ok(false); }
+                                    let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                    var_ls = cont_0.l1 as f64;
+                                    var_lb = cont_0.l2 as f64;
+                                    var_nt = cont_0.n1 as f64;
+                                    var_ne = cont_0.n2 as f64;
                                     Ok(((var_lb as f64 as i64) == (5_f64 as i64)) && ((var_ls as f64 as i64) == (1_f64 as i64)))
                                 })().unwrap_or(false);
                                 ok
@@ -11914,8 +12265,11 @@ pub fn parse_mf40_wildcard(
                             let lookahead_ok_3 = {
                                 let saved_ofs = ofs;
                                 let ok = (|| -> Result<bool, EndfError> {
-                                    if ofs >= lines.len() { return Ok(false); }
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    if ofs + 0 >= lines.len() { return Ok(false); }
+                                    let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                    var_lb = cont_0.l2 as f64;
+                                    var_nt = cont_0.n1 as f64;
+                                    var_ner = cont_0.n2 as f64;
                                     Ok((var_lb as f64 as i64) == (6_f64 as i64))
                                 })().unwrap_or(false);
                                 ok
@@ -11923,8 +12277,11 @@ pub fn parse_mf40_wildcard(
                             let lookahead_ok_4 = {
                                 let saved_ofs = ofs;
                                 let ok = (|| -> Result<bool, EndfError> {
-                                    if ofs >= lines.len() { return Ok(false); }
-                                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                                    if ofs + 0 >= lines.len() { return Ok(false); }
+                                    let (cont_0, _ctrl) = read_cont(&lines[ofs + 0], read_opts)?;
+                                    var_lt = cont_0.l1 as f64;
+                                    var_lb = cont_0.l2 as f64;
+                                    var_np = cont_0.n2 as f64;
                                     Ok((((var_lb as f64 as i64) == (8_f64 as i64)) || ((var_lb as f64 as i64) == (9_f64 as i64))) && ((var_lt as f64 as i64) == (0_f64 as i64)))
                                 })().unwrap_or(false);
                                 ok
@@ -11942,9 +12299,9 @@ pub fn parse_mf40_wildcard(
                                     result.insert("LT", EndfValue::Int(var_lt as i64));
                                     var_lb = cont.l2 as f64;
                                     result.insert("LB", EndfValue::Int(var_lb as i64));
-                                    // field n1 complex expression (validation skipped in compiled mode)
                                     var_np = cont.n2 as f64;
                                     result.insert("NP", EndfValue::Int(var_np as i64));
+                                    // field n1 complex expression (validation skipped in compiled mode)
 
                                     let mut vi: usize = 0;
                                     for var_q_loop_ in (1_f64 as i64)..=(((var_np as f64 - var_lt as f64)) as i64) {
@@ -12134,9 +12491,9 @@ pub fn parse_mf40_wildcard(
                                     result.insert("LT", EndfValue::Int(var_lt as i64));
                                     var_lb = cont.l2 as f64;
                                     result.insert("LB", EndfValue::Int(var_lb as i64));
-                                    // field n1 complex expression (validation skipped in compiled mode)
                                     var_np = cont.n2 as f64;
                                     result.insert("NP", EndfValue::Int(var_np as i64));
+                                    // field n1 complex expression (validation skipped in compiled mode)
 
                                     let mut vi: usize = 0;
                                     for var_q_loop_ in (1_f64 as i64)..=(var_np as f64 as i64) {

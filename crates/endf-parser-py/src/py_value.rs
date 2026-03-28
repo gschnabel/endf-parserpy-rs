@@ -77,7 +77,7 @@ pub fn py_to_endf_value(obj: &Bound<'_, PyAny>) -> PyResult<EndfValue> {
         // with NBT/INT/x/y) as Dict, never as Table. The Table type is
         // only used internally by record readers and should not appear
         // in the data dictionary.
-        let mut map = indexmap::IndexMap::new();
+        let mut map = endf_parser::value::FxIndexMap::default();
         for (k, v) in dict.iter() {
             let key = py_to_endf_key(&k)?;
             let val = py_to_endf_value(&v)?;

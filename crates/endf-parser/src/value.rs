@@ -1,6 +1,13 @@
 use indexmap::IndexMap;
+use rustc_hash::FxHasher;
 use serde::{Serialize, Deserialize, Serializer, Deserializer, de};
 use std::fmt;
+use std::hash::BuildHasherDefault;
+
+/// Fast IndexMap using FxHash instead of SipHash.
+/// Safe for trusted data (ENDF keys are not adversarial).
+pub type FxBuildHasher = BuildHasherDefault<FxHasher>;
+pub type FxIndexMap<K, V> = IndexMap<K, V, FxBuildHasher>;
 
 /// Key type for ENDF dictionaries. Can be integer (array indices, MF/MT numbers) or string (variable names).
 ///
@@ -98,7 +105,7 @@ pub enum EndfValue {
     /// String value (TEXT records, variable names)
     Str(String),
     /// Ordered dictionary (sections, MF/MT containers, variable collections)
-    Dict(IndexMap<EndfKey, EndfValue>),
+    Dict(FxIndexMap<EndfKey, EndfValue>),
     /// List-mode array (dense, with None for gaps)
     List(Vec<Option<EndfValue>>),
     /// Interpolation table data (TAB1/TAB2)
@@ -108,7 +115,7 @@ pub enum EndfValue {
 impl EndfValue {
     /// Create an empty dictionary.
     pub fn new_dict() -> Self {
-        EndfValue::Dict(IndexMap::new())
+        EndfValue::Dict(FxIndexMap::default())
     }
 
     /// Create an empty list.
@@ -143,7 +150,7 @@ impl EndfValue {
     }
 
     /// Try to get this value as a dictionary.
-    pub fn as_dict(&self) -> Option<&IndexMap<EndfKey, EndfValue>> {
+    pub fn as_dict(&self) -> Option<&FxIndexMap<EndfKey, EndfValue>> {
         match self {
             EndfValue::Dict(d) => Some(d),
             _ => None,
@@ -151,7 +158,7 @@ impl EndfValue {
     }
 
     /// Try to get this value as a mutable dictionary.
-    pub fn as_dict_mut(&mut self) -> Option<&mut IndexMap<EndfKey, EndfValue>> {
+    pub fn as_dict_mut(&mut self) -> Option<&mut FxIndexMap<EndfKey, EndfValue>> {
         match self {
             EndfValue::Dict(d) => Some(d),
             _ => None,

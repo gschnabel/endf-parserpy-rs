@@ -132,6 +132,27 @@ fn generate_dispatch_fn(recipes: &[(i32, i32, &[RecipeNode])]) -> String {
 }
 
 // ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/// Extract the variable name from a simple scalar variable expression.
+fn is_zero(s: &str) -> bool { s == "0_f64" || s == "0.0" }
+fn is_one(s: &str) -> bool { s == "1_f64" || s == "1.0" }
+fn neg_str(a: &str) -> String { if is_zero(a) { "0_f64".into() } else { format!("-({})", a) } }
+fn add_str(a: &str, b: &str) -> String { if is_zero(a) { b.into() } else if is_zero(b) { a.into() } else { format!("({} + {})", a, b) } }
+fn sub_str(a: &str, b: &str) -> String { if is_zero(b) { a.into() } else if is_zero(a) { neg_str(b) } else { format!("({} - {})", a, b) } }
+fn mul_str(a: &str, b: &str) -> String { if is_zero(a) || is_zero(b) { "0_f64".into() } else if is_one(a) { b.into() } else if is_one(b) { a.into() } else { format!("({} * {})", a, b) } }
+fn div_str(a: &str, b: &str) -> String { if is_zero(a) { "0_f64".into() } else if is_one(b) { a.into() } else { format!("({} / ({}))", a, b) } }
+
+fn get_simple_scalar_var(expr: &Expr) -> Option<String> {
+    match expr {
+        Expr::Variable(v) if v.indices.is_empty() => Some(v.name.clone()),
+        Expr::InconsistentVar(v) if v.indices.is_empty() => Some(v.name.clone()),
+        _ => None,
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Variable collection – pre-pass to find all variable names in a recipe
 // ---------------------------------------------------------------------------
 
@@ -310,6 +331,10 @@ struct CodeGen {
     mt: i32,
     /// All variables pre-collected from the recipe AST, to be declared at function scope.
     all_vars: HashSet<String>,
+    /// Variables known to have been assigned by prior records.
+    /// Used to distinguish unknowns from already-set variables when
+    /// solving complex field expressions.
+    known_vars: HashSet<String>,
     /// Stack of active loop variable names.
     loop_vars: Vec<String>,
     /// Compile-time abbreviation table: name -> defining Expr.
@@ -328,6 +353,7 @@ impl CodeGen {
             all_vars,
             loop_vars: Vec::new(),
             abbreviations: vec![HashMap::new()],
+            known_vars: HashSet::new(),
         }
     }
 
@@ -347,19 +373,6 @@ impl CodeGen {
         out.push_str(") -> EndfResult<EndfValue> {\n");
         out.push_str("    let mut ofs: usize = 0;\n");
         out.push_str("    let mut result = EndfValue::new_dict();\n");
-        // Store MAT/MF/MT from first line
-        out.push_str("    if !lines.is_empty() {\n");
-        out.push_str("        let ctrl = records::read_ctrl(&lines[0], read_opts)?;\n");
-        out.push_str(
-            "        result.insert(\"MAT\", EndfValue::Int(ctrl.mat as i64));\n",
-        );
-        out.push_str(
-            "        result.insert(\"MF\", EndfValue::Int(ctrl.mf as i64));\n",
-        );
-        out.push_str(
-            "        result.insert(\"MT\", EndfValue::Int(ctrl.mt as i64));\n",
-        );
-        out.push_str("    }\n");
 
         // Pre-declare all variables at function scope so they are accessible
         // from any branch or nested block.
@@ -374,6 +387,30 @@ impl CodeGen {
         if !sorted_vars.is_empty() {
             out.push('\n');
         }
+
+        // Store MAT/MF/MT from first line, and set local vars so conditions
+        // like `MT==MT1` can reference them.
+        out.push_str("    if !lines.is_empty() {\n");
+        out.push_str("        let ctrl = records::read_ctrl(&lines[0], read_opts)?;\n");
+        out.push_str(
+            "        result.insert(\"MAT\", EndfValue::Int(ctrl.mat as i64));\n",
+        );
+        out.push_str(
+            "        result.insert(\"MF\", EndfValue::Int(ctrl.mf as i64));\n",
+        );
+        out.push_str(
+            "        result.insert(\"MT\", EndfValue::Int(ctrl.mt as i64));\n",
+        );
+        if self.all_vars.contains("mat") {
+            out.push_str("        var_mat = ctrl.mat as f64;\n");
+        }
+        if self.all_vars.contains("mf") {
+            out.push_str("        var_mf = ctrl.mf as f64;\n");
+        }
+        if self.all_vars.contains("mt") {
+            out.push_str("        var_mt = ctrl.mt as f64;\n");
+        }
+        out.push_str("    }\n");
 
         out.push_str(&self.code);
         out.push_str("    Ok(result)\n");
@@ -570,12 +607,97 @@ impl CodeGen {
         let cont_fields = ["c1", "c2", "l1", "l2", "n1", "n2"];
         let is_int = [false, false, true, true, true, true];
 
-        for (i, expr) in fields.iter().enumerate() {
-            self.emit_cont_field_assignment(expr, cont_fields[i], is_int[i]);
-        }
+        self.emit_record_fields(fields, &cont_fields, &is_int);
 
         self.indent -= 1;
         self.line("}");
+    }
+
+    /// Two-pass field emission for record headers.
+    /// Pass 1: emit all simple fields (variables, constants, indexed vars).
+    /// Pass 2: emit solves for complex expressions — by now, variables from
+    /// other fields in the same record are known, turning quadratic
+    /// abbreviation expressions into linear ones.
+    fn emit_record_fields(&mut self, fields: &[Expr], cont_fields: &[&str], is_int: &[bool]) {
+        let n = fields.len().min(cont_fields.len());
+        let mut deferred: Vec<usize> = Vec::new();
+
+        // Pass 1: simple fields.
+        for i in 0..n {
+            if self.is_simple_field(&fields[i]) {
+                self.emit_cont_field_assignment(&fields[i], cont_fields[i], is_int[i]);
+                // Track which variables were assigned (both for this record
+                // and for subsequent records).
+                if let Some(name) = get_simple_scalar_var(&fields[i]) {
+                    self.known_vars.insert(name.to_lowercase());
+                }
+            } else {
+                deferred.push(i);
+            }
+        }
+
+        // Pass 2: complex expression fields. Variables from Pass 1 AND
+        // from prior records (in known_vars) are now considered known,
+        // turning e.g. NE*(NE-1)+1 into a linear expression if NE was
+        // assigned from another field, or (LG+1)*NT into linear if LG
+        // was set by the HEAD record.
+        for i in deferred {
+            self.emit_complex_field_solve(&fields[i], cont_fields[i], is_int[i]);
+        }
+    }
+
+    /// Check if a field expression is "simple" — can be processed without
+    /// depending on other fields in the same record.
+    fn is_simple_field(&self, expr: &Expr) -> bool {
+        match expr {
+            Expr::Number(_) | Expr::DesiredNumber(_) => true,
+            Expr::Variable(v) | Expr::InconsistentVar(v) if v.indices.is_empty() => {
+                // Abbreviation in field position is NOT simple — it may
+                // depend on variables from other fields.
+                !self.is_abbreviation(&v.name)
+            }
+            Expr::Variable(_) | Expr::InconsistentVar(_) => true, // indexed
+            _ => false, // complex expression
+        }
+    }
+
+    /// Emit code for a complex expression field, attempting to solve for
+    /// an unknown variable. `assigned` contains variables already stored
+    /// from other (simple) fields in the same record.
+    fn emit_complex_field_solve(
+        &mut self,
+        expr: &Expr,
+        cont_field: &str,
+        is_int: bool,
+    ) {
+        let expanded = self.expand_abbreviations(expr);
+        if let Some((var_name, coeff_expr, offset_expr)) = self.try_linear_solve(&expanded) {
+            let field_val = if is_int {
+                format!("cont.{} as f64", cont_field)
+            } else {
+                format!("cont.{}", cont_field)
+            };
+            let rhs = div_str(&sub_str(&field_val, &offset_expr), &coeff_expr);
+            self.declare_or_assign_f64(&var_name, &rhs);
+            if is_int {
+                self.line(&format!(
+                    "result.insert(\"{}\", EndfValue::Int({} as i64));",
+                    var_name, Self::var_name(&var_name)
+                ));
+            } else {
+                self.line(&format!(
+                    "result.insert(\"{}\", f64_to_endf_value({}));",
+                    var_name, Self::var_name(&var_name)
+                ));
+            }
+            self.known_vars.insert(var_name.to_lowercase());
+        } else {
+            // Fully known or non-linear — validation only.
+            self.line(&format!(
+                "// field {} complex expression (validation skipped in compiled mode)",
+                cont_field
+            ));
+        }
     }
 
     fn emit_cont_field_assignment(&mut self, expr: &Expr, cont_field: &str, is_int: bool) {
@@ -658,10 +780,10 @@ impl CodeGen {
                 self.emit_indexed_var_store(v, cont_field, is_int, "result");
             }
             _ => {
-                // Complex expression: emit a TODO comment
-                // Complex expression (e.g. 6*NX where NX is an abbreviation).
-                // After abbreviation expansion, this is computable from known
-                // variables — treat as validation.
+                // Complex expression — should only be reached from Pass 1
+                // (before other fields are known). In the two-pass approach,
+                // these are deferred to Pass 2 via emit_complex_field_solve.
+                // If called directly, just emit validation.
                 self.line(&format!(
                     "// field {} complex expression (validation skipped in compiled mode)",
                     cont_field
@@ -799,9 +921,7 @@ impl CodeGen {
 
         // Store table data
         if let Some(ref tn) = table_name {
-            self.line(&format!(
-                "let mut tab_section = EndfValue::new_dict();",
-            ));
+            self.line("let mut tab_section = EndfValue::new_dict();");
             self.line("tab_section.insert(\"NBT\", list_from_i64(&body.nbt));");
             self.line("tab_section.insert(\"INT\", list_from_i64(&body.int));");
             self.line(&format!(
@@ -812,10 +932,14 @@ impl CodeGen {
                 "tab_section.insert(\"{}\", list_from_f64(&body.y));",
                 y_var.name
             ));
-            self.line(&format!(
-                "result.insert(\"{}\", tab_section);",
-                tn.name
-            ));
+            if tn.indices.is_empty() {
+                self.line(&format!(
+                    "result.insert(\"{}\", tab_section);",
+                    tn.name
+                ));
+            } else {
+                self.emit_nested_insert("result", &tn.name, &tn.indices, "tab_section");
+            }
         } else {
             self.line("result.insert(\"NBT\", list_from_i64(&body.nbt));");
             self.line("result.insert(\"INT\", list_from_i64(&body.int));");
@@ -852,12 +976,15 @@ impl CodeGen {
         self.line("ofs += consumed;");
         self.blank();
 
-        let cont_fields = ["c1", "c2", "l1", "l2"];
-        let is_int = [false, false, true, true];
+        // Map header fields C1, C2, L1, L2 (fields 0-3) and N2 (field 5).
+        // N1 (NR) is NOT mapped — it's inferred from NBT array length.
+        // This matches interpreter behavior in map_tab2.
+        let cont_fields = ["c1", "c2", "l1", "l2", "n2"];
+        let is_int = [false, false, true, true, true];
+        let field_indices = [0, 1, 2, 3, 5];
+        let selected_fields: Vec<Expr> = field_indices.iter().map(|&fi| fields[fi].clone()).collect();
 
-        for (i, expr) in fields[..4].iter().enumerate() {
-            self.emit_cont_field_assignment(expr, cont_fields[i], is_int[i]);
-        }
+        self.emit_record_fields(&selected_fields, &cont_fields, &is_int);
 
         self.blank();
 
@@ -865,10 +992,14 @@ impl CodeGen {
             self.line("let mut tab_section = EndfValue::new_dict();");
             self.line("tab_section.insert(\"NBT\", list_from_i64(&body.nbt));");
             self.line("tab_section.insert(\"INT\", list_from_i64(&body.int));");
-            self.line(&format!(
-                "result.insert(\"{}\", tab_section);",
-                tn.name
-            ));
+            if tn.indices.is_empty() {
+                self.line(&format!(
+                    "result.insert(\"{}\", tab_section);",
+                    tn.name
+                ));
+            } else {
+                self.emit_nested_insert("result", &tn.name, &tn.indices, "tab_section");
+            }
         } else {
             self.line("result.insert(\"NBT\", list_from_i64(&body.nbt));");
             self.line("result.insert(\"INT\", list_from_i64(&body.int));");
@@ -901,9 +1032,7 @@ impl CodeGen {
         let cont_fields = ["c1", "c2", "l1", "l2", "n1", "n2"];
         let is_int = [false, false, true, true, true, true];
 
-        for (i, expr) in fields.iter().enumerate() {
-            self.emit_cont_field_assignment(expr, cont_fields[i], is_int[i]);
-        }
+        self.emit_record_fields(fields, &cont_fields, &is_int);
 
         self.blank();
 
@@ -922,10 +1051,14 @@ impl CodeGen {
         self.emit_list_body_distribution(body, target);
 
         if let Some(ref ln) = list_name {
-            self.line(&format!(
-                "result.insert(\"{}\", list_section);",
-                ln.name
-            ));
+            if ln.indices.is_empty() {
+                self.line(&format!(
+                    "result.insert(\"{}\", list_section);",
+                    ln.name
+                ));
+            } else {
+                self.emit_nested_insert("result", &ln.name, &ln.indices, "list_section");
+            }
         }
 
         self.indent -= 1;
@@ -1069,6 +1202,181 @@ impl CodeGen {
         self.line("}");
     }
 
+    /// Try to solve a (possibly expanded) expression for a single unknown
+    /// variable at compile time. Returns `(var_name, coeff_rust, offset_rust)`
+    /// where the expression equals `coeff * var + offset`, and coeff/offset
+    /// are Rust source expressions referencing only known variables.
+    ///
+    /// A variable is "unknown" if it is a scalar (no indices), not a loop var,
+    /// not an abbreviation, and not already known from context.
+    /// Try to solve a (possibly expanded) expression for a single unknown.
+    /// Uses `self.known_vars` (variables assigned from this and prior records),
+    /// loop vars, and abbreviations to determine which variables are known.
+    fn try_linear_solve(&self, expr: &Expr) -> Option<(String, String, String)> {
+        let mut vars = HashSet::new();
+        Self::collect_shallow_vars(expr, &mut vars);
+
+        let abbrev_names: HashSet<String> = self.abbreviations.iter()
+            .flat_map(|scope| scope.keys().cloned())
+            .collect();
+        vars.retain(|v| !abbrev_names.contains(&v.to_lowercase()));
+        vars.retain(|v| !self.loop_vars.contains(&v.to_lowercase()));
+        vars.retain(|v| !self.known_vars.contains(&v.to_lowercase()));
+
+        if vars.is_empty() { return None; }
+        if vars.len() != 1 { return None; }
+
+        let unknown = vars.into_iter().next().unwrap();
+        let (coeff, offset) = self.linear_decompose(expr, &unknown)?;
+        Some((unknown, coeff, offset))
+    }
+
+    /// Symbolically decompose `expr` into `coeff * var + offset`.
+    /// Returns `(coeff_rust_str, offset_rust_str)` or None if non-linear.
+    fn linear_decompose(&self, expr: &Expr, unknown: &str) -> Option<(String, String)> {
+        let unknown_lower = unknown.to_lowercase();
+        match expr {
+            Expr::Number(n) | Expr::DesiredNumber(n) => {
+                let s = if *n == (*n as i64) as f64 { format!("{}_f64", *n as i64) } else { format!("{}_f64", n) };
+                Some(("0_f64".to_string(), s))
+            }
+            Expr::Variable(v) | Expr::InconsistentVar(v) if v.indices.is_empty() => {
+                if v.name.to_lowercase() == unknown_lower {
+                    Some(("1_f64".to_string(), "0_f64".to_string()))
+                } else {
+                    Some(("0_f64".to_string(), self.expr_to_rust(expr)))
+                }
+            }
+            Expr::Variable(_) | Expr::InconsistentVar(_) => {
+                Some(("0_f64".to_string(), self.expr_to_rust(expr)))
+            }
+            Expr::Neg(a) => {
+                let (ac, ao) = self.linear_decompose(a, unknown)?;
+                Some((neg_str(&ac), neg_str(&ao)))
+            }
+            Expr::Bracket(a) => self.linear_decompose(a, unknown),
+            Expr::Add(a, b) => {
+                let (ac, ao) = self.linear_decompose(a, unknown)?;
+                let (bc, bo) = self.linear_decompose(b, unknown)?;
+                Some((add_str(&ac, &bc), add_str(&ao, &bo)))
+            }
+            Expr::Sub(a, b) => {
+                let (ac, ao) = self.linear_decompose(a, unknown)?;
+                let (bc, bo) = self.linear_decompose(b, unknown)?;
+                Some((sub_str(&ac, &bc), sub_str(&ao, &bo)))
+            }
+            Expr::Mul(a, b) => {
+                let (ac, ao) = self.linear_decompose(a, unknown)?;
+                let (bc, bo) = self.linear_decompose(b, unknown)?;
+                if is_zero(&ac) {
+                    Some((mul_str(&ao, &bc), mul_str(&ao, &bo)))
+                } else if is_zero(&bc) {
+                    Some((mul_str(&ac, &bo), mul_str(&ao, &bo)))
+                } else {
+                    None
+                }
+            }
+            Expr::Div(a, b) => {
+                let (ac, ao) = self.linear_decompose(a, unknown)?;
+                let (bc, _bo) = self.linear_decompose(b, unknown)?;
+                if !is_zero(&bc) { return None; }
+                let b_rust = self.expr_to_rust(b);
+                Some((div_str(&ac, &b_rust), div_str(&ao, &b_rust)))
+            }
+            Expr::Mod(_, _) => {
+                if self.expr_contains_var(expr, &unknown_lower) { None }
+                else { Some(("0_f64".to_string(), self.expr_to_rust(expr))) }
+            }
+        }
+    }
+
+    fn expr_contains_var(&self, expr: &Expr, var_lower: &str) -> bool {
+        match expr {
+            Expr::Variable(v) | Expr::InconsistentVar(v) if v.indices.is_empty() => v.name.to_lowercase() == *var_lower,
+            Expr::Variable(_) | Expr::InconsistentVar(_) | Expr::Number(_) | Expr::DesiredNumber(_) => false,
+            Expr::Neg(a) | Expr::Bracket(a) => self.expr_contains_var(a, var_lower),
+            Expr::Add(a, b) | Expr::Sub(a, b) | Expr::Mul(a, b) | Expr::Div(a, b) | Expr::Mod(a, b) =>
+                self.expr_contains_var(a, var_lower) || self.expr_contains_var(b, var_lower),
+        }
+    }
+
+    /// Collect simple (non-indexed) variable names from an expression
+    /// WITHOUT expanding abbreviations. Index expressions of indexed
+    /// variables are NOT collected — they reference loop vars or
+    /// already-known variables, not field unknowns.
+    fn collect_shallow_vars(expr: &Expr, vars: &mut HashSet<String>) {
+        match expr {
+            Expr::Variable(v) | Expr::InconsistentVar(v) if v.indices.is_empty() => {
+                vars.insert(v.name.clone());
+            }
+            Expr::Variable(_) | Expr::InconsistentVar(_) => {
+                // Indexed variables are "known" (read from result dict).
+                // Don't recurse into index expressions.
+            }
+            Expr::Neg(a) | Expr::Bracket(a) => Self::collect_shallow_vars(a, vars),
+            Expr::Add(a, b) | Expr::Sub(a, b) | Expr::Mul(a, b)
+            | Expr::Div(a, b) | Expr::Mod(a, b) => {
+                Self::collect_shallow_vars(a, vars);
+                Self::collect_shallow_vars(b, vars);
+            }
+            Expr::Number(_) | Expr::DesiredNumber(_) => {}
+        }
+    }
+
+    /// Collect field expressions from the first `count` record nodes in a body,
+    /// skipping non-record nodes (comments, abbreviations).
+    fn collect_record_nodes(body: &[RecipeNode], count: usize) -> Vec<Vec<&Expr>> {
+        let mut result = Vec::new();
+        for node in body {
+            if result.len() >= count { break; }
+            match node {
+                RecipeNode::HeadOrCont { fields, .. } => {
+                    result.push(fields.iter().collect());
+                }
+                RecipeNode::Tab1 { fields, .. } => {
+                    result.push(fields.iter().collect());
+                }
+                RecipeNode::Tab2 { fields, .. } => {
+                    result.push(fields.iter().collect());
+                }
+                RecipeNode::List { fields, .. } => {
+                    result.push(fields.iter().collect());
+                }
+                RecipeNode::Comment(_) | RecipeNode::Abbreviation { .. } => {
+                    continue;
+                }
+                _ => break,
+            }
+        }
+        result
+    }
+
+    /// Extract the field expressions from the first record node in a body.
+    /// Works for HEAD/CONT (6 fields), TAB1 (6), TAB2 (6), LIST (6).
+    fn first_record_fields(body: &[RecipeNode]) -> Option<Vec<&Expr>> {
+        for node in body {
+            match node {
+                RecipeNode::HeadOrCont { fields, .. } => {
+                    return Some(fields.iter().collect());
+                }
+                RecipeNode::Tab1 { fields, .. } => {
+                    return Some(fields.iter().collect());
+                }
+                RecipeNode::Tab2 { fields, .. } => {
+                    return Some(fields.iter().collect());
+                }
+                RecipeNode::List { fields, .. } => {
+                    return Some(fields.iter().collect());
+                }
+                RecipeNode::Comment(_) | RecipeNode::Abbreviation { .. } => {
+                    continue; // skip non-record nodes
+                }
+                _ => return None,
+            }
+        }
+        None
+    }
+
     // -- IfClause -----------------------------------------------------------
 
     fn emit_if_clause(
@@ -1086,13 +1394,43 @@ impl CodeGen {
                 self.line("let saved_ofs = ofs;");
                 self.line("let ok = (|| -> Result<bool, EndfError> {");
                 self.indent += 1;
-                self.line("if ofs >= lines.len() { return Ok(false); }");
-                self.line("let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;");
+                // Determine lookahead depth (number of ENDF records to read).
+                let la_depth = match branch.lookahead.as_deref() {
+                    Some(Expr::Number(n)) => *n as usize,
+                    _ => 1,
+                };
+
+                // Read up to la_depth record headers and extract variables.
+                let record_nodes = Self::collect_record_nodes(&branch.body, la_depth);
+                for (rec_idx, fields) in record_nodes.iter().enumerate() {
+                    let cont_var = format!("cont_{}", rec_idx);
+                    self.line(&format!(
+                        "if ofs + {} >= lines.len() {{ return Ok(false); }}",
+                        rec_idx
+                    ));
+                    self.line(&format!(
+                        "let ({}, _ctrl) = read_cont(&lines[ofs + {}], read_opts)?;",
+                        cont_var, rec_idx
+                    ));
+                    let cont_names = ["c1", "c2", "l1", "l2", "n1", "n2"];
+                    for (fi, expr) in fields.iter().enumerate() {
+                        if fi >= cont_names.len() { break; }
+                        if let Some(var) = get_simple_scalar_var(expr) {
+                            self.line(&format!(
+                                "{} = {}.{}{};",
+                                Self::var_name(&var),
+                                cont_var,
+                                cont_names[fi],
+                                if fi >= 2 { " as f64" } else { "" }
+                            ));
+                        }
+                    }
+                }
+
                 let cond_rust = self.bool_expr_to_rust(&branch.condition);
                 self.line(&format!("Ok({})", cond_rust));
                 self.indent -= 1;
                 self.line("})().unwrap_or(false);");
-                // Note: ofs is not modified here (closure borrows immutably via lines[ofs])
                 self.line("ok");
                 self.indent -= 1;
                 self.line("};");
@@ -1103,7 +1441,17 @@ impl CodeGen {
         }
 
         // Emit the if / else if / else chain.
+        // Save abbreviation and known_vars state before branches, since
+        // abbreviations defined in one branch must not leak into others
+        // (only one branch executes at runtime).
+        let saved_abbreviations = self.abbreviations.clone();
+        let saved_known_vars = self.known_vars.clone();
+
         for (i, branch) in branches.iter().enumerate() {
+            // Restore state to pre-branch baseline for each branch.
+            self.abbreviations = saved_abbreviations.clone();
+            self.known_vars = saved_known_vars.clone();
+
             let cond = if let Some(ref lv) = lookahead_vars[i] {
                 lv.clone()
             } else {
@@ -1123,6 +1471,8 @@ impl CodeGen {
         }
 
         if let Some(else_nodes) = else_body {
+            self.abbreviations = saved_abbreviations.clone();
+            self.known_vars = saved_known_vars.clone();
             self.line("} else {");
             self.indent += 1;
             for node in else_nodes {
@@ -1130,6 +1480,12 @@ impl CodeGen {
             }
             self.indent -= 1;
         }
+
+        // After the if/elif/else, restore to the pre-branch state.
+        // Variables set inside branches are not guaranteed to be set
+        // (depends on which branch was taken), so we can't rely on them.
+        self.abbreviations = saved_abbreviations;
+        self.known_vars = saved_known_vars;
         self.line("}");
     }
 
@@ -1199,31 +1555,8 @@ impl CodeGen {
                 section_var
             ));
 
-            // Insert with index key
-            self.line(&format!(
-                "if !result.contains_key(\"{}\") {{",
-                name.name
-            ));
-            self.indent += 1;
-            self.line(&format!(
-                "result.insert(\"{}\", EndfValue::new_dict());",
-                name.name
-            ));
-            self.indent -= 1;
-            self.line("}");
-
-            if name.indices.len() == 1 {
-                let idx = self.expr_to_rust(&name.indices[0]);
-                self.line(&format!(
-                    "result.get_mut(\"{}\").unwrap().insert(EndfKey::Int({} as i64), {});",
-                    name.name, idx, section_var
-                ));
-            } else {
-                self.line(&format!(
-                    "// TODO: multi-index section insert for {}",
-                    name.name
-                ));
-            }
+            // Insert with index key(s)
+            self.emit_nested_insert("result", &name.name, &name.indices, &section_var);
         }
 
         // Pop the abbreviation scope for this section.
@@ -1251,10 +1584,17 @@ impl CodeGen {
 
         if placeholders.len() == 1 {
             if let Some(ref v) = placeholders[0].var {
-                self.line(&format!(
-                    "result.insert(\"{}\", EndfValue::Str(text_rec.text.clone()));",
-                    v.name
-                ));
+                if v.indices.is_empty() {
+                    self.line(&format!(
+                        "result.insert(\"{}\", EndfValue::Str(text_rec.text.clone()));",
+                        v.name
+                    ));
+                } else {
+                    self.emit_nested_insert(
+                        "result", &v.name, &v.indices,
+                        "EndfValue::Str(text_rec.text.clone())",
+                    );
+                }
             }
         } else {
             // Multiple text fields: split by width
@@ -1262,10 +1602,18 @@ impl CodeGen {
             for ph in placeholders {
                 let width = ph.width.unwrap_or(66);
                 if let Some(ref v) = ph.var {
-                    self.line(&format!(
-                        "result.insert(\"{}\", EndfValue::Str(text_rec.text[{}..{}].to_string()));",
-                        v.name, pos, pos + width
-                    ));
+                    let text_expr = format!(
+                        "EndfValue::Str(text_rec.text[{}..{}.min(text_rec.text.len())].to_string())",
+                        pos, pos + width
+                    );
+                    if v.indices.is_empty() {
+                        self.line(&format!(
+                            "result.insert(\"{}\", {});",
+                            v.name, text_expr
+                        ));
+                    } else {
+                        self.emit_nested_insert("result", &v.name, &v.indices, &text_expr);
+                    }
                 }
                 pos += width;
             }
