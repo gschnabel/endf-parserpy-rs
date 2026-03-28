@@ -90,8 +90,11 @@ record_fields = {
 }
 
 // --------------- comment block ------------------------------
-comment_block = { COMMENT }
-COMMENT       = @{ (" "* ~ "#" ~ (!NEWLINE ~ ANY)* ~ NEWLINE)+ }
+// NOTE: The rule must NOT be named COMMENT (uppercase) because pest treats
+// that as a built-in implicit rule (like WHITESPACE) that gets silently
+// consumed between all tokens, which breaks section body parsing.
+comment_block  = { comment_line }
+comment_line   = @{ (" "* ~ "#" ~ (!NEWLINE ~ ANY)* ~ NEWLINE)+ }
 
 // --------------- stop instruction ---------------------------
 stop_line            = { "stop" ~ "(" ~ escaped_stop_message? ~ ")" }
