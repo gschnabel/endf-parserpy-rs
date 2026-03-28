@@ -27,9 +27,10 @@ fn list_from_i64(vals: &[i64]) -> EndfValue {
 }
 
 /// Build an EndfValue list from a slice of f64.
+/// All TAB1/LIST body values are floats by design — skip integer check.
 #[inline]
 fn list_from_f64(vals: &[f64]) -> EndfValue {
-    EndfValue::List(vals.iter().map(|v| Some(f64_to_endf_value(*v))).collect())
+    EndfValue::List(vals.iter().map(|v| Some(EndfValue::Float(*v))).collect())
 }
 
 pub fn parse_mf0_mt0(
@@ -303,7 +304,7 @@ pub fn parse_mf1_mt452(
             for var_k_loop_ in (1_f64 as i64)..=(var_nc as f64 as i64) {
                 var_k = var_k_loop_ as f64;
                 let _val = vals[vi];
-                result.get_mut("C").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("C").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
             }
         }
@@ -397,7 +398,7 @@ pub fn parse_mf1_mt455(
             for var_k_loop_ in (1_f64 as i64)..=(var_nnf as f64 as i64) {
                 var_k = var_k_loop_ as f64;
                 let _val = vals[vi];
-                result.get_mut("lambda").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("lambda").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
             }
         }
@@ -463,12 +464,12 @@ pub fn parse_mf1_mt455(
                     let _val = vals[vi];
                     if !result.get_mut("lambda").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("lambda").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                     let _nav_0 = result.get_mut("lambda").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                    _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                    _nav_0.insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                     vi += 1;
                     let _val = vals[vi];
                     if !result.get_mut("alpha").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("alpha").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                     let _nav_0 = result.get_mut("alpha").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                    _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                    _nav_0.insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                     vi += 1;
                 }
             }
@@ -511,7 +512,7 @@ pub fn parse_mf1_mt455(
             for var_k_loop_ in (1_f64 as i64)..=(var_nnf as f64 as i64) {
                 var_k = var_k_loop_ as f64;
                 let _val = vals[vi];
-                result.get_mut("lambda").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("lambda").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
             }
         }
@@ -530,7 +531,7 @@ pub fn parse_mf1_mt455(
 
             let mut vi: usize = 0;
             let _val = vals[vi];
-            result.insert("nubar_d", f64_to_endf_value(_val));
+            result.insert("nubar_d", EndfValue::Float(_val));
             var_nubar_d = _val;
             vi += 1;
         }
@@ -578,12 +579,12 @@ pub fn parse_mf1_mt455(
                     let _val = vals[vi];
                     if !result.get_mut("lambda").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("lambda").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                     let _nav_0 = result.get_mut("lambda").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                    _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                    _nav_0.insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                     vi += 1;
                     let _val = vals[vi];
                     if !result.get_mut("alpha").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("alpha").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                     let _nav_0 = result.get_mut("alpha").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                    _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                    _nav_0.insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                     vi += 1;
                 }
             }
@@ -609,7 +610,7 @@ pub fn parse_mf1_mt455(
             for var_k_loop_ in (1_f64 as i64)..=(var_nc as f64 as i64) {
                 var_k = var_k_loop_ as f64;
                 let _val = vals[vi];
-                result.get_mut("nubar_d").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("nubar_d").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
             }
         }
@@ -686,7 +687,7 @@ pub fn parse_mf1_mt456(
 
             let mut vi: usize = 0;
             let _val = vals[vi];
-            result.insert("nubar_p", f64_to_endf_value(_val));
+            result.insert("nubar_p", EndfValue::Float(_val));
             var_nubar_p = _val;
             vi += 1;
         }
@@ -835,75 +836,75 @@ pub fn parse_mf1_mt458(
 
             let mut vi: usize = 0;
             let _val = vals[vi];
-            result.insert("EFR", f64_to_endf_value(_val));
+            result.insert("EFR", EndfValue::Float(_val));
             var_efr = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("dEFR", f64_to_endf_value(_val));
+            result.insert("dEFR", EndfValue::Float(_val));
             var_defr = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("ENP", f64_to_endf_value(_val));
+            result.insert("ENP", EndfValue::Float(_val));
             var_enp = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("dENP", f64_to_endf_value(_val));
+            result.insert("dENP", EndfValue::Float(_val));
             var_denp = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("END", f64_to_endf_value(_val));
+            result.insert("END", EndfValue::Float(_val));
             var_end = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("dEND", f64_to_endf_value(_val));
+            result.insert("dEND", EndfValue::Float(_val));
             var_dend = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("EGP", f64_to_endf_value(_val));
+            result.insert("EGP", EndfValue::Float(_val));
             var_egp = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("dEGP", f64_to_endf_value(_val));
+            result.insert("dEGP", EndfValue::Float(_val));
             var_degp = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("EGD", f64_to_endf_value(_val));
+            result.insert("EGD", EndfValue::Float(_val));
             var_egd = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("dEGD", f64_to_endf_value(_val));
+            result.insert("dEGD", EndfValue::Float(_val));
             var_degd = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("EB", f64_to_endf_value(_val));
+            result.insert("EB", EndfValue::Float(_val));
             var_eb = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("dEB", f64_to_endf_value(_val));
+            result.insert("dEB", EndfValue::Float(_val));
             var_deb = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("ENU", f64_to_endf_value(_val));
+            result.insert("ENU", EndfValue::Float(_val));
             var_enu = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("dENU", f64_to_endf_value(_val));
+            result.insert("dENU", EndfValue::Float(_val));
             var_denu = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("ER", f64_to_endf_value(_val));
+            result.insert("ER", EndfValue::Float(_val));
             var_er = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("dER", f64_to_endf_value(_val));
+            result.insert("dER", EndfValue::Float(_val));
             var_der = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("ET", f64_to_endf_value(_val));
+            result.insert("ET", EndfValue::Float(_val));
             var_et = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("dET", f64_to_endf_value(_val));
+            result.insert("dET", EndfValue::Float(_val));
             var_det = _val;
             vi += 1;
         }
@@ -960,58 +961,58 @@ pub fn parse_mf1_mt458(
             for var_k_loop_ in (0_f64 as i64)..=(var_nply as f64 as i64) {
                 var_k = var_k_loop_ as f64;
                 let _val = vals[vi];
-                result.get_mut("c_EFR").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("c_EFR").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("dc_EFR").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("dc_EFR").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("c_ENP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("c_ENP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("dc_ENP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("dc_ENP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("c_END").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("c_END").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("dc_END").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("dc_END").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("c_EGP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("c_EGP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("dc_EGP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("dc_EGP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("c_EGD").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("c_EGD").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("dc_EGD").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("dc_EGD").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("c_EB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("c_EB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("dc_EB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("dc_EB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("c_ENU").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("c_ENU").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("dc_ENU").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("dc_ENU").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("c_ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("c_ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("dc_ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("dc_ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("c_ET").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("c_ET").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("dc_ET").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("dc_ET").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
             }
         }
@@ -1047,75 +1048,75 @@ pub fn parse_mf1_mt458(
 
             let mut vi: usize = 0;
             let _val = vals[vi];
-            result.insert("EFR", f64_to_endf_value(_val));
+            result.insert("EFR", EndfValue::Float(_val));
             var_efr = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("dEFR", f64_to_endf_value(_val));
+            result.insert("dEFR", EndfValue::Float(_val));
             var_defr = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("ENP", f64_to_endf_value(_val));
+            result.insert("ENP", EndfValue::Float(_val));
             var_enp = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("dENP", f64_to_endf_value(_val));
+            result.insert("dENP", EndfValue::Float(_val));
             var_denp = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("END", f64_to_endf_value(_val));
+            result.insert("END", EndfValue::Float(_val));
             var_end = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("dEND", f64_to_endf_value(_val));
+            result.insert("dEND", EndfValue::Float(_val));
             var_dend = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("EGP", f64_to_endf_value(_val));
+            result.insert("EGP", EndfValue::Float(_val));
             var_egp = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("dEGP", f64_to_endf_value(_val));
+            result.insert("dEGP", EndfValue::Float(_val));
             var_degp = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("EGD", f64_to_endf_value(_val));
+            result.insert("EGD", EndfValue::Float(_val));
             var_egd = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("dEGD", f64_to_endf_value(_val));
+            result.insert("dEGD", EndfValue::Float(_val));
             var_degd = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("EB", f64_to_endf_value(_val));
+            result.insert("EB", EndfValue::Float(_val));
             var_eb = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("dEB", f64_to_endf_value(_val));
+            result.insert("dEB", EndfValue::Float(_val));
             var_deb = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("ENU", f64_to_endf_value(_val));
+            result.insert("ENU", EndfValue::Float(_val));
             var_enu = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("dENU", f64_to_endf_value(_val));
+            result.insert("dENU", EndfValue::Float(_val));
             var_denu = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("ER", f64_to_endf_value(_val));
+            result.insert("ER", EndfValue::Float(_val));
             var_er = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("dER", f64_to_endf_value(_val));
+            result.insert("dER", EndfValue::Float(_val));
             var_der = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("ET", f64_to_endf_value(_val));
+            result.insert("ET", EndfValue::Float(_val));
             var_et = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("dET", f64_to_endf_value(_val));
+            result.insert("dET", EndfValue::Float(_val));
             var_det = _val;
             vi += 1;
         }
@@ -1286,7 +1287,7 @@ pub fn parse_mf1_mt460(
             for var_i_loop_ in (1_f64 as i64)..=(var_nnf as f64 as i64) {
                 var_i = var_i_loop_ as f64;
                 let _val = vals[vi];
-                result.get_mut("lambda").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("lambda").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
             }
         }
@@ -1594,22 +1595,22 @@ pub fn parse_mf2_mt151(
                                         for var_k_loop_ in (1_f64 as i64)..=(var_nrs as f64 as i64) {
                                             var_k = var_k_loop_ as f64;
                                             let _val = vals[vi];
-                                            result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                         }
                                     }
@@ -1710,22 +1711,22 @@ pub fn parse_mf2_mt151(
                                         for var_k_loop_ in (1_f64 as i64)..=(var_nrs as f64 as i64) {
                                             var_k = var_k_loop_ as f64;
                                             let _val = vals[vi];
-                                            result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GFA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GFA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GFB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GFB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                         }
                                     }
@@ -1847,7 +1848,7 @@ pub fn parse_mf2_mt151(
                                     for var_k_loop_ in (1_f64 as i64)..=(4_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("AT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("AT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                     if (1_f64 as i64) <= (2_f64 as i64) {
@@ -1856,7 +1857,7 @@ pub fn parse_mf2_mt151(
                                     for var_k_loop_ in (1_f64 as i64)..=(2_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("BT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("BT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -1884,7 +1885,7 @@ pub fn parse_mf2_mt151(
                                     for var_k_loop_ in (1_f64 as i64)..=(4_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("AT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("AT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                     if (1_f64 as i64) <= (2_f64 as i64) {
@@ -1893,7 +1894,7 @@ pub fn parse_mf2_mt151(
                                     for var_k_loop_ in (1_f64 as i64)..=(2_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("BT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("BT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                     if (1_f64 as i64) <= (4_f64 as i64) {
@@ -1902,7 +1903,7 @@ pub fn parse_mf2_mt151(
                                     for var_k_loop_ in (1_f64 as i64)..=(4_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("AC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("AC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                     if (1_f64 as i64) <= (2_f64 as i64) {
@@ -1911,7 +1912,7 @@ pub fn parse_mf2_mt151(
                                     for var_k_loop_ in (1_f64 as i64)..=(2_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("BC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("BC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -1939,7 +1940,7 @@ pub fn parse_mf2_mt151(
                                     for var_k_loop_ in (1_f64 as i64)..=(4_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("AT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("AT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                     if (1_f64 as i64) <= (2_f64 as i64) {
@@ -1948,7 +1949,7 @@ pub fn parse_mf2_mt151(
                                     for var_k_loop_ in (1_f64 as i64)..=(2_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("BT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("BT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                     if (1_f64 as i64) <= (4_f64 as i64) {
@@ -1957,7 +1958,7 @@ pub fn parse_mf2_mt151(
                                     for var_k_loop_ in (1_f64 as i64)..=(4_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("AF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("AF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                     if (1_f64 as i64) <= (2_f64 as i64) {
@@ -1966,7 +1967,7 @@ pub fn parse_mf2_mt151(
                                     for var_k_loop_ in (1_f64 as i64)..=(2_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("BF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("BF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                     if (1_f64 as i64) <= (4_f64 as i64) {
@@ -1975,7 +1976,7 @@ pub fn parse_mf2_mt151(
                                     for var_k_loop_ in (1_f64 as i64)..=(4_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("AC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("AC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                     if (1_f64 as i64) <= (2_f64 as i64) {
@@ -1984,7 +1985,7 @@ pub fn parse_mf2_mt151(
                                     for var_k_loop_ in (1_f64 as i64)..=(2_f64 as i64) {
                                         var_k = var_k_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("BC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("BC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -2049,40 +2050,40 @@ pub fn parse_mf2_mt151(
                                                 for var_k_loop_ in (1_f64 as i64)..=(var_nlj as f64 as i64) {
                                                     var_k = var_k_loop_ as f64;
                                                     let _val = vals[vi];
-                                                    result.get_mut("DET").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                                    result.get_mut("DET").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                                     vi += 1;
                                                     let _val = vals[vi];
-                                                    result.get_mut("DWT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                                    result.get_mut("DWT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                                     vi += 1;
                                                     let _val = vals[vi];
-                                                    result.get_mut("GRT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                                    result.get_mut("GRT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                                     vi += 1;
                                                     let _val = vals[vi];
-                                                    result.get_mut("GIT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                                    result.get_mut("GIT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                                     vi += 1;
                                                     let _val = vals[vi];
-                                                    result.get_mut("DEF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                                    result.get_mut("DEF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                                     vi += 1;
                                                     let _val = vals[vi];
-                                                    result.get_mut("DWF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                                    result.get_mut("DWF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                                     vi += 1;
                                                     let _val = vals[vi];
-                                                    result.get_mut("GRF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                                    result.get_mut("GRF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                                     vi += 1;
                                                     let _val = vals[vi];
-                                                    result.get_mut("GIF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                                    result.get_mut("GIF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                                     vi += 1;
                                                     let _val = vals[vi];
-                                                    result.get_mut("DEC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                                    result.get_mut("DEC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                                     vi += 1;
                                                     let _val = vals[vi];
-                                                    result.get_mut("DWC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                                    result.get_mut("DWC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                                     vi += 1;
                                                     let _val = vals[vi];
-                                                    result.get_mut("GRC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                                    result.get_mut("GRC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                                     vi += 1;
                                                     let _val = vals[vi];
-                                                    result.get_mut("GIC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                                    result.get_mut("GIC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                                     vi += 1;
                                                 }
                                             }
@@ -2148,40 +2149,40 @@ pub fn parse_mf2_mt151(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_npp as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("MA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("MA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("MB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("MB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("ZA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("ZA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("ZB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("ZB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("IA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("IA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("IB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("IB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("Q").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("Q").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("PNT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("PNT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("SHF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("SHF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("MT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("MT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("PA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("PA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("PB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("PB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                             }
@@ -2221,22 +2222,22 @@ pub fn parse_mf2_mt151(
                                         for var_l_loop_ in (1_f64 as i64)..=(var_nch as f64 as i64) {
                                             var_l = var_l_loop_ as f64;
                                             let _val = vals[vi];
-                                            result.get_mut("PPI").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("PPI").unwrap().insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("L").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("L").unwrap().insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("SCH").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("SCH").unwrap().insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("BND").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("BND").unwrap().insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("APE").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("APE").unwrap().insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("APT").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("APT").unwrap().insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                         }
                                     }
@@ -2285,7 +2286,7 @@ pub fn parse_mf2_mt151(
                                             for var_n_loop_ in (1_f64 as i64)..=(var_nrs as f64 as i64) {
                                                 var_n = var_n_loop_ as f64;
                                                 let _val = vals[vi];
-                                                result.get_mut("ER").unwrap().insert(EndfKey::Int(var_n as f64 as i64), f64_to_endf_value(_val));
+                                                result.get_mut("ER").unwrap().insert(EndfKey::Int(var_n as f64 as i64), EndfValue::Float(_val));
                                                 vi += 1;
                                                 if (1_f64 as i64) <= (var_nch as f64 as i64) {
                                                     if !result.contains_key("GAM") { result.insert("GAM", EndfValue::new_dict()); }
@@ -2295,7 +2296,7 @@ pub fn parse_mf2_mt151(
                                                     let _val = vals[vi];
                                                     if !result.get_mut("GAM").unwrap().contains_key(EndfKey::Int(var_m as f64 as i64).clone()) { result.get_mut("GAM").unwrap().insert(EndfKey::Int(var_m as f64 as i64).clone(), EndfValue::new_dict()); }
                                                     let _nav_0 = result.get_mut("GAM").unwrap().get_mut(EndfKey::Int(var_m as f64 as i64)).unwrap();
-                                                    _nav_0.insert(EndfKey::Int(var_n as f64 as i64), f64_to_endf_value(_val));
+                                                    _nav_0.insert(EndfKey::Int(var_n as f64 as i64), EndfValue::Float(_val));
                                                     vi += 1;
                                                 }
                                                 for var_p_loop_ in (1_f64 as i64)..=((((((5_f64 - var_nch as f64))) as i64 % (6_f64) as i64) as f64) as i64) {
@@ -2419,23 +2420,23 @@ pub fn parse_mf2_mt151(
 
                                                     let mut vi: usize = 0;
                                                     let _val = vals[vi];
-                                                    result.insert("R0", f64_to_endf_value(_val));
+                                                    result.insert("R0", EndfValue::Float(_val));
                                                     var_r0 = _val;
                                                     vi += 1;
                                                     let _val = vals[vi];
-                                                    result.insert("R1", f64_to_endf_value(_val));
+                                                    result.insert("R1", EndfValue::Float(_val));
                                                     var_r1 = _val;
                                                     vi += 1;
                                                     let _val = vals[vi];
-                                                    result.insert("R2", f64_to_endf_value(_val));
+                                                    result.insert("R2", EndfValue::Float(_val));
                                                     var_r2 = _val;
                                                     vi += 1;
                                                     let _val = vals[vi];
-                                                    result.insert("S0", f64_to_endf_value(_val));
+                                                    result.insert("S0", EndfValue::Float(_val));
                                                     var_s0 = _val;
                                                     vi += 1;
                                                     let _val = vals[vi];
-                                                    result.insert("S1", f64_to_endf_value(_val));
+                                                    result.insert("S1", EndfValue::Float(_val));
                                                     var_s1 = _val;
                                                     vi += 1;
                                                 }
@@ -2457,15 +2458,15 @@ pub fn parse_mf2_mt151(
 
                                                     let mut vi: usize = 0;
                                                     let _val = vals[vi];
-                                                    result.insert("R0", f64_to_endf_value(_val));
+                                                    result.insert("R0", EndfValue::Float(_val));
                                                     var_r0 = _val;
                                                     vi += 1;
                                                     let _val = vals[vi];
-                                                    result.insert("S0", f64_to_endf_value(_val));
+                                                    result.insert("S0", EndfValue::Float(_val));
                                                     var_s0 = _val;
                                                     vi += 1;
                                                     let _val = vals[vi];
-                                                    result.insert("GA", f64_to_endf_value(_val));
+                                                    result.insert("GA", EndfValue::Float(_val));
                                                     var_ga = _val;
                                                     vi += 1;
                                                 }
@@ -2644,19 +2645,19 @@ pub fn parse_mf2_mt151(
                                         for var_m_loop_ in (1_f64 as i64)..=(var_njs as f64 as i64) {
                                             var_m = var_m_loop_ as f64;
                                             let _val = vals[vi];
-                                            result.get_mut("D").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("D").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("AMUN").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("AMUN").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GN0").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GN0").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GG").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GG").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             // list body constant 0 (validation skipped)
                                             vi += 1;
@@ -2715,7 +2716,7 @@ pub fn parse_mf2_mt151(
                                     for var_p_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                         var_p = var_p_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("ES").unwrap().insert(EndfKey::Int(var_p as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("ES").unwrap().insert(EndfKey::Int(var_p as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -2745,7 +2746,7 @@ pub fn parse_mf2_mt151(
                                     for var_p_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                         var_p = var_p_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("ES").unwrap().insert(EndfKey::Int(var_p as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("ES").unwrap().insert(EndfKey::Int(var_p as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -2794,23 +2795,23 @@ pub fn parse_mf2_mt151(
 
                                                 let mut vi: usize = 0;
                                                 let _val = vals[vi];
-                                                result.insert("D", f64_to_endf_value(_val));
+                                                result.insert("D", EndfValue::Float(_val));
                                                 var_d = _val;
                                                 vi += 1;
                                                 let _val = vals[vi];
-                                                result.insert("AJ", f64_to_endf_value(_val));
+                                                result.insert("AJ", EndfValue::Float(_val));
                                                 var_aj = _val;
                                                 vi += 1;
                                                 let _val = vals[vi];
-                                                result.insert("AMUN", f64_to_endf_value(_val));
+                                                result.insert("AMUN", EndfValue::Float(_val));
                                                 var_amun = _val;
                                                 vi += 1;
                                                 let _val = vals[vi];
-                                                result.insert("GN0", f64_to_endf_value(_val));
+                                                result.insert("GN0", EndfValue::Float(_val));
                                                 var_gn0 = _val;
                                                 vi += 1;
                                                 let _val = vals[vi];
-                                                result.insert("GG", f64_to_endf_value(_val));
+                                                result.insert("GG", EndfValue::Float(_val));
                                                 var_gg = _val;
                                                 vi += 1;
                                                 // list body constant 0 (validation skipped)
@@ -2821,7 +2822,7 @@ pub fn parse_mf2_mt151(
                                                 for var_m_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                                     var_m = var_m_loop_ as f64;
                                                     let _val = vals[vi];
-                                                    result.get_mut("GF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                                    result.get_mut("GF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                                     vi += 1;
                                                 }
                                             }
@@ -2940,19 +2941,19 @@ pub fn parse_mf2_mt151(
                                                 // list body constant 0 (validation skipped)
                                                 vi += 1;
                                                 let _val = vals[vi];
-                                                result.insert("AMUX", f64_to_endf_value(_val));
+                                                result.insert("AMUX", EndfValue::Float(_val));
                                                 var_amux = _val;
                                                 vi += 1;
                                                 let _val = vals[vi];
-                                                result.insert("AMUN", f64_to_endf_value(_val));
+                                                result.insert("AMUN", EndfValue::Float(_val));
                                                 var_amun = _val;
                                                 vi += 1;
                                                 let _val = vals[vi];
-                                                result.insert("AMUG", f64_to_endf_value(_val));
+                                                result.insert("AMUG", EndfValue::Float(_val));
                                                 var_amug = _val;
                                                 vi += 1;
                                                 let _val = vals[vi];
-                                                result.insert("AMUF", f64_to_endf_value(_val));
+                                                result.insert("AMUF", EndfValue::Float(_val));
                                                 var_amuf = _val;
                                                 vi += 1;
                                                 if (1_f64 as i64) <= (var_ne as f64 as i64) {
@@ -2966,22 +2967,22 @@ pub fn parse_mf2_mt151(
                                                 for var_m_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                                     var_m = var_m_loop_ as f64;
                                                     let _val = vals[vi];
-                                                    result.get_mut("ES").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                                    result.get_mut("ES").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                                     vi += 1;
                                                     let _val = vals[vi];
-                                                    result.get_mut("D").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                                    result.get_mut("D").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                                     vi += 1;
                                                     let _val = vals[vi];
-                                                    result.get_mut("GX").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                                    result.get_mut("GX").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                                     vi += 1;
                                                     let _val = vals[vi];
-                                                    result.get_mut("GN0").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                                    result.get_mut("GN0").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                                     vi += 1;
                                                     let _val = vals[vi];
-                                                    result.get_mut("GG").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                                    result.get_mut("GG").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                                     vi += 1;
                                                     let _val = vals[vi];
-                                                    result.get_mut("GF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                                    result.get_mut("GF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                                     vi += 1;
                                                 }
                                             }
@@ -3230,7 +3231,7 @@ pub fn parse_mf4_wildcard(
                     let _val = vals[vi];
                     if !result.get_mut("a").unwrap().contains_key(EndfKey::Int(var_i as f64 as i64).clone()) { result.get_mut("a").unwrap().insert(EndfKey::Int(var_i as f64 as i64).clone(), EndfValue::new_dict()); }
                     let _nav_0 = result.get_mut("a").unwrap().get_mut(EndfKey::Int(var_i as f64 as i64)).unwrap();
-                    _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                    _nav_0.insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                     vi += 1;
                 }
             }
@@ -3334,7 +3335,7 @@ pub fn parse_mf4_wildcard(
                     let _val = vals[vi];
                     if !result.get_mut("al").unwrap().contains_key(EndfKey::Int(var_i as f64 as i64).clone()) { result.get_mut("al").unwrap().insert(EndfKey::Int(var_i as f64 as i64).clone(), EndfValue::new_dict()); }
                     let _nav_0 = result.get_mut("al").unwrap().get_mut(EndfKey::Int(var_i as f64 as i64)).unwrap();
-                    _nav_0.insert(EndfKey::Int(var_j as f64 as i64), f64_to_endf_value(_val));
+                    _nav_0.insert(EndfKey::Int(var_j as f64 as i64), EndfValue::Float(_val));
                     vi += 1;
                 }
             }
@@ -3960,7 +3961,7 @@ pub fn parse_mf6_wildcard(
                             let _val = vals[vi];
                             if !result.get_mut("Ep").unwrap().contains_key(EndfKey::Int(var_j as f64 as i64).clone()) { result.get_mut("Ep").unwrap().insert(EndfKey::Int(var_j as f64 as i64).clone(), EndfValue::new_dict()); }
                             let _nav_0 = result.get_mut("Ep").unwrap().get_mut(EndfKey::Int(var_j as f64 as i64)).unwrap();
-                            _nav_0.insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                            _nav_0.insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                             vi += 1;
                             if (0_f64 as i64) <= (result.get("NA").and_then(|d| d.get(EndfKey::Int(var_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
                                 if !result.contains_key("b") { result.insert("b", EndfValue::new_dict()); }
@@ -3972,7 +3973,7 @@ pub fn parse_mf6_wildcard(
                                 let _nav_0 = result.get_mut("b").unwrap().get_mut(EndfKey::Int(var_j as f64 as i64)).unwrap();
                                 if !_nav_0.contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { _nav_0.insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                                 let _nav_1 = _nav_0.get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                                _nav_1.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                _nav_1.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                             }
                         }
@@ -4029,7 +4030,7 @@ pub fn parse_mf6_wildcard(
                             let _val = vals[vi];
                             if !result.get_mut("A").unwrap().contains_key(EndfKey::Int(var_j as f64 as i64).clone()) { result.get_mut("A").unwrap().insert(EndfKey::Int(var_j as f64 as i64).clone(), EndfValue::new_dict()); }
                             let _nav_0 = result.get_mut("A").unwrap().get_mut(EndfKey::Int(var_j as f64 as i64)).unwrap();
-                            _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                            _nav_0.insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                             vi += 1;
                         }
                     }
@@ -4089,7 +4090,7 @@ pub fn parse_mf6_wildcard(
                             let _val = vals[vi];
                             if !result.get_mut("A").unwrap().contains_key(EndfKey::Int(var_j as f64 as i64).clone()) { result.get_mut("A").unwrap().insert(EndfKey::Int(var_j as f64 as i64).clone(), EndfValue::new_dict()); }
                             let _nav_0 = result.get_mut("A").unwrap().get_mut(EndfKey::Int(var_j as f64 as i64)).unwrap();
-                            _nav_0.insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                            _nav_0.insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                             vi += 1;
                         }
                     }
@@ -4298,7 +4299,7 @@ pub fn parse_mf7_mt2(
                     let _val = vals[vi];
                     if !result.get_mut("S").unwrap().contains_key(EndfKey::Int(var_q as f64 as i64).clone()) { result.get_mut("S").unwrap().insert(EndfKey::Int(var_q as f64 as i64).clone(), EndfValue::new_dict()); }
                     let _nav_0 = result.get_mut("S").unwrap().get_mut(EndfKey::Int(var_q as f64 as i64)).unwrap();
-                    _nav_0.insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                    _nav_0.insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                     vi += 1;
                 }
             }
@@ -4371,7 +4372,7 @@ pub fn parse_mf7_mt2(
                     let _val = vals[vi];
                     if !result.get_mut("S").unwrap().contains_key(EndfKey::Int(var_q as f64 as i64).clone()) { result.get_mut("S").unwrap().insert(EndfKey::Int(var_q as f64 as i64).clone(), EndfValue::new_dict()); }
                     let _nav_0 = result.get_mut("S").unwrap().get_mut(EndfKey::Int(var_q as f64 as i64)).unwrap();
-                    _nav_0.insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                    _nav_0.insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                     vi += 1;
                 }
             }
@@ -4485,7 +4486,7 @@ pub fn parse_mf7_mt4(
         for var_n_loop_ in (1_f64 as i64)..=(var_ni as f64 as i64) {
             var_n = var_n_loop_ as f64;
             let _val = vals[vi];
-            result.get_mut("B").unwrap().insert(EndfKey::Int(var_n as f64 as i64), f64_to_endf_value(_val));
+            result.get_mut("B").unwrap().insert(EndfKey::Int(var_n as f64 as i64), EndfValue::Float(_val));
             vi += 1;
         }
     }
@@ -4573,7 +4574,7 @@ pub fn parse_mf7_mt4(
                     let _nav_0 = result.get_mut("S").unwrap().get_mut(EndfKey::Int(var_q as f64 as i64)).unwrap();
                     if !_nav_0.contains_key(EndfKey::Int(var_i as f64 as i64).clone()) { _nav_0.insert(EndfKey::Int(var_i as f64 as i64).clone(), EndfValue::new_dict()); }
                     let _nav_1 = _nav_0.get_mut(EndfKey::Int(var_i as f64 as i64)).unwrap();
-                    _nav_1.insert(EndfKey::Int(var_j as f64 as i64), f64_to_endf_value(_val));
+                    _nav_1.insert(EndfKey::Int(var_j as f64 as i64), EndfValue::Float(_val));
                     vi += 1;
                 }
             }
@@ -4733,27 +4734,27 @@ pub fn parse_mf7_mt451(
                 let _val = vals[vi];
                 if !result.get_mut("ZAI").unwrap().contains_key(EndfKey::Int(var_i as f64 as i64).clone()) { result.get_mut("ZAI").unwrap().insert(EndfKey::Int(var_i as f64 as i64).clone(), EndfValue::new_dict()); }
                 let _nav_0 = result.get_mut("ZAI").unwrap().get_mut(EndfKey::Int(var_i as f64 as i64)).unwrap();
-                _nav_0.insert(EndfKey::Int(var_j as f64 as i64), f64_to_endf_value(_val));
+                _nav_0.insert(EndfKey::Int(var_j as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
                 if !result.get_mut("LISI").unwrap().contains_key(EndfKey::Int(var_i as f64 as i64).clone()) { result.get_mut("LISI").unwrap().insert(EndfKey::Int(var_i as f64 as i64).clone(), EndfValue::new_dict()); }
                 let _nav_0 = result.get_mut("LISI").unwrap().get_mut(EndfKey::Int(var_i as f64 as i64)).unwrap();
-                _nav_0.insert(EndfKey::Int(var_j as f64 as i64), f64_to_endf_value(_val));
+                _nav_0.insert(EndfKey::Int(var_j as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
                 if !result.get_mut("AFI").unwrap().contains_key(EndfKey::Int(var_i as f64 as i64).clone()) { result.get_mut("AFI").unwrap().insert(EndfKey::Int(var_i as f64 as i64).clone(), EndfValue::new_dict()); }
                 let _nav_0 = result.get_mut("AFI").unwrap().get_mut(EndfKey::Int(var_i as f64 as i64)).unwrap();
-                _nav_0.insert(EndfKey::Int(var_j as f64 as i64), f64_to_endf_value(_val));
+                _nav_0.insert(EndfKey::Int(var_j as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
                 if !result.get_mut("AWRI").unwrap().contains_key(EndfKey::Int(var_i as f64 as i64).clone()) { result.get_mut("AWRI").unwrap().insert(EndfKey::Int(var_i as f64 as i64).clone(), EndfValue::new_dict()); }
                 let _nav_0 = result.get_mut("AWRI").unwrap().get_mut(EndfKey::Int(var_i as f64 as i64)).unwrap();
-                _nav_0.insert(EndfKey::Int(var_j as f64 as i64), f64_to_endf_value(_val));
+                _nav_0.insert(EndfKey::Int(var_j as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
                 if !result.get_mut("SFI").unwrap().contains_key(EndfKey::Int(var_i as f64 as i64).clone()) { result.get_mut("SFI").unwrap().insert(EndfKey::Int(var_i as f64 as i64).clone(), EndfValue::new_dict()); }
                 let _nav_0 = result.get_mut("SFI").unwrap().get_mut(EndfKey::Int(var_i as f64 as i64)).unwrap();
-                _nav_0.insert(EndfKey::Int(var_j as f64 as i64), f64_to_endf_value(_val));
+                _nav_0.insert(EndfKey::Int(var_j as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 // list body constant 0 (validation skipped)
                 vi += 1;
@@ -4852,22 +4853,22 @@ pub fn parse_mf8_wildcard(
                     for var_l_loop_ in (1_f64 as i64)..=(var_nd as f64 as i64) {
                         var_l = var_l_loop_ as f64;
                         let _val = vals[vi];
-                        result.get_mut("HL").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                        result.get_mut("HL").unwrap().insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                         vi += 1;
                         let _val = vals[vi];
-                        result.get_mut("RTYP").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                        result.get_mut("RTYP").unwrap().insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                         vi += 1;
                         let _val = vals[vi];
-                        result.get_mut("ZAN").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                        result.get_mut("ZAN").unwrap().insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                         vi += 1;
                         let _val = vals[vi];
-                        result.get_mut("BR").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                        result.get_mut("BR").unwrap().insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                         vi += 1;
                         let _val = vals[vi];
-                        result.get_mut("END").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                        result.get_mut("END").unwrap().insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                         vi += 1;
                         let _val = vals[vi];
-                        result.get_mut("CT").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                        result.get_mut("CT").unwrap().insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                         vi += 1;
                     }
                 }
@@ -4988,22 +4989,22 @@ pub fn parse_mf8_mt454(
             let _val = vals[vi];
             if !result.get_mut("ZAFP").unwrap().contains_key(EndfKey::Int(0_f64 as i64).clone()) { result.get_mut("ZAFP").unwrap().insert(EndfKey::Int(0_f64 as i64).clone(), EndfValue::new_dict()); }
             let _nav_0 = result.get_mut("ZAFP").unwrap().get_mut(EndfKey::Int(0_f64 as i64)).unwrap();
-            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
             vi += 1;
             let _val = vals[vi];
             if !result.get_mut("FPS").unwrap().contains_key(EndfKey::Int(0_f64 as i64).clone()) { result.get_mut("FPS").unwrap().insert(EndfKey::Int(0_f64 as i64).clone(), EndfValue::new_dict()); }
             let _nav_0 = result.get_mut("FPS").unwrap().get_mut(EndfKey::Int(0_f64 as i64)).unwrap();
-            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
             vi += 1;
             let _val = vals[vi];
             if !result.get_mut("YI").unwrap().contains_key(EndfKey::Int(0_f64 as i64).clone()) { result.get_mut("YI").unwrap().insert(EndfKey::Int(0_f64 as i64).clone(), EndfValue::new_dict()); }
             let _nav_0 = result.get_mut("YI").unwrap().get_mut(EndfKey::Int(0_f64 as i64)).unwrap();
-            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
             vi += 1;
             let _val = vals[vi];
             if !result.get_mut("DYI").unwrap().contains_key(EndfKey::Int(0_f64 as i64).clone()) { result.get_mut("DYI").unwrap().insert(EndfKey::Int(0_f64 as i64).clone(), EndfValue::new_dict()); }
             let _nav_0 = result.get_mut("DYI").unwrap().get_mut(EndfKey::Int(0_f64 as i64)).unwrap();
-            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
             vi += 1;
         }
     }
@@ -5046,22 +5047,22 @@ pub fn parse_mf8_mt454(
                 let _val = vals[vi];
                 if !result.get_mut("ZAFP").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("ZAFP").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                 let _nav_0 = result.get_mut("ZAFP").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
                 if !result.get_mut("FPS").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("FPS").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                 let _nav_0 = result.get_mut("FPS").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
                 if !result.get_mut("YI").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("YI").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                 let _nav_0 = result.get_mut("YI").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
                 if !result.get_mut("DYI").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("DYI").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                 let _nav_0 = result.get_mut("DYI").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
             }
         }
@@ -5218,10 +5219,10 @@ pub fn parse_mf8_mt457(
             for var_k_loop_ in (1_f64 as i64)..=(var_nc as f64 as i64) {
                 var_k = var_k_loop_ as f64;
                 let _val = vals[vi];
-                result.get_mut("Ebar_x").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("Ebar_x").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("dEbar_x").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("dEbar_x").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
             }
         }
@@ -5253,22 +5254,22 @@ pub fn parse_mf8_mt457(
             for var_k_loop_ in (1_f64 as i64)..=(var_ndk as f64 as i64) {
                 var_k = var_k_loop_ as f64;
                 let _val = vals[vi];
-                result.get_mut("RTYP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("RTYP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("RFS").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("RFS").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("Q").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("Q").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("dQ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("dQ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("BR").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("BR").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("dBR").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("dBR").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
             }
         }
@@ -5297,27 +5298,27 @@ pub fn parse_mf8_mt457(
 
                     let mut vi: usize = 0;
                     let _val = vals[vi];
-                    result.insert("FD", f64_to_endf_value(_val));
+                    result.insert("FD", EndfValue::Float(_val));
                     var_fd = _val;
                     vi += 1;
                     let _val = vals[vi];
-                    result.insert("dFD", f64_to_endf_value(_val));
+                    result.insert("dFD", EndfValue::Float(_val));
                     var_dfd = _val;
                     vi += 1;
                     let _val = vals[vi];
-                    result.insert("ERAV", f64_to_endf_value(_val));
+                    result.insert("ERAV", EndfValue::Float(_val));
                     var_erav = _val;
                     vi += 1;
                     let _val = vals[vi];
-                    result.insert("dERAV", f64_to_endf_value(_val));
+                    result.insert("dERAV", EndfValue::Float(_val));
                     var_derav = _val;
                     vi += 1;
                     let _val = vals[vi];
-                    result.insert("FC", f64_to_endf_value(_val));
+                    result.insert("FC", EndfValue::Float(_val));
                     var_fc = _val;
                     vi += 1;
                     let _val = vals[vi];
-                    result.insert("dFC", f64_to_endf_value(_val));
+                    result.insert("dFC", EndfValue::Float(_val));
                     var_dfc = _val;
                     vi += 1;
                 }
@@ -5389,27 +5390,27 @@ pub fn parse_mf8_mt457(
 
                                         let mut vi: usize = 0;
                                         let _val = vals[vi];
-                                        result.insert("RTYP", f64_to_endf_value(_val));
+                                        result.insert("RTYP", EndfValue::Float(_val));
                                         var_rtyp = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("TYPE", f64_to_endf_value(_val));
+                                        result.insert("TYPE", EndfValue::Float(_val));
                                         var_type = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("RI", f64_to_endf_value(_val));
+                                        result.insert("RI", EndfValue::Float(_val));
                                         var_ri = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("dRI", f64_to_endf_value(_val));
+                                        result.insert("dRI", EndfValue::Float(_val));
                                         var_dri = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("RIS", f64_to_endf_value(_val));
+                                        result.insert("RIS", EndfValue::Float(_val));
                                         var_ris = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("dRIS", f64_to_endf_value(_val));
+                                        result.insert("dRIS", EndfValue::Float(_val));
                                         var_dris = _val;
                                         vi += 1;
                                     }
@@ -5432,35 +5433,35 @@ pub fn parse_mf8_mt457(
 
                                         let mut vi: usize = 0;
                                         let _val = vals[vi];
-                                        result.insert("RTYP", f64_to_endf_value(_val));
+                                        result.insert("RTYP", EndfValue::Float(_val));
                                         var_rtyp = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("TYPE", f64_to_endf_value(_val));
+                                        result.insert("TYPE", EndfValue::Float(_val));
                                         var_type = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("RI", f64_to_endf_value(_val));
+                                        result.insert("RI", EndfValue::Float(_val));
                                         var_ri = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("dRI", f64_to_endf_value(_val));
+                                        result.insert("dRI", EndfValue::Float(_val));
                                         var_dri = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("RIS", f64_to_endf_value(_val));
+                                        result.insert("RIS", EndfValue::Float(_val));
                                         var_ris = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("dRIS", f64_to_endf_value(_val));
+                                        result.insert("dRIS", EndfValue::Float(_val));
                                         var_dris = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("RICC", f64_to_endf_value(_val));
+                                        result.insert("RICC", EndfValue::Float(_val));
                                         var_ricc = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("dRICC", f64_to_endf_value(_val));
+                                        result.insert("dRICC", EndfValue::Float(_val));
                                         var_dricc = _val;
                                         vi += 1;
                                     }
@@ -5483,51 +5484,51 @@ pub fn parse_mf8_mt457(
 
                                         let mut vi: usize = 0;
                                         let _val = vals[vi];
-                                        result.insert("RTYP", f64_to_endf_value(_val));
+                                        result.insert("RTYP", EndfValue::Float(_val));
                                         var_rtyp = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("TYPE", f64_to_endf_value(_val));
+                                        result.insert("TYPE", EndfValue::Float(_val));
                                         var_type = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("RI", f64_to_endf_value(_val));
+                                        result.insert("RI", EndfValue::Float(_val));
                                         var_ri = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("dRI", f64_to_endf_value(_val));
+                                        result.insert("dRI", EndfValue::Float(_val));
                                         var_dri = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("RIS", f64_to_endf_value(_val));
+                                        result.insert("RIS", EndfValue::Float(_val));
                                         var_ris = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("dRIS", f64_to_endf_value(_val));
+                                        result.insert("dRIS", EndfValue::Float(_val));
                                         var_dris = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("RICC", f64_to_endf_value(_val));
+                                        result.insert("RICC", EndfValue::Float(_val));
                                         var_ricc = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("dRICC", f64_to_endf_value(_val));
+                                        result.insert("dRICC", EndfValue::Float(_val));
                                         var_dricc = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("RICK", f64_to_endf_value(_val));
+                                        result.insert("RICK", EndfValue::Float(_val));
                                         var_rick = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("dRICK", f64_to_endf_value(_val));
+                                        result.insert("dRICK", EndfValue::Float(_val));
                                         var_drick = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("RICL", f64_to_endf_value(_val));
+                                        result.insert("RICL", EndfValue::Float(_val));
                                         var_ricl = _val;
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.insert("dRICL", f64_to_endf_value(_val));
+                                        result.insert("dRICL", EndfValue::Float(_val));
                                         var_dricl = _val;
                                         vi += 1;
                                     }
@@ -5600,10 +5601,10 @@ pub fn parse_mf8_mt457(
                             for var_m_loop_ in (1_f64 as i64)..=(var_npp as f64 as i64) {
                                 var_m = var_m_loop_ as f64;
                                 let _val = vals[vi];
-                                result.get_mut("E").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("E").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("F").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("F").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                             }
                         }
@@ -5647,7 +5648,7 @@ pub fn parse_mf8_mt457(
                                 for var_m_loop_ in (1_f64 as i64)..=(var_nerp as f64 as i64) {
                                     var_m = var_m_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                                 if (1_f64 as i64) <= ((var_nerp as f64 - 2_f64) as i64) {
@@ -5663,7 +5664,7 @@ pub fn parse_mf8_mt457(
                                         let _val = vals[vi];
                                         if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_m as f64 as i64).clone()) { result.get_mut("F").unwrap().insert(EndfKey::Int(var_m as f64 as i64).clone(), EndfValue::new_dict()); }
                                         let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_m as f64 as i64)).unwrap();
-                                        _nav_0.insert(EndfKey::Int(var_n as f64 as i64), f64_to_endf_value(_val));
+                                        _nav_0.insert(EndfKey::Int(var_n as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -5836,22 +5837,22 @@ pub fn parse_mf8_mt459(
             let _val = vals[vi];
             if !result.get_mut("ZAFP").unwrap().contains_key(EndfKey::Int(0_f64 as i64).clone()) { result.get_mut("ZAFP").unwrap().insert(EndfKey::Int(0_f64 as i64).clone(), EndfValue::new_dict()); }
             let _nav_0 = result.get_mut("ZAFP").unwrap().get_mut(EndfKey::Int(0_f64 as i64)).unwrap();
-            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
             vi += 1;
             let _val = vals[vi];
             if !result.get_mut("FPS").unwrap().contains_key(EndfKey::Int(0_f64 as i64).clone()) { result.get_mut("FPS").unwrap().insert(EndfKey::Int(0_f64 as i64).clone(), EndfValue::new_dict()); }
             let _nav_0 = result.get_mut("FPS").unwrap().get_mut(EndfKey::Int(0_f64 as i64)).unwrap();
-            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
             vi += 1;
             let _val = vals[vi];
             if !result.get_mut("YC").unwrap().contains_key(EndfKey::Int(0_f64 as i64).clone()) { result.get_mut("YC").unwrap().insert(EndfKey::Int(0_f64 as i64).clone(), EndfValue::new_dict()); }
             let _nav_0 = result.get_mut("YC").unwrap().get_mut(EndfKey::Int(0_f64 as i64)).unwrap();
-            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
             vi += 1;
             let _val = vals[vi];
             if !result.get_mut("DYC").unwrap().contains_key(EndfKey::Int(0_f64 as i64).clone()) { result.get_mut("DYC").unwrap().insert(EndfKey::Int(0_f64 as i64).clone(), EndfValue::new_dict()); }
             let _nav_0 = result.get_mut("DYC").unwrap().get_mut(EndfKey::Int(0_f64 as i64)).unwrap();
-            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
             vi += 1;
         }
     }
@@ -5894,22 +5895,22 @@ pub fn parse_mf8_mt459(
                 let _val = vals[vi];
                 if !result.get_mut("ZAFP").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("ZAFP").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                 let _nav_0 = result.get_mut("ZAFP").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
                 if !result.get_mut("FPS").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("FPS").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                 let _nav_0 = result.get_mut("FPS").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
                 if !result.get_mut("YC").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("YC").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                 let _nav_0 = result.get_mut("YC").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
                 if !result.get_mut("DYC").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("DYC").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                 let _nav_0 = result.get_mut("DYC").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
             }
         }
@@ -6252,10 +6253,10 @@ pub fn parse_mf12_wildcard(
                 for var_i_loop_ in (1_f64 as i64)..=(var_nt as f64 as i64) {
                     var_i = var_i_loop_ as f64;
                     let _val = vals[vi];
-                    result.get_mut("ES").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                    result.get_mut("ES").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                     vi += 1;
                     let _val = vals[vi];
-                    result.get_mut("TP").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                    result.get_mut("TP").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                     vi += 1;
                 }
             }
@@ -6285,13 +6286,13 @@ pub fn parse_mf12_wildcard(
                 for var_i_loop_ in (1_f64 as i64)..=(var_nt as f64 as i64) {
                     var_i = var_i_loop_ as f64;
                     let _val = vals[vi];
-                    result.get_mut("ES").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                    result.get_mut("ES").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                     vi += 1;
                     let _val = vals[vi];
-                    result.get_mut("TP").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                    result.get_mut("TP").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                     vi += 1;
                     let _val = vals[vi];
-                    result.get_mut("GP").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                    result.get_mut("GP").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                     vi += 1;
                 }
             }
@@ -6597,7 +6598,7 @@ pub fn parse_mf14_wildcard(
                         let _nav_0 = result.get_mut("a").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
                         if !_nav_0.contains_key(EndfKey::Int(var_l as f64 as i64).clone()) { _nav_0.insert(EndfKey::Int(var_l as f64 as i64).clone(), EndfValue::new_dict()); }
                         let _nav_1 = _nav_0.get_mut(EndfKey::Int(var_l as f64 as i64)).unwrap();
-                        _nav_1.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                        _nav_1.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                         vi += 1;
                     }
                 }
@@ -6972,10 +6973,10 @@ pub fn parse_mf31_wildcard(
             for var_k_loop_ in (1_f64 as i64)..=(var_nci as f64 as i64) {
                 var_k = var_k_loop_ as f64;
                 let _val = vals[vi];
-                result.get_mut("CI").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("CI").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
                 let _val = vals[vi];
-                result.get_mut("XMTI").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                result.get_mut("XMTI").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                 vi += 1;
             }
         }
@@ -6997,17 +6998,17 @@ pub fn parse_mf31_wildcard(
 
             let mut vi: usize = 0;
             let _val = vals[vi];
-            result.insert("XMFS", f64_to_endf_value(_val));
+            result.insert("XMFS", EndfValue::Float(_val));
             var_xmfs = _val;
             vi += 1;
             let _val = vals[vi];
-            result.insert("XLFSS", f64_to_endf_value(_val));
+            result.insert("XLFSS", EndfValue::Float(_val));
             var_xlfss = _val;
             vi += 1;
             // list body constant 0 (validation skipped)
             vi += 1;
             let _val = vals[vi];
-            result.insert("Weight", f64_to_endf_value(_val));
+            result.insert("Weight", EndfValue::Float(_val));
             var_weight = _val;
             vi += 1;
         }
@@ -7161,10 +7162,10 @@ pub fn parse_mf31_mt452(
                                 for var_i_loop_ in (1_f64 as i64)..=(var_nci as f64 as i64) {
                                     var_i = var_i_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("C").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("C").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("XMT").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("XMT").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                             }
@@ -7189,11 +7190,11 @@ pub fn parse_mf31_mt452(
 
                                 let mut vi: usize = 0;
                                 let _val = vals[vi];
-                                result.insert("XMFS", f64_to_endf_value(_val));
+                                result.insert("XMFS", EndfValue::Float(_val));
                                 var_xmfs = _val;
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.insert("XLFSS", f64_to_endf_value(_val));
+                                result.insert("XLFSS", EndfValue::Float(_val));
                                 var_xlfss = _val;
                                 vi += 1;
                                 if (1_f64 as i64) <= (var_nei as f64 as i64) {
@@ -7203,10 +7204,10 @@ pub fn parse_mf31_mt452(
                                 for var_i_loop_ in (1_f64 as i64)..=(var_nei as f64 as i64) {
                                     var_i = var_i_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("WE").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("WE").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                             }
@@ -7311,10 +7312,10 @@ pub fn parse_mf31_mt452(
                                 for var_k_loop_ in (1_f64 as i64)..=(((var_np as f64 - var_lt as f64)) as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                                 if (1_f64 as i64) <= (var_lt as f64 as i64) {
@@ -7324,10 +7325,10 @@ pub fn parse_mf31_mt452(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_lt as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("El").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("El").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                             }
@@ -7355,7 +7356,7 @@ pub fn parse_mf31_mt452(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                                 if (1_f64 as i64) <= ((var_ne as f64 - 1_f64) as i64) {
@@ -7371,7 +7372,7 @@ pub fn parse_mf31_mt452(
                                         let _val = vals[vi];
                                         if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                                         let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), f64_to_endf_value(_val));
+                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -7400,7 +7401,7 @@ pub fn parse_mf31_mt452(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                                 if (1_f64 as i64) <= ((var_ne as f64 - 1_f64) as i64) {
@@ -7416,7 +7417,7 @@ pub fn parse_mf31_mt452(
                                         let _val = vals[vi];
                                         if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                                         let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), f64_to_endf_value(_val));
+                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -7445,7 +7446,7 @@ pub fn parse_mf31_mt452(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ner as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                                 if (1_f64 as i64) <= (var_nec as f64 as i64) {
@@ -7454,7 +7455,7 @@ pub fn parse_mf31_mt452(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_nec as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("EC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("EC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                                 if (1_f64 as i64) <= ((var_ner as f64 - 1_f64) as i64) {
@@ -7470,7 +7471,7 @@ pub fn parse_mf31_mt452(
                                         let _val = vals[vi];
                                         if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                                         let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                                        _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                                        _nav_0.insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -7500,10 +7501,10 @@ pub fn parse_mf31_mt452(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_np as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                             }
@@ -7670,10 +7671,10 @@ pub fn parse_mf31_mt455(
                                 for var_i_loop_ in (1_f64 as i64)..=(var_nci as f64 as i64) {
                                     var_i = var_i_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("C").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("C").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("XMT").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("XMT").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                             }
@@ -7698,11 +7699,11 @@ pub fn parse_mf31_mt455(
 
                                 let mut vi: usize = 0;
                                 let _val = vals[vi];
-                                result.insert("XMFS", f64_to_endf_value(_val));
+                                result.insert("XMFS", EndfValue::Float(_val));
                                 var_xmfs = _val;
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.insert("XLFSS", f64_to_endf_value(_val));
+                                result.insert("XLFSS", EndfValue::Float(_val));
                                 var_xlfss = _val;
                                 vi += 1;
                                 if (1_f64 as i64) <= (var_nei as f64 as i64) {
@@ -7712,10 +7713,10 @@ pub fn parse_mf31_mt455(
                                 for var_i_loop_ in (1_f64 as i64)..=(var_nei as f64 as i64) {
                                     var_i = var_i_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("WE").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("WE").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                             }
@@ -7820,10 +7821,10 @@ pub fn parse_mf31_mt455(
                                 for var_k_loop_ in (1_f64 as i64)..=(((var_np as f64 - var_lt as f64)) as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                                 if (1_f64 as i64) <= (var_lt as f64 as i64) {
@@ -7833,10 +7834,10 @@ pub fn parse_mf31_mt455(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_lt as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("El").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("El").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                             }
@@ -7864,7 +7865,7 @@ pub fn parse_mf31_mt455(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                                 if (1_f64 as i64) <= ((var_ne as f64 - 1_f64) as i64) {
@@ -7880,7 +7881,7 @@ pub fn parse_mf31_mt455(
                                         let _val = vals[vi];
                                         if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                                         let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), f64_to_endf_value(_val));
+                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -7909,7 +7910,7 @@ pub fn parse_mf31_mt455(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                                 if (1_f64 as i64) <= ((var_ne as f64 - 1_f64) as i64) {
@@ -7925,7 +7926,7 @@ pub fn parse_mf31_mt455(
                                         let _val = vals[vi];
                                         if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                                         let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), f64_to_endf_value(_val));
+                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -7954,7 +7955,7 @@ pub fn parse_mf31_mt455(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ner as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                                 if (1_f64 as i64) <= (var_nec as f64 as i64) {
@@ -7963,7 +7964,7 @@ pub fn parse_mf31_mt455(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_nec as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("EC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("EC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                                 if (1_f64 as i64) <= ((var_ner as f64 - 1_f64) as i64) {
@@ -7979,7 +7980,7 @@ pub fn parse_mf31_mt455(
                                         let _val = vals[vi];
                                         if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                                         let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                                        _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                                        _nav_0.insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -8009,10 +8010,10 @@ pub fn parse_mf31_mt455(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_np as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                             }
@@ -8179,10 +8180,10 @@ pub fn parse_mf31_mt456(
                                 for var_i_loop_ in (1_f64 as i64)..=(var_nci as f64 as i64) {
                                     var_i = var_i_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("C").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("C").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("XMT").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("XMT").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                             }
@@ -8207,11 +8208,11 @@ pub fn parse_mf31_mt456(
 
                                 let mut vi: usize = 0;
                                 let _val = vals[vi];
-                                result.insert("XMFS", f64_to_endf_value(_val));
+                                result.insert("XMFS", EndfValue::Float(_val));
                                 var_xmfs = _val;
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.insert("XLFSS", f64_to_endf_value(_val));
+                                result.insert("XLFSS", EndfValue::Float(_val));
                                 var_xlfss = _val;
                                 vi += 1;
                                 if (1_f64 as i64) <= (var_nei as f64 as i64) {
@@ -8221,10 +8222,10 @@ pub fn parse_mf31_mt456(
                                 for var_i_loop_ in (1_f64 as i64)..=(var_nei as f64 as i64) {
                                     var_i = var_i_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("WE").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("WE").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                             }
@@ -8329,10 +8330,10 @@ pub fn parse_mf31_mt456(
                                 for var_k_loop_ in (1_f64 as i64)..=(((var_np as f64 - var_lt as f64)) as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                                 if (1_f64 as i64) <= (var_lt as f64 as i64) {
@@ -8342,10 +8343,10 @@ pub fn parse_mf31_mt456(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_lt as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("El").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("El").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                             }
@@ -8373,7 +8374,7 @@ pub fn parse_mf31_mt456(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                                 if (1_f64 as i64) <= ((var_ne as f64 - 1_f64) as i64) {
@@ -8389,7 +8390,7 @@ pub fn parse_mf31_mt456(
                                         let _val = vals[vi];
                                         if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                                         let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), f64_to_endf_value(_val));
+                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -8418,7 +8419,7 @@ pub fn parse_mf31_mt456(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                                 if (1_f64 as i64) <= ((var_ne as f64 - 1_f64) as i64) {
@@ -8434,7 +8435,7 @@ pub fn parse_mf31_mt456(
                                         let _val = vals[vi];
                                         if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                                         let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), f64_to_endf_value(_val));
+                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -8463,7 +8464,7 @@ pub fn parse_mf31_mt456(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ner as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                                 if (1_f64 as i64) <= (var_nec as f64 as i64) {
@@ -8472,7 +8473,7 @@ pub fn parse_mf31_mt456(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_nec as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("EC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("EC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                                 if (1_f64 as i64) <= ((var_ner as f64 - 1_f64) as i64) {
@@ -8488,7 +8489,7 @@ pub fn parse_mf31_mt456(
                                         let _val = vals[vi];
                                         if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                                         let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                                        _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                                        _nav_0.insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -8518,10 +8519,10 @@ pub fn parse_mf31_mt456(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_np as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                             }
@@ -8839,10 +8840,10 @@ pub fn parse_mf32_wildcard(
                                         for var_k_loop_ in (1_f64 as i64)..=(((var_np as f64 - var_lt as f64)) as i64) {
                                             var_k = var_k_loop_ as f64;
                                             let _val = vals[vi];
-                                            result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                         }
                                         if (1_f64 as i64) <= (var_lt as f64 as i64) {
@@ -8852,10 +8853,10 @@ pub fn parse_mf32_wildcard(
                                         for var_k_loop_ in (1_f64 as i64)..=(var_lt as f64 as i64) {
                                             var_k = var_k_loop_ as f64;
                                             let _val = vals[vi];
-                                            result.get_mut("El").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("El").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                         }
                                     }
@@ -8883,7 +8884,7 @@ pub fn parse_mf32_wildcard(
                                         for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                             var_k = var_k_loop_ as f64;
                                             let _val = vals[vi];
-                                            result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                         }
                                         if (1_f64 as i64) <= ((var_ne as f64 - 1_f64) as i64) {
@@ -8899,7 +8900,7 @@ pub fn parse_mf32_wildcard(
                                                 let _val = vals[vi];
                                                 if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                                                 let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                                                _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), f64_to_endf_value(_val));
+                                                _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), EndfValue::Float(_val));
                                                 vi += 1;
                                             }
                                         }
@@ -8928,7 +8929,7 @@ pub fn parse_mf32_wildcard(
                                         for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                             var_k = var_k_loop_ as f64;
                                             let _val = vals[vi];
-                                            result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                         }
                                         if (1_f64 as i64) <= ((var_ne as f64 - 1_f64) as i64) {
@@ -8944,7 +8945,7 @@ pub fn parse_mf32_wildcard(
                                                 let _val = vals[vi];
                                                 if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                                                 let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                                                _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), f64_to_endf_value(_val));
+                                                _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), EndfValue::Float(_val));
                                                 vi += 1;
                                             }
                                         }
@@ -9115,55 +9116,55 @@ pub fn parse_mf32_wildcard(
                                     for var_m_loop_ in (1_f64 as i64)..=(var_nrs as f64 as i64) {
                                         var_m = var_m_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("ER").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("ER").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("GT").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("GT").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("GN").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("GN").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("GG").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("GG").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("GF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("GF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("DE2").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("DE2").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("DN2").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("DN2").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("DNDG").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("DNDG").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("DG2").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("DG2").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("DNDF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("DNDF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("DGDF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("DGDF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("DF2").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("DF2").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("DJDN").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("DJDN").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("DJDG").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("DJDG").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("DJDF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("DJDF").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("DJ2").unwrap().insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("DJ2").unwrap().insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         // list body constant 0 (validation skipped)
                                         vi += 1;
@@ -9255,22 +9256,22 @@ pub fn parse_mf32_wildcard(
                                         for var_k_loop_ in (1_f64 as i64)..=(var_nrb as f64 as i64) {
                                             var_k = var_k_loop_ as f64;
                                             let _val = vals[vi];
-                                            result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                         }
                                         if (1_f64 as i64) <= ((var_mpar as f64 * var_nrb as f64) as i64) {
@@ -9286,7 +9287,7 @@ pub fn parse_mf32_wildcard(
                                                 let _val = vals[vi];
                                                 if !result.get_mut("V").unwrap().contains_key(EndfKey::Int(var_m as f64 as i64).clone()) { result.get_mut("V").unwrap().insert(EndfKey::Int(var_m as f64 as i64).clone(), EndfValue::new_dict()); }
                                                 let _nav_0 = result.get_mut("V").unwrap().get_mut(EndfKey::Int(var_m as f64 as i64)).unwrap();
-                                                _nav_0.insert(EndfKey::Int(var_n as f64 as i64), f64_to_endf_value(_val));
+                                                _nav_0.insert(EndfKey::Int(var_n as f64 as i64), EndfValue::Float(_val));
                                                 vi += 1;
                                             }
                                         }
@@ -9321,7 +9322,7 @@ pub fn parse_mf32_wildcard(
                                     for var_k_loop_ in (1_f64 as i64)..=(var_mls as f64 as i64) {
                                         var_k = var_k_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("DAP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("DAP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -9373,22 +9374,22 @@ pub fn parse_mf32_wildcard(
                                         for var_k_loop_ in (1_f64 as i64)..=(var_nrb as f64 as i64) {
                                             var_k = var_k_loop_ as f64;
                                             let _val = vals[vi];
-                                            result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GFA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GFA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GFB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GFB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                         }
                                         if (1_f64 as i64) <= ((var_mpar as f64 * var_nrb as f64) as i64) {
@@ -9404,7 +9405,7 @@ pub fn parse_mf32_wildcard(
                                                 let _val = vals[vi];
                                                 if !result.get_mut("V").unwrap().contains_key(EndfKey::Int(var_m as f64 as i64).clone()) { result.get_mut("V").unwrap().insert(EndfKey::Int(var_m as f64 as i64).clone(), EndfValue::new_dict()); }
                                                 let _nav_0 = result.get_mut("V").unwrap().get_mut(EndfKey::Int(var_m as f64 as i64)).unwrap();
-                                                _nav_0.insert(EndfKey::Int(var_n as f64 as i64), f64_to_endf_value(_val));
+                                                _nav_0.insert(EndfKey::Int(var_n as f64 as i64), EndfValue::Float(_val));
                                                 vi += 1;
                                             }
                                         }
@@ -9484,40 +9485,40 @@ pub fn parse_mf32_wildcard(
                                         for var_k_loop_ in (1_f64 as i64)..=(var_nrb as f64 as i64) {
                                             var_k = var_k_loop_ as f64;
                                             let _val = vals[vi];
-                                            result.get_mut("DET").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("DET").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("DWT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("DWT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GRT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GRT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GIT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GIT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("DEF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("DEF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("DWF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("DWF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GRF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GRF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GIF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GIF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("DEC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("DEC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("DWC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("DWC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GRC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GRC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                             let _val = vals[vi];
-                                            result.get_mut("GIC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            result.get_mut("GIC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                         }
                                         if (1_f64 as i64) <= ((var_mpar as f64 * var_nrb as f64) as i64) {
@@ -9533,7 +9534,7 @@ pub fn parse_mf32_wildcard(
                                                 let _val = vals[vi];
                                                 if !result.get_mut("V").unwrap().contains_key(EndfKey::Int(var_m as f64 as i64).clone()) { result.get_mut("V").unwrap().insert(EndfKey::Int(var_m as f64 as i64).clone(), EndfValue::new_dict()); }
                                                 let _nav_0 = result.get_mut("V").unwrap().get_mut(EndfKey::Int(var_m as f64 as i64)).unwrap();
-                                                _nav_0.insert(EndfKey::Int(var_n as f64 as i64), f64_to_endf_value(_val));
+                                                _nav_0.insert(EndfKey::Int(var_n as f64 as i64), EndfValue::Float(_val));
                                                 vi += 1;
                                             }
                                         }
@@ -9602,10 +9603,10 @@ pub fn parse_mf32_wildcard(
                                             for var_k_loop_ in (1_f64 as i64)..=(var_neb as f64 as i64) {
                                                 var_k = var_k_loop_ as f64;
                                                 let _val = vals[vi];
-                                                result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                                result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                                 vi += 1;
                                                 let _val = vals[vi];
-                                                result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                                result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                                 vi += 1;
                                             }
                                         }
@@ -9633,7 +9634,7 @@ pub fn parse_mf32_wildcard(
                                             for var_k_loop_ in (1_f64 as i64)..=(var_neb as f64 as i64) {
                                                 var_k = var_k_loop_ as f64;
                                                 let _val = vals[vi];
-                                                result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                                result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                                 vi += 1;
                                             }
                                             if (1_f64 as i64) <= ((var_neb as f64 - 1_f64) as i64) {
@@ -9649,7 +9650,7 @@ pub fn parse_mf32_wildcard(
                                                     let _val = vals[vi];
                                                     if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                                                     let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                                                    _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), f64_to_endf_value(_val));
+                                                    _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), EndfValue::Float(_val));
                                                     vi += 1;
                                                 }
                                             }
@@ -9709,7 +9710,7 @@ pub fn parse_mf32_wildcard(
                                         let _val = vals[vi];
                                         if !result.get_mut("DAP").unwrap().contains_key(EndfKey::Int(var_m as f64 as i64).clone()) { result.get_mut("DAP").unwrap().insert(EndfKey::Int(var_m as f64 as i64).clone(), EndfValue::new_dict()); }
                                         let _nav_0 = result.get_mut("DAP").unwrap().get_mut(EndfKey::Int(var_m as f64 as i64)).unwrap();
-                                        _nav_0.insert(EndfKey::Int(var_n as f64 as i64), f64_to_endf_value(_val));
+                                        _nav_0.insert(EndfKey::Int(var_n as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -9775,7 +9776,7 @@ pub fn parse_mf32_wildcard(
                                             for var_p_loop_ in (1_f64 as i64)..=(var_nrb as f64 as i64) {
                                                 var_p = var_p_loop_ as f64;
                                                 let _val = vals[vi];
-                                                result.get_mut("ER").unwrap().insert(EndfKey::Int(var_p as f64 as i64), f64_to_endf_value(_val));
+                                                result.get_mut("ER").unwrap().insert(EndfKey::Int(var_p as f64 as i64), EndfValue::Float(_val));
                                                 vi += 1;
                                                 if (1_f64 as i64) <= (var_nch as f64 as i64) {
                                                     if !result.contains_key("GAM") { result.insert("GAM", EndfValue::new_dict()); }
@@ -9785,7 +9786,7 @@ pub fn parse_mf32_wildcard(
                                                     let _val = vals[vi];
                                                     if !result.get_mut("GAM").unwrap().contains_key(EndfKey::Int(var_q as f64 as i64).clone()) { result.get_mut("GAM").unwrap().insert(EndfKey::Int(var_q as f64 as i64).clone(), EndfValue::new_dict()); }
                                                     let _nav_0 = result.get_mut("GAM").unwrap().get_mut(EndfKey::Int(var_q as f64 as i64)).unwrap();
-                                                    _nav_0.insert(EndfKey::Int(var_p as f64 as i64), f64_to_endf_value(_val));
+                                                    _nav_0.insert(EndfKey::Int(var_p as f64 as i64), EndfValue::Float(_val));
                                                     vi += 1;
                                                 }
                                                 for var_r_loop_ in (1_f64 as i64)..=((((((5_f64 - var_nch as f64))) as i64 % (6_f64) as i64) as f64) as i64) {
@@ -9830,7 +9831,7 @@ pub fn parse_mf32_wildcard(
                                             let _val = vals[vi];
                                             if !result.get_mut("V").unwrap().contains_key(EndfKey::Int(var_p as f64 as i64).clone()) { result.get_mut("V").unwrap().insert(EndfKey::Int(var_p as f64 as i64).clone(), EndfValue::new_dict()); }
                                             let _nav_0 = result.get_mut("V").unwrap().get_mut(EndfKey::Int(var_p as f64 as i64)).unwrap();
-                                            _nav_0.insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
+                                            _nav_0.insert(EndfKey::Int(var_q as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                         }
                                     }
@@ -9905,38 +9906,38 @@ pub fn parse_mf32_wildcard(
                             for var_k_loop_ in (1_f64 as i64)..=(var_nrsa as f64 as i64) {
                                 var_k = var_k_loop_ as f64;
                                 let _val = vals[vi];
-                                result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("GT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("GT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("GF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("GF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("DER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("DER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 // list body constant 0 (validation skipped)
                                 vi += 1;
                                 // list body constant 0 (validation skipped)
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("DGN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("DGN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("DGG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("DGG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("DGF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("DGF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                             }
                         }
@@ -10016,7 +10017,7 @@ pub fn parse_mf32_wildcard(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_mls as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("DAP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("DAP").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                             }
@@ -10054,39 +10055,39 @@ pub fn parse_mf32_wildcard(
                             for var_k_loop_ in (1_f64 as i64)..=(var_nrsa as f64 as i64) {
                                 var_k = var_k_loop_ as f64;
                                 let _val = vals[vi];
-                                result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("GN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("GFA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("GFA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("GFB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("GFB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("DER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("DER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 // list body constant 0 (validation skipped)
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("DGN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("DGN").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("DGG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("DGG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("DGFA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("DGFA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("DGFB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("DGFB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                             }
                         }
@@ -10172,7 +10173,7 @@ pub fn parse_mf32_wildcard(
                                         let _val = vals[vi];
                                         if !result.get_mut("DAP").unwrap().contains_key(EndfKey::Int(var_m as f64 as i64).clone()) { result.get_mut("DAP").unwrap().insert(EndfKey::Int(var_m as f64 as i64).clone(), EndfValue::new_dict()); }
                                         let _nav_0 = result.get_mut("DAP").unwrap().get_mut(EndfKey::Int(var_m as f64 as i64)).unwrap();
-                                        _nav_0.insert(EndfKey::Int(var_n as f64 as i64), f64_to_endf_value(_val));
+                                        _nav_0.insert(EndfKey::Int(var_n as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -10211,40 +10212,40 @@ pub fn parse_mf32_wildcard(
                             for var_k_loop_ in (1_f64 as i64)..=(var_npp as f64 as i64) {
                                 var_k = var_k_loop_ as f64;
                                 let _val = vals[vi];
-                                result.get_mut("MA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("MA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("MB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("MB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("ZA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("ZA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("ZB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("ZB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("IA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("IA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("IB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("IB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("Q").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("Q").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("PNT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("PNT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("SHF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("SHF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("MT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("MT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("PA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("PA").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.get_mut("PB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                result.get_mut("PB").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                             }
                         }
@@ -10282,22 +10283,22 @@ pub fn parse_mf32_wildcard(
                                     for var_k_loop_ in (1_f64 as i64)..=(var_nch as f64 as i64) {
                                         var_k = var_k_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("PPI").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("PPI").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("L").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("L").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("SCH").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("SCH").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("BND").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("BND").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("APE").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("APE").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("APT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("APT").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -10325,7 +10326,7 @@ pub fn parse_mf32_wildcard(
                                     for var_k_loop_ in (1_f64 as i64)..=(var_nrsa as f64 as i64) {
                                         var_k = var_k_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         if (1_f64 as i64) <= (var_nch as f64 as i64) {
                                             if !result.contains_key("GAM") { result.insert("GAM", EndfValue::new_dict()); }
@@ -10335,7 +10336,7 @@ pub fn parse_mf32_wildcard(
                                             let _val = vals[vi];
                                             if !result.get_mut("GAM").unwrap().contains_key(EndfKey::Int(var_p as f64 as i64).clone()) { result.get_mut("GAM").unwrap().insert(EndfKey::Int(var_p as f64 as i64).clone(), EndfValue::new_dict()); }
                                             let _nav_0 = result.get_mut("GAM").unwrap().get_mut(EndfKey::Int(var_p as f64 as i64)).unwrap();
-                                            _nav_0.insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            _nav_0.insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                         }
                                         for var_r_loop_ in (1_f64 as i64)..=((((((5_f64 - var_nch as f64))) as i64 % (6_f64) as i64) as f64) as i64) {
@@ -10344,7 +10345,7 @@ pub fn parse_mf32_wildcard(
                                             vi += 1;
                                         }
                                         let _val = vals[vi];
-                                        result.get_mut("DER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("DER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         if (1_f64 as i64) <= (var_nch as f64 as i64) {
                                             if !result.contains_key("DGAM") { result.insert("DGAM", EndfValue::new_dict()); }
@@ -10354,7 +10355,7 @@ pub fn parse_mf32_wildcard(
                                             let _val = vals[vi];
                                             if !result.get_mut("DGAM").unwrap().contains_key(EndfKey::Int(var_p as f64 as i64).clone()) { result.get_mut("DGAM").unwrap().insert(EndfKey::Int(var_p as f64 as i64).clone(), EndfValue::new_dict()); }
                                             let _nav_0 = result.get_mut("DGAM").unwrap().get_mut(EndfKey::Int(var_p as f64 as i64)).unwrap();
-                                            _nav_0.insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                            _nav_0.insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                         }
                                         for var_r_loop_ in (1_f64 as i64)..=((((((5_f64 - var_nch as f64))) as i64 % (6_f64) as i64) as f64) as i64) {
@@ -10457,22 +10458,22 @@ pub fn parse_mf32_wildcard(
                                     for var_k_loop_ in (1_f64 as i64)..=(var_njs as f64 as i64) {
                                         var_k = var_k_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("D").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("D").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("AJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("GN0").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("GN0").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("GG").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("GF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("GF").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("GX").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("GX").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -10512,7 +10513,7 @@ pub fn parse_mf32_wildcard(
                                     let _val = vals[vi];
                                     if !result.get_mut("RV").unwrap().contains_key(EndfKey::Int(var_p as f64 as i64).clone()) { result.get_mut("RV").unwrap().insert(EndfKey::Int(var_p as f64 as i64).clone(), EndfValue::new_dict()); }
                                     let _nav_0 = result.get_mut("RV").unwrap().get_mut(EndfKey::Int(var_p as f64 as i64)).unwrap();
-                                    _nav_0.insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
+                                    _nav_0.insert(EndfKey::Int(var_q as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                             }
@@ -10679,10 +10680,10 @@ pub fn parse_mf33_wildcard(
                                 for var_i_loop_ in (1_f64 as i64)..=(var_nci as f64 as i64) {
                                     var_i = var_i_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("C").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("C").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("XMT").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("XMT").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                             }
@@ -10707,11 +10708,11 @@ pub fn parse_mf33_wildcard(
 
                                 let mut vi: usize = 0;
                                 let _val = vals[vi];
-                                result.insert("XMFS", f64_to_endf_value(_val));
+                                result.insert("XMFS", EndfValue::Float(_val));
                                 var_xmfs = _val;
                                 vi += 1;
                                 let _val = vals[vi];
-                                result.insert("XLFSS", f64_to_endf_value(_val));
+                                result.insert("XLFSS", EndfValue::Float(_val));
                                 var_xlfss = _val;
                                 vi += 1;
                                 if (1_f64 as i64) <= (var_nei as f64 as i64) {
@@ -10721,10 +10722,10 @@ pub fn parse_mf33_wildcard(
                                 for var_i_loop_ in (1_f64 as i64)..=(var_nei as f64 as i64) {
                                     var_i = var_i_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("WE").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("WE").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                             }
@@ -10829,10 +10830,10 @@ pub fn parse_mf33_wildcard(
                                 for var_k_loop_ in (1_f64 as i64)..=(((var_np as f64 - var_lt as f64)) as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                                 if (1_f64 as i64) <= (var_lt as f64 as i64) {
@@ -10842,10 +10843,10 @@ pub fn parse_mf33_wildcard(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_lt as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("El").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("El").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                             }
@@ -10873,7 +10874,7 @@ pub fn parse_mf33_wildcard(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                                 if (1_f64 as i64) <= ((var_ne as f64 - 1_f64) as i64) {
@@ -10889,7 +10890,7 @@ pub fn parse_mf33_wildcard(
                                         let _val = vals[vi];
                                         if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                                         let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), f64_to_endf_value(_val));
+                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -10918,7 +10919,7 @@ pub fn parse_mf33_wildcard(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                                 if (1_f64 as i64) <= ((var_ne as f64 - 1_f64) as i64) {
@@ -10934,7 +10935,7 @@ pub fn parse_mf33_wildcard(
                                         let _val = vals[vi];
                                         if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                                         let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), f64_to_endf_value(_val));
+                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -10963,7 +10964,7 @@ pub fn parse_mf33_wildcard(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_ner as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("ER").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                                 if (1_f64 as i64) <= (var_nec as f64 as i64) {
@@ -10972,7 +10973,7 @@ pub fn parse_mf33_wildcard(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_nec as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("EC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("EC").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                                 if (1_f64 as i64) <= ((var_ner as f64 - 1_f64) as i64) {
@@ -10988,7 +10989,7 @@ pub fn parse_mf33_wildcard(
                                         let _val = vals[vi];
                                         if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) { result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict()); }
                                         let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
-                                        _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                                        _nav_0.insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -11018,10 +11019,10 @@ pub fn parse_mf33_wildcard(
                                 for var_k_loop_ in (1_f64 as i64)..=(var_np as f64 as i64) {
                                     var_k = var_k_loop_ as f64;
                                     let _val = vals[vi];
-                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
+                                    result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Float(_val));
                                     vi += 1;
                                 }
                             }
@@ -11233,7 +11234,7 @@ pub fn parse_mf34_wildcard(
                                 let _nav_0 = result.get_mut("Data").unwrap().get_mut(EndfKey::Int(var_n as f64 as i64)).unwrap();
                                 if !_nav_0.contains_key(EndfKey::Int(var_m as f64 as i64).clone()) { _nav_0.insert(EndfKey::Int(var_m as f64 as i64).clone(), EndfValue::new_dict()); }
                                 let _nav_1 = _nav_0.get_mut(EndfKey::Int(var_m as f64 as i64)).unwrap();
-                                _nav_1.insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
+                                _nav_1.insert(EndfKey::Int(var_q as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                             }
                         }
@@ -11355,7 +11356,7 @@ pub fn parse_mf34_wildcard(
                                 let _nav_0 = result.get_mut("Data").unwrap().get_mut(EndfKey::Int(var_n as f64 as i64)).unwrap();
                                 if !_nav_0.contains_key(EndfKey::Int(var_m as f64 as i64).clone()) { _nav_0.insert(EndfKey::Int(var_m as f64 as i64).clone(), EndfValue::new_dict()); }
                                 let _nav_1 = _nav_0.get_mut(EndfKey::Int(var_m as f64 as i64)).unwrap();
-                                _nav_1.insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
+                                _nav_1.insert(EndfKey::Int(var_q as f64 as i64), EndfValue::Float(_val));
                                 vi += 1;
                             }
                         }
@@ -11464,7 +11465,7 @@ pub fn parse_mf35_wildcard(
                     for var_i_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                         var_i = var_i_loop_ as f64;
                         let _val = vals[vi];
-                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                         vi += 1;
                     }
                     if (1_f64 as i64) <= ((var_ne as f64 - 1_f64) as i64) {
@@ -11480,7 +11481,7 @@ pub fn parse_mf35_wildcard(
                             let _val = vals[vi];
                             if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_i as f64 as i64).clone()) { result.get_mut("F").unwrap().insert(EndfKey::Int(var_i as f64 as i64).clone(), EndfValue::new_dict()); }
                             let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_i as f64 as i64)).unwrap();
-                            _nav_0.insert(EndfKey::Int(var_j as f64 as i64), f64_to_endf_value(_val));
+                            _nav_0.insert(EndfKey::Int(var_j as f64 as i64), EndfValue::Float(_val));
                             vi += 1;
                         }
                     }
@@ -11686,10 +11687,10 @@ pub fn parse_mf40_wildcard(
                                     for var_i_loop_ in (1_f64 as i64)..=(var_nci as f64 as i64) {
                                         var_i = var_i_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("C").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("C").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("XMT").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("XMT").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -11726,11 +11727,11 @@ pub fn parse_mf40_wildcard(
 
                                     let mut vi: usize = 0;
                                     let _val = vals[vi];
-                                    result.insert("XMFS", f64_to_endf_value(_val));
+                                    result.insert("XMFS", EndfValue::Float(_val));
                                     var_xmfs = _val;
                                     vi += 1;
                                     let _val = vals[vi];
-                                    result.insert("XLFSS", f64_to_endf_value(_val));
+                                    result.insert("XLFSS", EndfValue::Float(_val));
                                     var_xlfss = _val;
                                     vi += 1;
                                     if (1_f64 as i64) <= (var_nei as f64 as i64) {
@@ -11740,10 +11741,10 @@ pub fn parse_mf40_wildcard(
                                     for var_i_loop_ in (1_f64 as i64)..=(var_nei as f64 as i64) {
                                         var_i = var_i_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("WE").unwrap().insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("WE").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -11848,10 +11849,10 @@ pub fn parse_mf40_wildcard(
                                     for var_q_loop_ in (1_f64 as i64)..=(((var_np as f64 - var_lt as f64)) as i64) {
                                         var_q = var_q_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("Ek").unwrap().insert(EndfKey::Int(var_q as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("Fk").unwrap().insert(EndfKey::Int(var_q as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                     if (1_f64 as i64) <= (var_lt as f64 as i64) {
@@ -11861,10 +11862,10 @@ pub fn parse_mf40_wildcard(
                                     for var_q_loop_ in (1_f64 as i64)..=(var_lt as f64 as i64) {
                                         var_q = var_q_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("El").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("El").unwrap().insert(EndfKey::Int(var_q as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("Fl").unwrap().insert(EndfKey::Int(var_q as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }
@@ -11893,7 +11894,7 @@ pub fn parse_mf40_wildcard(
                                     for var_q_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                         var_q = var_q_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_q as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                     if (1_f64 as i64) <= ((var_ne as f64 - 1_f64) as i64) {
@@ -11909,7 +11910,7 @@ pub fn parse_mf40_wildcard(
                                             let _val = vals[vi];
                                             if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_q as f64 as i64).clone()) { result.get_mut("F").unwrap().insert(EndfKey::Int(var_q as f64 as i64).clone(), EndfValue::new_dict()); }
                                             let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_q as f64 as i64)).unwrap();
-                                            _nav_0.insert(EndfKey::Int(var_qp as f64 as i64), f64_to_endf_value(_val));
+                                            _nav_0.insert(EndfKey::Int(var_qp as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                         }
                                     }
@@ -11939,7 +11940,7 @@ pub fn parse_mf40_wildcard(
                                     for var_q_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                                         var_q = var_q_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_q as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                     if (1_f64 as i64) <= ((var_ne as f64 - 1_f64) as i64) {
@@ -11955,7 +11956,7 @@ pub fn parse_mf40_wildcard(
                                             let _val = vals[vi];
                                             if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_q as f64 as i64).clone()) { result.get_mut("F").unwrap().insert(EndfKey::Int(var_q as f64 as i64).clone(), EndfValue::new_dict()); }
                                             let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_q as f64 as i64)).unwrap();
-                                            _nav_0.insert(EndfKey::Int(var_qp as f64 as i64), f64_to_endf_value(_val));
+                                            _nav_0.insert(EndfKey::Int(var_qp as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                         }
                                     }
@@ -11984,7 +11985,7 @@ pub fn parse_mf40_wildcard(
                                     for var_q_loop_ in (1_f64 as i64)..=(var_ner as f64 as i64) {
                                         var_q = var_q_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("ER").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("ER").unwrap().insert(EndfKey::Int(var_q as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                     if (1_f64 as i64) <= ((((var_nt as f64 - 1_f64)) / var_ner as f64) as i64) {
@@ -11993,7 +11994,7 @@ pub fn parse_mf40_wildcard(
                                     for var_q_loop_ in (1_f64 as i64)..=((((var_nt as f64 - 1_f64)) / var_ner as f64) as i64) {
                                         var_q = var_q_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("EC").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("EC").unwrap().insert(EndfKey::Int(var_q as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                     if (1_f64 as i64) <= ((var_ner as f64 - 1_f64) as i64) {
@@ -12009,7 +12010,7 @@ pub fn parse_mf40_wildcard(
                                             let _val = vals[vi];
                                             if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_q as f64 as i64).clone()) { result.get_mut("F").unwrap().insert(EndfKey::Int(var_q as f64 as i64).clone(), EndfValue::new_dict()); }
                                             let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_q as f64 as i64)).unwrap();
-                                            _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
+                                            _nav_0.insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Float(_val));
                                             vi += 1;
                                         }
                                     }
@@ -12039,10 +12040,10 @@ pub fn parse_mf40_wildcard(
                                     for var_q_loop_ in (1_f64 as i64)..=(var_np as f64 as i64) {
                                         var_q = var_q_loop_ as f64;
                                         let _val = vals[vi];
-                                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_q as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                         let _val = vals[vi];
-                                        result.get_mut("F").unwrap().insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
+                                        result.get_mut("F").unwrap().insert(EndfKey::Int(var_q as f64 as i64), EndfValue::Float(_val));
                                         vi += 1;
                                     }
                                 }

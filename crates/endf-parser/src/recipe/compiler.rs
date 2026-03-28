@@ -72,9 +72,10 @@ fn list_from_i64(vals: &[i64]) -> EndfValue {
 }
 
 /// Build an EndfValue list from a slice of f64.
+/// All TAB1/LIST body values are floats by design — skip integer check.
 #[inline]
 fn list_from_f64(vals: &[f64]) -> EndfValue {
-    EndfValue::List(vals.iter().map(|v| Some(f64_to_endf_value(*v))).collect())
+    EndfValue::List(vals.iter().map(|v| Some(EndfValue::Float(*v))).collect())
 }
 
 "#
@@ -1198,10 +1199,9 @@ impl CodeGen {
                     self.line("// list body abbreviation (validation skipped)");
                     self.line("vi += 1;");
                 } else {
-                    // Use unchecked access — NPL from header guarantees bounds.
                     self.line("let _val = vals[vi];");
                     self.line(&format!(
-                        "{}.insert(\"{}\", f64_to_endf_value(_val));",
+                        "{}.insert(\"{}\", EndfValue::Float(_val));",
                         target, v.name
                     ));
                     self.declare_or_assign_f64(&v.name, "_val");
@@ -1209,9 +1209,9 @@ impl CodeGen {
                 }
             }
             Expr::Variable(v) => {
-                // Indexed: container already pre-created by emit_list_body_distribution.
+                // Indexed: container already pre-created.
                 self.line("let _val = vals[vi];");
-                self.emit_nested_insert_precreated(target, &v.name, &v.indices, "f64_to_endf_value(_val)");
+                self.emit_nested_insert_precreated(target, &v.name, &v.indices, "EndfValue::Float(_val)");
                 self.line("vi += 1;");
             }
             Expr::Number(n) => {
@@ -1225,7 +1225,7 @@ impl CodeGen {
                 } else {
                     self.line("let _val = vals[vi];");
                     self.line(&format!(
-                        "{}.insert(\"{}\", f64_to_endf_value(_val));",
+                        "{}.insert(\"{}\", EndfValue::Float(_val));",
                         target, v.name
                     ));
                     self.declare_or_assign_f64(&v.name, "_val");
@@ -1234,7 +1234,7 @@ impl CodeGen {
             }
             Expr::InconsistentVar(v) if !v.indices.is_empty() => {
                 self.line("let _val = vals[vi];");
-                self.emit_nested_insert_precreated(target, &v.name, &v.indices, "f64_to_endf_value(_val)");
+                self.emit_nested_insert_precreated(target, &v.name, &v.indices, "EndfValue::Float(_val)");
                 self.line("vi += 1;");
             }
             _ => {
