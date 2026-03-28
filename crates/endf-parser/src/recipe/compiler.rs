@@ -873,6 +873,48 @@ impl CodeGen {
         ));
     }
 
+    /// Like emit_nested_insert but assumes the top-level container
+    /// `target["name"]` already exists (pre-created before the loop).
+    /// Skips the contains_key check for the first level.
+    /// For intermediate levels, uses entry-or-insert pattern.
+    fn emit_nested_insert_precreated(
+        &mut self,
+        target: &str,
+        name: &str,
+        indices: &[Expr],
+        val_expr: &str,
+    ) {
+        if indices.is_empty() {
+            self.line(&format!("{}.insert(\"{}\", {});", target, name, val_expr));
+            return;
+        }
+
+        // First level: container exists, just get_mut.
+        let mut current = format!("{}.get_mut(\"{}\").unwrap()", target, name);
+
+        // Intermediate levels: ensure-exists + descend.
+        for (depth, idx_expr) in indices[..indices.len() - 1].iter().enumerate() {
+            let idx = self.expr_to_rust(idx_expr);
+            let key_expr = format!("EndfKey::Int({} as i64)", idx);
+            self.line(&format!(
+                "if !{}.contains_key({}.clone()) {{ {}.insert({}.clone(), EndfValue::new_dict()); }}",
+                current, key_expr, current, key_expr
+            ));
+            let nav_var = format!("_nav_{}", depth);
+            self.line(&format!(
+                "let {} = {}.get_mut({}).unwrap();",
+                nav_var, current, key_expr
+            ));
+            current = nav_var;
+        }
+
+        let last_idx = self.expr_to_rust(indices.last().unwrap());
+        self.line(&format!(
+            "{}.insert(EndfKey::Int({} as i64), {});",
+            current, last_idx, val_expr
+        ));
+    }
+
     /// Generate a Rust expression that reads an indexed variable from the
     /// result dict. Supports any number of indices via chained `.get()` calls.
     fn indexed_var_access(&self, name: &str, indices: &[Expr]) -> String {
@@ -1066,6 +1108,10 @@ impl CodeGen {
     }
 
     fn emit_list_body_distribution(&mut self, body: &[ListItem], target: &str) {
+        self.emit_list_body_items(body, target);
+    }
+
+    fn emit_list_body_items(&mut self, body: &[ListItem], target: &str) {
         for item in body {
             match item {
                 ListItem::Value(expr) => {
@@ -1081,62 +1127,95 @@ impl CodeGen {
                     let stop_s = self.expr_to_rust(stop);
                     let loop_var = Self::var_name(var);
                     let loop_counter = format!("{}_loop_", loop_var);
+
+                    // Pre-create containers for indexed variables in this
+                    // loop body, INSIDE the loop guard so they're only
+                    // created when the loop actually executes.
+                    let indexed_vars = Self::collect_indexed_var_names(loop_body);
+                    if !indexed_vars.is_empty() {
+                        self.line(&format!(
+                            "if ({} as i64) <= ({} as i64) {{",
+                            start_s, stop_s
+                        ));
+                        self.indent += 1;
+                        for var_name in &indexed_vars {
+                            self.line(&format!(
+                                "if !{}.contains_key(\"{}\") {{ {}.insert(\"{}\", EndfValue::new_dict()); }}",
+                                target, var_name, target, var_name
+                            ));
+                        }
+                        self.indent -= 1;
+                        self.line("}");
+                    }
+
                     self.line(&format!(
                         "for {} in ({} as i64)..=({} as i64) {{",
                         loop_counter, start_s, stop_s
                     ));
                     self.indent += 1;
                     self.line(&format!("{} = {} as f64;", loop_var, loop_counter));
-                    self.emit_list_body_distribution(loop_body, target);
+                    self.emit_list_body_items(loop_body, target);
                     self.indent -= 1;
                     self.line("}");
                 }
                 ListItem::Padding => {
-                    // Advance vi to next 6-element boundary
                     self.line("vi = (vi + 5) / 6 * 6;");
                 }
             }
         }
     }
 
+    /// Collect all indexed variable names from a LIST body (recursing into loops).
+    fn collect_indexed_var_names(body: &[ListItem]) -> Vec<String> {
+        let mut names = Vec::new();
+        let mut seen = HashSet::new();
+        Self::collect_indexed_var_names_inner(body, &mut names, &mut seen);
+        names
+    }
+
+    fn collect_indexed_var_names_inner(body: &[ListItem], names: &mut Vec<String>, seen: &mut HashSet<String>) {
+        for item in body {
+            match item {
+                ListItem::Value(Expr::Variable(v)) | ListItem::Value(Expr::InconsistentVar(v))
+                    if !v.indices.is_empty() =>
+                {
+                    if seen.insert(v.name.clone()) {
+                        names.push(v.name.clone());
+                    }
+                }
+                ListItem::Loop { body: loop_body, .. } => {
+                    Self::collect_indexed_var_names_inner(loop_body, names, seen);
+                }
+                _ => {}
+            }
+        }
+    }
+
     fn emit_list_value_store(&mut self, expr: &Expr, target: &str) {
-        // Helper: bounds-checked vals access
-        let vals_get = "*vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!(\"LIST body index {} out of bounds (len={})\", vi, vals.len()) })?";
         match expr {
             Expr::Variable(v) if v.indices.is_empty() => {
                 if self.is_abbreviation(&v.name) {
-                    // Abbreviation in list body: validation only, skip.
                     self.line("// list body abbreviation (validation skipped)");
                     self.line("vi += 1;");
                 } else {
-                    self.line(&format!(
-                        "let _val = {};",
-                        vals_get
-                    ));
+                    // Use unchecked access — NPL from header guarantees bounds.
+                    self.line("let _val = vals[vi];");
                     self.line(&format!(
                         "{}.insert(\"{}\", f64_to_endf_value(_val));",
                         target, v.name
                     ));
-                    // Also set as local var for later use
                     self.declare_or_assign_f64(&v.name, "_val");
                     self.line("vi += 1;");
                 }
             }
             Expr::Variable(v) => {
-                // Indexed: e.g., ER[j] or F[k,kp]
-                self.line(&format!(
-                    "let _val = {};",
-                    vals_get
-                ));
-                self.emit_nested_insert(target, &v.name, &v.indices, "f64_to_endf_value(_val)");
+                // Indexed: container already pre-created by emit_list_body_distribution.
+                self.line("let _val = vals[vi];");
+                self.emit_nested_insert_precreated(target, &v.name, &v.indices, "f64_to_endf_value(_val)");
                 self.line("vi += 1;");
             }
             Expr::Number(n) => {
-                // Constant: validate or skip
-                self.line(&format!(
-                    "// list body constant {} (validation skipped)",
-                    n
-                ));
+                self.line(&format!("// list body constant {} (validation skipped)", n));
                 self.line("vi += 1;");
             }
             Expr::InconsistentVar(v) if v.indices.is_empty() => {
@@ -1144,10 +1223,7 @@ impl CodeGen {
                     self.line("// list body abbreviation (validation skipped)");
                     self.line("vi += 1;");
                 } else {
-                    self.line(&format!(
-                        "let _val = {};",
-                        vals_get
-                    ));
+                    self.line("let _val = vals[vi];");
                     self.line(&format!(
                         "{}.insert(\"{}\", f64_to_endf_value(_val));",
                         target, v.name
@@ -1157,16 +1233,11 @@ impl CodeGen {
                 }
             }
             Expr::InconsistentVar(v) if !v.indices.is_empty() => {
-                // Indexed inconsistent variable — same as Variable
-                self.line(&format!(
-                    "let _val = {};",
-                    vals_get
-                ));
-                self.emit_nested_insert(target, &v.name, &v.indices, "f64_to_endf_value(_val)");
+                self.line("let _val = vals[vi];");
+                self.emit_nested_insert_precreated(target, &v.name, &v.indices, "f64_to_endf_value(_val)");
                 self.line("vi += 1;");
             }
             _ => {
-                // Complex expression (e.g., DesiredNumber) — validation only
                 self.line("// list body expression (validation skipped)");
                 self.line("vi += 1;");
             }
