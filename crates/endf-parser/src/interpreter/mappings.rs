@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::error::{EndfError, EndfResult};
 use crate::options::{ParseOpts, ReadOpts, WriteOpts};
@@ -396,6 +396,10 @@ fn map_fields_to_datadic(
         } // scope_chain dropped here, releasing immutable borrows
 
         // Phase 2: Process results and apply mutations.
+        // Track variables solved in this pass to avoid overwriting by later
+        // fields that also have the same unknown (e.g., L2=NRS and N1=6*NX
+        // where NX abbreviation expands to an expression linear in NRS).
+        let mut solved_this_pass: HashSet<String> = HashSet::new();
         for i in 0..n {
             if done[i] {
                 continue;
@@ -460,18 +464,22 @@ fn map_fields_to_datadic(
                 progress = true;
             } else {
                 // Expression has one unknown -- solve for it.
-                let solved = resolve_field(&r, field_values[i], RwMode::Read)?;
                 if let Some(ref var) = r.unbound_var {
+                    let var_key = if var.indices.is_empty() {
+                        var.name.clone()
+                    } else {
+                        format!("{:?}", var)
+                    };
+                    if solved_this_pass.contains(&var_key) {
+                        // This variable was already solved by an earlier field
+                        // in this pass. Skip — next pass will re-evaluate with
+                        // the solved value and validate or solve remaining fields.
+                        continue;
+                    }
+                    let solved = resolve_field(&r, field_values[i], RwMode::Read)?;
                     let var_name = var.name.clone();
                     let var_indices = var.indices.clone();
                     let new_value = f64_to_endf_value(solved);
-
-                    // Match Python behavior: simply overwrite the variable
-                    // with the new value. The Python endf_mapping_core.py
-                    // never checks for existing values when solving for
-                    // unknowns — it just assigns. This is important because
-                    // variables like AWR can appear in multiple records
-                    // (HEAD and CONT) with legitimately different values.
 
                     eval_and_set_var(
                         &var_name,
@@ -480,6 +488,10 @@ fn map_fields_to_datadic(
                         state,
                         parse_opts,
                     )?;
+                    solved_this_pass.insert(var_key);
+                } else {
+                    // No unbound variable but not fully known — shouldn't happen,
+                    // but mark as done to avoid infinite loop.
                 }
                 done[i] = true;
                 progress = true;
