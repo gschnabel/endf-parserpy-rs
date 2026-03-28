@@ -165,6 +165,10 @@ fn try_fast_map_fields(
     for expr in exprs {
         match expr {
             Expr::Variable(v) if v.indices.is_empty() => {
+                // Abbreviations are compile-time substitutions; don't store them.
+                if state.abbreviations.contains_key(&v.name) {
+                    return Ok(false); // Fall back to slow path for validation
+                }
                 actions.push(FieldAction::SetScalar(v.name.clone()));
             }
             Expr::Variable(v) => {
@@ -407,10 +411,21 @@ fn map_fields_to_datadic(
                 // If the expression is a simple variable reference (e.g., AWR)
                 // that resolved as "known" because the variable was already set
                 // by a prior record, we reassign it with the new field value.
-                // This matches Python's look_up=False behavior where existing
+                // This matches Python's look_up=FALSE behavior where existing
                 // datadic variables are not looked up during field mapping, so
                 // they enter the "solve for unknown" branch and get overwritten.
-                if is_simple_variable(&exprs[i]) {
+                //
+                // Exception: abbreviations (e.g., NW := NEP[j]*(NA[j]+2)) are
+                // compile-time substitutions — they should not be stored in the
+                // output dict. When an abbreviation name appears in a field
+                // position, its expanded expression evaluates as "known", and
+                // we treat it as a validation (like a computed constant).
+                let is_abbreviation = if let Some(var) = get_simple_variable(&exprs[i]) {
+                    var.indices.is_empty() && state.abbreviations.contains_key(&var.name)
+                } else {
+                    false
+                };
+                if is_simple_variable(&exprs[i]) && !is_abbreviation {
                     let new_value = f64_to_endf_value(field_values[i]);
                     let var = get_simple_variable(&exprs[i]).unwrap();
                     let var_name = var.name.clone();
