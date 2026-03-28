@@ -2093,6 +2093,7 @@ impl WriteCodeGen {
         out.push_str(") -> EndfResult<Vec<String>> {\n");
         out.push_str("    let mut lines: Vec<String> = Vec::new();\n");
         out.push_str("    let ctrl = get_ctrl(data);\n");
+        out.push_str("    let _saved_data = data;  // top-level scope fallback\n");
         out.push_str(&self.code);
         out.push_str("    Ok(lines)\n");
         out.push_str("}\n");
@@ -2148,7 +2149,8 @@ impl WriteCodeGen {
                     "mt" => return "ctrl.mt as f64".to_string(),
                     _ => {}
                 }
-                format!("get_float({}, \"{}\")", scope, v.name)
+                // Try current scope first, fall back to _saved_data for parent scope vars.
+                format!("{}.get(\"{}\").or_else(|| _saved_data.get(\"{}\")).and_then(|v| v.as_float()).unwrap_or(0.0)", scope, v.name, v.name)
             }
             Expr::Variable(v) => {
                 let mut e = format!("{}.get(\"{}\")", scope, v.name);
@@ -2168,7 +2170,13 @@ impl WriteCodeGen {
                         return format!("({})", self.expr_to_rust(abbrev_expr, scope));
                     }
                 }
-                format!("get_float({}, \"{}\")", scope, v.name)
+                match lower.as_str() {
+                    "mat" => return "ctrl.mat as f64".to_string(),
+                    "mf" => return "ctrl.mf as f64".to_string(),
+                    "mt" => return "ctrl.mt as f64".to_string(),
+                    _ => {}
+                }
+                format!("{}.get(\"{}\").or_else(|| _saved_data.get(\"{}\")).and_then(|v| v.as_float()).unwrap_or(0.0)", scope, v.name, v.name)
             }
             Expr::InconsistentVar(v) => {
                 let mut e = format!("{}.get(\"{}\")", scope, v.name);
