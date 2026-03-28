@@ -5,7 +5,7 @@
 #![allow(unused_variables, unused_mut, unused_assignments)]
 
 use endf_parser::records::{self, read_cont, read_tab1, read_tab1_body, read_tab2, read_tab2_body, read_list, read_intg, read_endf_numbers};
-use endf_parser::records::{write_cont, write_tab1_body, write_tab2_body, write_send, ContRecord, Tab1Body, Tab2Body, CtrlRecord};
+use endf_parser::records::{write_cont, write_text, write_dir, write_tab1_body, write_tab2_body, write_send, ContRecord, TextRecord, DirRecord, Tab1Body, Tab2Body, CtrlRecord};
 use endf_parser::fortran::{fortstr_to_f64, read_fort_int, f64_to_fortstr};
 use endf_parser::value::{EndfKey, EndfValue, EndfTable};
 use endf_parser::options::{ReadOpts, ParseOpts, WriteOpts};
@@ -108,8 +108,14 @@ pub fn write_mf0_mt0(
 ) -> EndfResult<Vec<String>> {
     let mut lines: Vec<String> = Vec::new();
     let ctrl = get_ctrl(data);
-    // TODO: TEXT write not yet implemented
-    lines.push(String::new());
+    // Write TEXT
+    {
+        let mut _text = String::new();
+        _text.push_str(&match data.get("TAPEDESCR") { Some(EndfValue::Str(s)) => s.clone(), _ => String::new() });
+        while _text.len() < 66 { _text.push(' '); }
+        if _text.len() > 66 { _text.truncate(66); }
+        lines.push(write_text(&TextRecord { text: _text }, &ctrl, write_opts));
+    }
     Ok(lines)
 }
 
@@ -314,21 +320,56 @@ pub fn write_mf1_mt451(
     lines.push(write_cont(&ContRecord { c1: get_float(data, "AWI"), c2: get_float(data, "EMAX"), l1: get_float(data, "LREL") as i64, l2: 0_f64 as i64, n1: get_float(data, "NSUB") as i64, n2: get_float(data, "NVER") as i64 }, &ctrl, write_opts));
     // Write HEAD/CONT
     lines.push(write_cont(&ContRecord { c1: get_float(data, "TEMP"), c2: 0_f64, l1: get_float(data, "LDRV") as i64, l2: 0_f64 as i64, n1: get_float(data, "NWD") as i64, n2: get_float(data, "NXC") as i64 }, &ctrl, write_opts));
-    // TODO: TEXT write not yet implemented
-    lines.push(String::new());
-    // TODO: TEXT write not yet implemented
-    lines.push(String::new());
+    // Write TEXT
+    {
+        let mut _text = String::new();
+        _text.push_str(&format!("{:<width$}", match data.get("ZSYMAM") { Some(EndfValue::Str(s)) => s.clone(), _ => String::new() }, width = 11));
+        _text.push_str(&format!("{:<width$}", match data.get("ALAB") { Some(EndfValue::Str(s)) => s.clone(), _ => String::new() }, width = 11));
+        _text.push_str(&format!("{:<width$}", match data.get("EDATE") { Some(EndfValue::Str(s)) => s.clone(), _ => String::new() }, width = 10));
+        _text.push_str(&" ".repeat(1));
+        _text.push_str(&format!("{:<width$}", match data.get("AUTH") { Some(EndfValue::Str(s)) => s.clone(), _ => String::new() }, width = 33));
+        while _text.len() < 66 { _text.push(' '); }
+        if _text.len() > 66 { _text.truncate(66); }
+        lines.push(write_text(&TextRecord { text: _text }, &ctrl, write_opts));
+    }
+    // Write TEXT
+    {
+        let mut _text = String::new();
+        _text.push_str(&" ".repeat(1));
+        _text.push_str(&format!("{:<width$}", match data.get("REF") { Some(EndfValue::Str(s)) => s.clone(), _ => String::new() }, width = 21));
+        _text.push_str(&format!("{:<width$}", match data.get("DDATE") { Some(EndfValue::Str(s)) => s.clone(), _ => String::new() }, width = 10));
+        _text.push_str(&" ".repeat(1));
+        _text.push_str(&format!("{:<width$}", match data.get("RDATE") { Some(EndfValue::Str(s)) => s.clone(), _ => String::new() }, width = 10));
+        _text.push_str(&" ".repeat(12));
+        _text.push_str(&format!("{:<width$}", match data.get("ENDATE") { Some(EndfValue::Str(s)) => s.clone(), _ => String::new() }, width = 8));
+        _text.push_str(&" ".repeat(3));
+        while _text.len() < 66 { _text.push(' '); }
+        if _text.len() > 66 { _text.truncate(66); }
+        lines.push(write_text(&TextRecord { text: _text }, &ctrl, write_opts));
+    }
     for _i_i in (1_f64 as i64)..=(3_f64 as i64) {
-        // TODO: TEXT write not yet implemented
-        lines.push(String::new());
+        // Write TEXT
+        {
+            let mut _text = String::new();
+            _text.push_str(&match data.get("HSUB").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))) { Some(EndfValue::Str(s)) => s.clone(), _ => String::new() });
+            while _text.len() < 66 { _text.push(' '); }
+            if _text.len() > 66 { _text.truncate(66); }
+            lines.push(write_text(&TextRecord { text: _text }, &ctrl, write_opts));
+        }
     }
     for _i_i in (1_f64 as i64)..=((get_float(data, "NWD") - 5_f64) as i64) {
-        // TODO: TEXT write not yet implemented
-        lines.push(String::new());
+        // Write TEXT
+        {
+            let mut _text = String::new();
+            _text.push_str(&match data.get("DESCRIPTION").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))) { Some(EndfValue::Str(s)) => s.clone(), _ => String::new() });
+            while _text.len() < 66 { _text.push(' '); }
+            if _text.len() > 66 { _text.truncate(66); }
+            lines.push(write_text(&TextRecord { text: _text }, &ctrl, write_opts));
+        }
     }
     for _i_i in (1_f64 as i64)..=(get_float(data, "NXC") as i64) {
-        // TODO: DIR write not yet implemented
-        lines.push(String::new());
+        // Write DIR
+        lines.push(write_dir(&DirRecord { l1: data.get("MFx").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: data.get("MTx").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, n1: data.get("NCx").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, n2: data.get("MOD").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
     }
     // SEND
     Ok(lines)

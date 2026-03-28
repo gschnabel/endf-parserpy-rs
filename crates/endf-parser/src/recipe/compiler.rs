@@ -63,7 +63,7 @@ fn generate_header() -> String {
 #![allow(unused_variables, unused_mut, unused_assignments)]
 
 use endf_parser::records::{self, read_cont, read_tab1, read_tab1_body, read_tab2, read_tab2_body, read_list, read_intg, read_endf_numbers};
-use endf_parser::records::{write_cont, write_tab1_body, write_tab2_body, write_send, ContRecord, Tab1Body, Tab2Body, CtrlRecord};
+use endf_parser::records::{write_cont, write_text, write_dir, write_tab1_body, write_tab2_body, write_send, ContRecord, TextRecord, DirRecord, Tab1Body, Tab2Body, CtrlRecord};
 use endf_parser::fortran::{fortstr_to_f64, read_fort_int, f64_to_fortstr};
 use endf_parser::value::{EndfKey, EndfValue, EndfTable};
 use endf_parser::options::{ReadOpts, ParseOpts, WriteOpts};
@@ -2416,14 +2416,57 @@ impl WriteCodeGen {
         }
     }
 
-    fn emit_write_text(&mut self, _placeholders: &[TextPlaceholder], _scope: &str) {
-        self.line("// TODO: TEXT write not yet implemented");
-        self.line("lines.push(String::new());");
+    fn emit_write_text(&mut self, placeholders: &[TextPlaceholder], scope: &str) {
+        self.line("// Write TEXT");
+        self.line("{");
+        self.indent += 1;
+        self.line("let mut _text = String::new();");
+
+        for ph in placeholders {
+            if let Some(ref v) = ph.var {
+                // Read the string value from the data dict.
+                let val_expr = if v.indices.is_empty() {
+                    format!("match {}.get(\"{}\") {{ Some(EndfValue::Str(s)) => s.clone(), _ => String::new() }}", scope, v.name)
+                } else {
+                    let mut e = format!("{}.get(\"{}\")", scope, v.name);
+                    for idx in &v.indices {
+                        let idx_rust = self.expr_to_rust(idx, scope);
+                        e = format!("{}.and_then(|d| d.get(EndfKey::Int({} as i64)))", e, idx_rust);
+                    }
+                    format!("match {} {{ Some(EndfValue::Str(s)) => s.clone(), _ => String::new() }}", e)
+                };
+                if let Some(w) = ph.width {
+                    self.line(&format!(
+                        "_text.push_str(&format!(\"{{:<width$}}\", {}, width = {}));",
+                        val_expr, w
+                    ));
+                } else {
+                    self.line(&format!("_text.push_str(&{});", val_expr));
+                }
+            } else {
+                // Unnamed placeholder — blank space.
+                let w = ph.width.unwrap_or(1);
+                self.line(&format!("_text.push_str(&\" \".repeat({}));", w));
+            }
+        }
+
+        self.line("while _text.len() < 66 { _text.push(' '); }");
+        self.line("if _text.len() > 66 { _text.truncate(66); }");
+        self.line("lines.push(write_text(&TextRecord { text: _text }, &ctrl, write_opts));");
+        self.indent -= 1;
+        self.line("}");
     }
 
-    fn emit_write_dir(&mut self, _fields: &[Expr; 4], _scope: &str) {
-        self.line("// TODO: DIR write not yet implemented");
-        self.line("lines.push(String::new());");
+    fn emit_write_dir(&mut self, fields: &[Expr; 4], scope: &str) {
+        self.line("// Write DIR");
+        let l1 = self.expr_to_rust(&fields[0], scope);
+        let l2 = self.expr_to_rust(&fields[1], scope);
+        let n1 = self.expr_to_rust(&fields[2], scope);
+        let n2 = self.expr_to_rust(&fields[3], scope);
+        self.line(&format!(
+            "lines.push(write_dir(&DirRecord {{ l1: {} as i64, l2: {} as i64, n1: {} as i64, n2: {} as i64 }}, &ctrl, write_opts));",
+            l1, l2, n1, n2
+        ));
     }
 
     fn emit_write_intg(&mut self, _fields: &[Expr; 3], _ndigit: &Expr, _scope: &str) {
