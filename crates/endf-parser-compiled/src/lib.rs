@@ -39,14 +39,14 @@ pub fn parse_mf0_mt0(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
+    let mut var_tapedescr: f64 = 0.0;
+
     if !lines.is_empty() {
         let ctrl = records::read_ctrl(&lines[0], read_opts)?;
         result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
         result.insert("MF", EndfValue::Int(ctrl.mf as i64));
         result.insert("MT", EndfValue::Int(ctrl.mt as i64));
     }
-    let mut var_tapedescr: f64 = 0.0;
-
     // TEXT record
     {
         let (text_rec, _ctrl) = records::read_text(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -63,12 +63,6 @@ pub fn parse_mf1_mt451(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_alab: f64 = 0.0;
     let mut var_auth: f64 = 0.0;
     let mut var_awi: f64 = 0.0;
@@ -105,6 +99,12 @@ pub fn parse_mf1_mt451(
     let mut var_za: f64 = 0.0;
     let mut var_zsymam: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -250,12 +250,6 @@ pub fn parse_mf1_mt452(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_c: f64 = 0.0;
     let mut var_eint: f64 = 0.0;
@@ -267,6 +261,12 @@ pub fn parse_mf1_mt452(
     let mut var_nu: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -336,12 +336,6 @@ pub fn parse_mf1_mt455(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_alpha: f64 = 0.0;
     let mut var_awr: f64 = 0.0;
     let mut var_e: f64 = 0.0;
@@ -360,6 +354,12 @@ pub fn parse_mf1_mt455(
     let mut var_nubar_d: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -637,12 +637,6 @@ pub fn parse_mf1_mt456(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_eint: f64 = 0.0;
     let mut var_lnu: f64 = 0.0;
@@ -651,6 +645,12 @@ pub fn parse_mf1_mt456(
     let mut var_nubar_p: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -714,12 +714,6 @@ pub fn parse_mf1_mt458(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_c_eb: f64 = 0.0;
     let mut var_c_efr: f64 = 0.0;
@@ -770,6 +764,12 @@ pub fn parse_mf1_mt458(
     let mut var_nr: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     let lookahead_ok_0 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
@@ -1207,12 +1207,6 @@ pub fn parse_mf1_mt460(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_e: f64 = 0.0;
     let mut var_i: f64 = 0.0;
@@ -1227,6 +1221,12 @@ pub fn parse_mf1_mt460(
     let mut var_tint: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     let lookahead_ok_0 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
@@ -1348,12 +1348,6 @@ pub fn parse_mf2_mt151(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_abn: f64 = 0.0;
     let mut var_ac: f64 = 0.0;
     let mut var_af: f64 = 0.0;
@@ -1479,6 +1473,13 @@ pub fn parse_mf2_mt151(
     let mut var_zai: f64 = 0.0;
     let mut var_zb: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+        var_mt = ctrl.mt as f64;
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -3164,12 +3165,6 @@ pub fn parse_mf3_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_e: f64 = 0.0;
     let mut var_lr: f64 = 0.0;
@@ -3181,6 +3176,12 @@ pub fn parse_mf3_wildcard(
     let mut var_xstable: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -3226,12 +3227,6 @@ pub fn parse_mf4_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_a: f64 = 0.0;
     let mut var_al: f64 = 0.0;
     let mut var_ang_int: f64 = 0.0;
@@ -3260,6 +3255,12 @@ pub fn parse_mf4_wildcard(
     let mut var_t: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -3540,12 +3541,6 @@ pub fn parse_mf5_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_contribution: f64 = 0.0;
     let mut var_e: f64 = 0.0;
@@ -3574,6 +3569,12 @@ pub fn parse_mf5_wildcard(
     let mut var_x: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -3949,12 +3950,6 @@ pub fn parse_mf6_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_a: f64 = 0.0;
     let mut var_apsx: f64 = 0.0;
     let mut var_awp: f64 = 0.0;
@@ -4002,6 +3997,12 @@ pub fn parse_mf6_wildcard(
     let mut var_za: f64 = 0.0;
     let mut var_zap: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -4361,12 +4362,6 @@ pub fn parse_mf7_mt2(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_eint: f64 = 0.0;
     let mut var_i: f64 = 0.0;
@@ -4385,6 +4380,12 @@ pub fn parse_mf7_mt2(
     let mut var_wp: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -4560,12 +4561,6 @@ pub fn parse_mf7_mt4(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_alpha: f64 = 0.0;
     let mut var_awr: f64 = 0.0;
     let mut var_b: f64 = 0.0;
@@ -4602,6 +4597,12 @@ pub fn parse_mf7_mt4(
     let mut var_tint: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -4827,12 +4828,6 @@ pub fn parse_mf7_mt451(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_afi: f64 = 0.0;
     let mut var_awr: f64 = 0.0;
     let mut var_awri: f64 = 0.0;
@@ -4846,6 +4841,12 @@ pub fn parse_mf7_mt451(
     let mut var_za: f64 = 0.0;
     let mut var_zai: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -4948,12 +4949,6 @@ pub fn parse_mf8_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_br: f64 = 0.0;
     let mut var_ct: f64 = 0.0;
@@ -4975,6 +4970,12 @@ pub fn parse_mf8_wildcard(
     let mut var_zan: f64 = 0.0;
     let mut var_zap: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -5106,12 +5107,6 @@ pub fn parse_mf8_mt454(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_dyi: f64 = 0.0;
     let mut var_e: f64 = 0.0;
@@ -5126,6 +5121,12 @@ pub fn parse_mf8_mt454(
     let mut var_za: f64 = 0.0;
     let mut var_zafp: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -5292,12 +5293,6 @@ pub fn parse_mf8_mt457(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_br: f64 = 0.0;
     let mut var_continuous: f64 = 0.0;
@@ -5362,6 +5357,12 @@ pub fn parse_mf8_mt457(
     let mut var_type: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     let lookahead_ok_0 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
@@ -5995,12 +5996,6 @@ pub fn parse_mf8_mt459(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_dyc: f64 = 0.0;
     let mut var_e: f64 = 0.0;
@@ -6015,6 +6010,12 @@ pub fn parse_mf8_mt459(
     let mut var_za: f64 = 0.0;
     let mut var_zafp: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -6181,12 +6182,6 @@ pub fn parse_mf9_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_e: f64 = 0.0;
     let mut var_izap: f64 = 0.0;
@@ -6202,6 +6197,12 @@ pub fn parse_mf9_wildcard(
     let mut var_y: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -6261,12 +6262,6 @@ pub fn parse_mf10_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_e: f64 = 0.0;
     let mut var_izap: f64 = 0.0;
@@ -6282,6 +6277,12 @@ pub fn parse_mf10_wildcard(
     let mut var_subsection: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -6341,12 +6342,6 @@ pub fn parse_mf12_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_eg: f64 = 0.0;
     let mut var_eint: f64 = 0.0;
@@ -6369,6 +6364,12 @@ pub fn parse_mf12_wildcard(
     let mut var_y: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     let lookahead_ok_0 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
@@ -6570,12 +6571,6 @@ pub fn parse_mf13_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_e: f64 = 0.0;
     let mut var_eg: f64 = 0.0;
@@ -6591,6 +6586,12 @@ pub fn parse_mf13_wildcard(
     let mut var_subsection: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -6667,12 +6668,6 @@ pub fn parse_mf14_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_a: f64 = 0.0;
     let mut var_awr: f64 = 0.0;
     let mut var_e: f64 = 0.0;
@@ -6691,6 +6686,12 @@ pub fn parse_mf14_wildcard(
     let mut var_nr: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     let lookahead_ok_0 = {
         let saved_ofs = ofs;
         let ok = (|| -> Result<bool, EndfError> {
@@ -6900,12 +6901,6 @@ pub fn parse_mf15_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_e: f64 = 0.0;
     let mut var_egamma: f64 = 0.0;
@@ -6924,6 +6919,12 @@ pub fn parse_mf15_wildcard(
     let mut var_subsection: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -7038,12 +7039,6 @@ pub fn parse_mf23_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_efl: f64 = 0.0;
     let mut var_eint: f64 = 0.0;
@@ -7053,6 +7048,12 @@ pub fn parse_mf23_wildcard(
     let mut var_sigma: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -7113,12 +7114,6 @@ pub fn parse_mf27_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_h: f64 = 0.0;
     let mut var_np: f64 = 0.0;
@@ -7127,6 +7122,12 @@ pub fn parse_mf27_wildcard(
     let mut var_z: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -7186,12 +7187,6 @@ pub fn parse_mf31_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_ci: f64 = 0.0;
     let mut var_k: f64 = 0.0;
     let mut var_lty: f64 = 0.0;
@@ -7203,6 +7198,12 @@ pub fn parse_mf31_wildcard(
     let mut var_xmfs: f64 = 0.0;
     let mut var_xmti: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -7293,12 +7294,6 @@ pub fn parse_mf31_mt452(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_c: f64 = 0.0;
     let mut var_e: f64 = 0.0;
@@ -7347,6 +7342,12 @@ pub fn parse_mf31_mt452(
     let mut var_xmt: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -7809,12 +7810,6 @@ pub fn parse_mf31_mt455(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_c: f64 = 0.0;
     let mut var_e: f64 = 0.0;
@@ -7863,6 +7858,12 @@ pub fn parse_mf31_mt455(
     let mut var_xmt: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -8325,12 +8326,6 @@ pub fn parse_mf31_mt456(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_c: f64 = 0.0;
     let mut var_e: f64 = 0.0;
@@ -8379,6 +8374,12 @@ pub fn parse_mf31_mt456(
     let mut var_xmt: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -8841,12 +8842,6 @@ pub fn parse_mf32_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_abn: f64 = 0.0;
     let mut var_aj: f64 = 0.0;
     let mut var_ap: f64 = 0.0;
@@ -8987,6 +8982,13 @@ pub fn parse_mf32_wildcard(
     let mut var_zai: f64 = 0.0;
     let mut var_zb: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+        var_mt = ctrl.mt as f64;
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -10986,12 +10988,6 @@ pub fn parse_mf33_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_c: f64 = 0.0;
     let mut var_e: f64 = 0.0;
@@ -11040,6 +11036,12 @@ pub fn parse_mf33_wildcard(
     let mut var_xmt: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -11502,12 +11504,6 @@ pub fn parse_mf34_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_data: f64 = 0.0;
     let mut var_k: f64 = 0.0;
@@ -11532,6 +11528,13 @@ pub fn parse_mf34_wildcard(
     let mut var_subsection: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+        var_mt = ctrl.mt as f64;
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -11837,12 +11840,6 @@ pub fn parse_mf35_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_e: f64 = 0.0;
     let mut var_e1: f64 = 0.0;
@@ -11859,6 +11856,12 @@ pub fn parse_mf35_wildcard(
     let mut var_subsection: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
@@ -11960,12 +11963,6 @@ pub fn parse_mf40_wildcard(
 ) -> EndfResult<EndfValue> {
     let mut ofs: usize = 0;
     let mut result = EndfValue::new_dict();
-    if !lines.is_empty() {
-        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
-        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
-        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
-        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
-    }
     let mut var_awr: f64 = 0.0;
     let mut var_c: f64 = 0.0;
     let mut var_e: f64 = 0.0;
@@ -12019,6 +12016,12 @@ pub fn parse_mf40_wildcard(
     let mut var_xmt: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
+    if !lines.is_empty() {
+        let ctrl = records::read_ctrl(&lines[0], read_opts)?;
+        result.insert("MAT", EndfValue::Int(ctrl.mat as i64));
+        result.insert("MF", EndfValue::Int(ctrl.mf as i64));
+        result.insert("MT", EndfValue::Int(ctrl.mt as i64));
+    }
     // HEAD/CONT record
     {
         let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;

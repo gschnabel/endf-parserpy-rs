@@ -365,19 +365,6 @@ impl CodeGen {
         out.push_str(") -> EndfResult<EndfValue> {\n");
         out.push_str("    let mut ofs: usize = 0;\n");
         out.push_str("    let mut result = EndfValue::new_dict();\n");
-        // Store MAT/MF/MT from first line
-        out.push_str("    if !lines.is_empty() {\n");
-        out.push_str("        let ctrl = records::read_ctrl(&lines[0], read_opts)?;\n");
-        out.push_str(
-            "        result.insert(\"MAT\", EndfValue::Int(ctrl.mat as i64));\n",
-        );
-        out.push_str(
-            "        result.insert(\"MF\", EndfValue::Int(ctrl.mf as i64));\n",
-        );
-        out.push_str(
-            "        result.insert(\"MT\", EndfValue::Int(ctrl.mt as i64));\n",
-        );
-        out.push_str("    }\n");
 
         // Pre-declare all variables at function scope so they are accessible
         // from any branch or nested block.
@@ -392,6 +379,30 @@ impl CodeGen {
         if !sorted_vars.is_empty() {
             out.push('\n');
         }
+
+        // Store MAT/MF/MT from first line, and set local vars so conditions
+        // like `MT==MT1` can reference them.
+        out.push_str("    if !lines.is_empty() {\n");
+        out.push_str("        let ctrl = records::read_ctrl(&lines[0], read_opts)?;\n");
+        out.push_str(
+            "        result.insert(\"MAT\", EndfValue::Int(ctrl.mat as i64));\n",
+        );
+        out.push_str(
+            "        result.insert(\"MF\", EndfValue::Int(ctrl.mf as i64));\n",
+        );
+        out.push_str(
+            "        result.insert(\"MT\", EndfValue::Int(ctrl.mt as i64));\n",
+        );
+        if self.all_vars.contains("mat") {
+            out.push_str("        var_mat = ctrl.mat as f64;\n");
+        }
+        if self.all_vars.contains("mf") {
+            out.push_str("        var_mf = ctrl.mf as f64;\n");
+        }
+        if self.all_vars.contains("mt") {
+            out.push_str("        var_mt = ctrl.mt as f64;\n");
+        }
+        out.push_str("    }\n");
 
         out.push_str(&self.code);
         out.push_str("    Ok(result)\n");
