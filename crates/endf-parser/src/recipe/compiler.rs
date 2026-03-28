@@ -1412,7 +1412,17 @@ impl CodeGen {
         }
 
         // Emit the if / else if / else chain.
+        // Save abbreviation and known_vars state before branches, since
+        // abbreviations defined in one branch must not leak into others
+        // (only one branch executes at runtime).
+        let saved_abbreviations = self.abbreviations.clone();
+        let saved_known_vars = self.known_vars.clone();
+
         for (i, branch) in branches.iter().enumerate() {
+            // Restore state to pre-branch baseline for each branch.
+            self.abbreviations = saved_abbreviations.clone();
+            self.known_vars = saved_known_vars.clone();
+
             let cond = if let Some(ref lv) = lookahead_vars[i] {
                 lv.clone()
             } else {
@@ -1432,6 +1442,8 @@ impl CodeGen {
         }
 
         if let Some(else_nodes) = else_body {
+            self.abbreviations = saved_abbreviations.clone();
+            self.known_vars = saved_known_vars.clone();
             self.line("} else {");
             self.indent += 1;
             for node in else_nodes {
@@ -1439,6 +1451,12 @@ impl CodeGen {
             }
             self.indent -= 1;
         }
+
+        // After the if/elif/else, restore to the pre-branch state.
+        // Variables set inside branches are not guaranteed to be set
+        // (depends on which branch was taken), so we can't rely on them.
+        self.abbreviations = saved_abbreviations;
+        self.known_vars = saved_known_vars;
         self.line("}");
     }
 

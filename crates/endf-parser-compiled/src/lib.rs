@@ -450,7 +450,8 @@ pub fn parse_mf1_mt455(
                 // field l1 expected 0 (validation skipped in compiled mode)
                 // field l2 expected 0 (validation skipped in compiled mode)
                 // field n2 expected 0 (validation skipped in compiled mode)
-                // field n1 complex expression (validation skipped in compiled mode)
+                var_nnf = ((cont.n1 as f64 - ((0_f64 * 2_f64))) / ((((1_f64 * 2_f64)) - ((0_f64 * 2_f64)))));
+                result.insert("NNF", EndfValue::Int(var_nnf as i64));
 
                 let mut vi: usize = 0;
                 for var_l_loop_ in (1_f64 as i64)..=(var_nnf as f64 as i64) {
@@ -570,7 +571,8 @@ pub fn parse_mf1_mt455(
                 // field l1 expected 0 (validation skipped in compiled mode)
                 // field l2 expected 0 (validation skipped in compiled mode)
                 // field n2 expected 0 (validation skipped in compiled mode)
-                // field n1 complex expression (validation skipped in compiled mode)
+                var_nnf = ((cont.n1 as f64 - ((0_f64 * 2_f64))) / ((((1_f64 * 2_f64)) - ((0_f64 * 2_f64)))));
+                result.insert("NNF", EndfValue::Int(var_nnf as i64));
 
                 let mut vi: usize = 0;
                 for var_l_loop_ in (1_f64 as i64)..=(var_nnf as f64 as i64) {
@@ -2435,8 +2437,9 @@ pub fn parse_mf2_mt151(
                                             // field l1 expected 0 (validation skipped in compiled mode)
                                             var_nrs = cont.l2 as f64;
                                             result.insert("NRS", EndfValue::Int(var_nrs as i64));
+                                            var_nx = cont.n2 as f64;
+                                            result.insert("NX", EndfValue::Int(var_nx as i64));
                                             // field n1 complex expression (validation skipped in compiled mode)
-                                            // field n2 complex expression (validation skipped in compiled mode)
 
                                             let mut vi: usize = 0;
                                             for var_m_loop_ in (1_f64 as i64)..=(6_f64 as i64) {
@@ -2914,7 +2917,8 @@ pub fn parse_mf2_mt151(
                                                 var_muf = cont.l2 as f64;
                                                 result.insert("MUF", EndfValue::Int(var_muf as i64));
                                                 // field n2 expected 0 (validation skipped in compiled mode)
-                                                // field n1 complex expression (validation skipped in compiled mode)
+                                                var_ne = ((cont.n1 as f64 - ((0_f64 + 6_f64))) / ((((1_f64 + 6_f64)) - ((0_f64 + 6_f64)))));
+                                                result.insert("NE", EndfValue::Int(var_ne as i64));
 
                                                 let mut vi: usize = 0;
                                                 let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
