@@ -219,7 +219,7 @@ pub fn read_intg(line: &str, ndigit: usize, opts: &ReadOpts) -> EndfResult<(Intg
     let field_width = ndigit + 1;
     let mut kij = Vec::new();
     let mut pos = start;
-    while pos + field_width <= 65 {
+    while pos + field_width <= 66 {
         let s = &padded[pos..pos + field_width];
         if s.trim().is_empty() {
             kij.push(0);
