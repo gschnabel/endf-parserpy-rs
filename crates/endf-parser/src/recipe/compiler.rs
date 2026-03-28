@@ -1294,6 +1294,34 @@ impl CodeGen {
         }
     }
 
+    /// Collect field expressions from the first `count` record nodes in a body,
+    /// skipping non-record nodes (comments, abbreviations).
+    fn collect_record_nodes(body: &[RecipeNode], count: usize) -> Vec<Vec<&Expr>> {
+        let mut result = Vec::new();
+        for node in body {
+            if result.len() >= count { break; }
+            match node {
+                RecipeNode::HeadOrCont { fields, .. } => {
+                    result.push(fields.iter().collect());
+                }
+                RecipeNode::Tab1 { fields, .. } => {
+                    result.push(fields.iter().collect());
+                }
+                RecipeNode::Tab2 { fields, .. } => {
+                    result.push(fields.iter().collect());
+                }
+                RecipeNode::List { fields, .. } => {
+                    result.push(fields.iter().collect());
+                }
+                RecipeNode::Comment(_) | RecipeNode::Abbreviation { .. } => {
+                    continue;
+                }
+                _ => break,
+            }
+        }
+        result
+    }
+
     /// Extract the field expressions from the first record node in a body.
     /// Works for HEAD/CONT (6 fields), TAB1 (6), TAB2 (6), LIST (6).
     fn first_record_fields(body: &[RecipeNode]) -> Option<Vec<&Expr>> {
@@ -1337,20 +1365,32 @@ impl CodeGen {
                 self.line("let saved_ofs = ofs;");
                 self.line("let ok = (|| -> Result<bool, EndfError> {");
                 self.indent += 1;
-                self.line("if ofs >= lines.len() { return Ok(false); }");
-                self.line("let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;");
+                // Determine lookahead depth (number of ENDF records to read).
+                let la_depth = match branch.lookahead.as_deref() {
+                    Some(Expr::Number(n)) => *n as usize,
+                    _ => 1,
+                };
 
-                // Extract field-to-variable mappings from the first record in the
-                // branch body (HEAD/CONT/TAB1/TAB2/LIST) so that condition variables
-                // like LO, LF, LTT are populated from the CONT fields.
-                if let Some(fields) = Self::first_record_fields(&branch.body) {
+                // Read up to la_depth record headers and extract variables.
+                let record_nodes = Self::collect_record_nodes(&branch.body, la_depth);
+                for (rec_idx, fields) in record_nodes.iter().enumerate() {
+                    let cont_var = format!("cont_{}", rec_idx);
+                    self.line(&format!(
+                        "if ofs + {} >= lines.len() {{ return Ok(false); }}",
+                        rec_idx
+                    ));
+                    self.line(&format!(
+                        "let ({}, _ctrl) = read_cont(&lines[ofs + {}], read_opts)?;",
+                        cont_var, rec_idx
+                    ));
                     let cont_names = ["c1", "c2", "l1", "l2", "n1", "n2"];
                     for (fi, expr) in fields.iter().enumerate() {
                         if fi >= cont_names.len() { break; }
                         if let Some(var) = get_simple_scalar_var(expr) {
                             self.line(&format!(
-                                "{} = cont.{}{};",
+                                "{} = {}.{}{};",
                                 Self::var_name(&var),
+                                cont_var,
                                 cont_names[fi],
                                 if fi >= 2 { " as f64" } else { "" }
                             ));
