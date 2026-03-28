@@ -1,6 +1,6 @@
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
-use endf_parser::value::{EndfKey, EndfValue, EndfTable};
+use endf_parser::value::{EndfKey, EndfValue};
 
 /// Convert an EndfValue to a Python object.
 pub fn endf_value_to_py(py: Python<'_>, val: &EndfValue) -> PyResult<PyObject> {
@@ -72,38 +72,18 @@ pub fn py_to_endf_value(obj: &Bound<'_, PyAny>) -> PyResult<EndfValue> {
     } else if let Ok(v) = obj.extract::<String>() {
         Ok(EndfValue::Str(v))
     } else if let Ok(dict) = obj.downcast::<PyDict>() {
-        // Check if this looks like an EndfTable (has NBT and INT keys).
-        // Only convert to Table if the dict contains EXACTLY the expected
-        // keys — otherwise it's a regular section dict that happens to
-        // contain NBT/INT alongside other variables.
-        let dict_len = dict.len();
-        let has_nbt = dict.get_item("NBT")?.is_some();
-        let has_int = dict.get_item("INT")?.is_some();
-        let has_x = dict.get_item("X")?.is_some();
-        let has_y = dict.get_item("Y")?.is_some();
-
-        if has_nbt && has_int && has_x && has_y && dict_len == 4 {
-            // TAB1 table (exactly NBT, INT, X, Y)
-            let nbt: Vec<i64> = dict.get_item("NBT")?.unwrap().extract()?;
-            let int: Vec<i64> = dict.get_item("INT")?.unwrap().extract()?;
-            let x: Vec<f64> = dict.get_item("X")?.unwrap().extract()?;
-            let y: Vec<f64> = dict.get_item("Y")?.unwrap().extract()?;
-            Ok(EndfValue::Table(EndfTable::new_tab1(nbt, int, x, y)))
-        } else if has_nbt && has_int && dict_len == 2 {
-            // TAB2 table (exactly NBT, INT)
-            let nbt: Vec<i64> = dict.get_item("NBT")?.unwrap().extract()?;
-            let int: Vec<i64> = dict.get_item("INT")?.unwrap().extract()?;
-            Ok(EndfValue::Table(EndfTable::new_tab2(nbt, int)))
-        } else {
-            // Regular dict
-            let mut map = indexmap::IndexMap::new();
-            for (k, v) in dict.iter() {
-                let key = py_to_endf_key(&k)?;
-                let val = py_to_endf_value(&v)?;
-                map.insert(key, val);
-            }
-            Ok(EndfValue::Dict(map))
+        // Always convert Python dicts to EndfValue::Dict.
+        // The interpreter stores all data (including table body sections
+        // with NBT/INT/x/y) as Dict, never as Table. The Table type is
+        // only used internally by record readers and should not appear
+        // in the data dictionary.
+        let mut map = indexmap::IndexMap::new();
+        for (k, v) in dict.iter() {
+            let key = py_to_endf_key(&k)?;
+            let val = py_to_endf_value(&v)?;
+            map.insert(key, val);
         }
+        Ok(EndfValue::Dict(map))
     } else if let Ok(list) = obj.downcast::<PyList>() {
         let mut items = Vec::new();
         for item in list.iter() {

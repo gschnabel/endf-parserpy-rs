@@ -87,11 +87,50 @@ impl EndfParser {
 
         let mut mat = 0i32;
 
+        // First pass: determine MAT from any parsed section.
+        for (_mf_key, mt_dict_val) in mf_dict {
+            if let Some(mt_d) = mt_dict_val.as_dict() {
+                for (_mt_key, section_data) in mt_d {
+                    if let Some(mat_val) = section_data.get("MAT") {
+                        if let Some(m) = mat_val.as_int() {
+                            if m > 0 { mat = m as i32; break; }
+                        }
+                    }
+                }
+            }
+            if mat > 0 { break; }
+        }
+
         for (mf_key, mt_dict_val) in mf_dict {
             let mf = match mf_key {
                 EndfKey::Int(n) => *n as i32,
                 _ => continue,
             };
+
+            // MF0 is the TPID (tape identification) — a single text line
+            // with no SEND/FEND records. Handle it specially.
+            if mf == 0 {
+                if let Some(mt_d) = mt_dict_val.as_dict() {
+                    for (_mt_key, section_data) in mt_d {
+                        if let Some(EndfValue::Str(ref text)) = section_data.get("TPID") {
+                            let ctrl = records::CtrlRecord { mat: 0, mf: 0, mt: 0 };
+                            let rec = records::TextRecord { text: text.clone() };
+                            let tpid_line = records::write_text(
+                                &rec, &ctrl, &self.engine.write_opts,
+                            );
+                            all_lines.push(tpid_line);
+                        } else {
+                            // Try writing the section via engine (tapehead recipe)
+                            let section_lines =
+                                self.engine.write_section(0, 0, section_data.clone())?;
+                            // TPID has no line numbers
+                            all_lines.extend(section_lines);
+                        }
+                    }
+                }
+                continue;
+            }
+
             let mt_dict = mt_dict_val.as_dict().ok_or_else(|| EndfError::RecipeParse {
                 message: format!("MF {} value must be a Dict", mf),
             })?;
@@ -101,13 +140,6 @@ impl EndfParser {
                     EndfKey::Int(n) => *n as i32,
                     _ => continue,
                 };
-
-                // Determine MAT from section data
-                if let Some(mat_val) = section_data.get("MAT") {
-                    if let Some(m) = mat_val.as_int() {
-                        mat = m as i32;
-                    }
-                }
 
                 if let EndfValue::Str(raw) = section_data {
                     // Unparsed section: output raw
