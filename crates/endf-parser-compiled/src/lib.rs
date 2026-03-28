@@ -14779,7 +14779,7 @@ pub fn write_mf34_wildcard(
         {
             let _saved_data = data;
             let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).unwrap();
-            if ((get_float(data, "MT1") as i64) == (0_f64 as i64)) || ((get_float(data, "MT")) == (get_float(data, "MT1"))) {
+            if ((get_float(data, "MT1") as i64) == (0_f64 as i64)) || ((ctrl.mt as f64) == (get_float(data, "MT1"))) {
                 // Write HEAD/CONT
                 lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "MAT1") as i64, l2: get_float(data, "MT1") as i64, n1: get_float(data, "NL") as i64, n2: get_float(data, "NL") as i64 }, &ctrl, write_opts));
                 for _i_n in (1_f64 as i64)..=(((get_float(data, "NL") * ((get_float(data, "NL") + 1_f64))) / 2_f64) as i64) {

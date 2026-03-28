@@ -2141,6 +2141,13 @@ impl WriteCodeGen {
                         return format!("({})", self.expr_to_rust(abbrev_expr, scope));
                     }
                 }
+                // MAT/MF/MT come from the control record, accessible everywhere.
+                match lower.as_str() {
+                    "mat" => return "ctrl.mat as f64".to_string(),
+                    "mf" => return "ctrl.mf as f64".to_string(),
+                    "mt" => return "ctrl.mt as f64".to_string(),
+                    _ => {}
+                }
                 format!("get_float({}, \"{}\")", scope, v.name)
             }
             Expr::Variable(v) => {
