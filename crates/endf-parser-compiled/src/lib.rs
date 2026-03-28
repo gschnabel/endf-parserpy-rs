@@ -4,7 +4,7 @@
 
 #![allow(unused_variables, unused_mut, unused_assignments)]
 
-use endf_parser::records::{self, read_cont, read_tab1, read_tab1_body, read_tab2, read_tab2_body, read_list, read_endf_numbers};
+use endf_parser::records::{self, read_cont, read_tab1, read_tab1_body, read_tab2, read_tab2_body, read_list, read_intg, read_endf_numbers};
 use endf_parser::fortran::{fortstr_to_f64, read_fort_int};
 use endf_parser::value::{EndfKey, EndfValue, EndfTable};
 use endf_parser::options::{ReadOpts, ParseOpts};
@@ -211,10 +211,26 @@ pub fn parse_mf1_mt451(
         {
             let (dir_rec, _ctrl) = records::read_dir(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
             ofs += 1;
-            // TODO: complex DIR field expression for l1
-            // TODO: complex DIR field expression for l2
-            // TODO: complex DIR field expression for n1
-            // TODO: complex DIR field expression for n2
+            if !result.contains_key("MFx") {
+                result.insert("MFx", EndfValue::new_dict());
+            }
+            result.get_mut("MFx").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Int(dir_rec.l1 as i64));
+            var_mfx = dir_rec.l1 as f64;
+            if !result.contains_key("MTx") {
+                result.insert("MTx", EndfValue::new_dict());
+            }
+            result.get_mut("MTx").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Int(dir_rec.l2 as i64));
+            var_mtx = dir_rec.l2 as f64;
+            if !result.contains_key("NCx") {
+                result.insert("NCx", EndfValue::new_dict());
+            }
+            result.get_mut("NCx").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Int(dir_rec.n1 as i64));
+            var_ncx = dir_rec.n1 as f64;
+            if !result.contains_key("MOD") {
+                result.insert("MOD", EndfValue::new_dict());
+            }
+            result.get_mut("MOD").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Int(dir_rec.n2 as i64));
+            var_mod = dir_rec.n2 as f64;
         }
     }
     // SEND
@@ -10012,7 +10028,26 @@ pub fn parse_mf32_wildcard(
                         }
                         for var_k_loop_ in (1_f64 as i64)..=(var_nm as f64 as i64) {
                             var_k = var_k_loop_ as f64;
-                            // TODO: INTG record not yet supported by compiler
+                            // INTG record
+                            {
+                                let (intg_rec, _ctrl) = records::read_intg(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, var_ndigit as f64 as usize, read_opts)?;
+                                ofs += 1;
+                                if !result.contains_key("II") {
+                                    result.insert("II", EndfValue::new_dict());
+                                }
+                                result.get_mut("II").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Int(intg_rec.ii as i64));
+                                var_ii = intg_rec.ii as f64;
+                                if !result.contains_key("JJ") {
+                                    result.insert("JJ", EndfValue::new_dict());
+                                }
+                                result.get_mut("JJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Int(intg_rec.jj as i64));
+                                var_jj = intg_rec.jj as f64;
+                                let kij_list = EndfValue::List(intg_rec.kij.iter().map(|&v| Some(EndfValue::Int(v))).collect());
+                                if !result.contains_key("KIJ") {
+                                    result.insert("KIJ", EndfValue::new_dict());
+                                }
+                                result.get_mut("KIJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), kij_list);
+                            }
                         }
                     } else if lookahead_ok_4 {
                         // HEAD/CONT record
@@ -10163,7 +10198,26 @@ pub fn parse_mf32_wildcard(
                         }
                         for var_k_loop_ in (1_f64 as i64)..=(var_nm as f64 as i64) {
                             var_k = var_k_loop_ as f64;
-                            // TODO: INTG record not yet supported by compiler
+                            // INTG record
+                            {
+                                let (intg_rec, _ctrl) = records::read_intg(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, var_ndigit as f64 as usize, read_opts)?;
+                                ofs += 1;
+                                if !result.contains_key("II") {
+                                    result.insert("II", EndfValue::new_dict());
+                                }
+                                result.get_mut("II").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Int(intg_rec.ii as i64));
+                                var_ii = intg_rec.ii as f64;
+                                if !result.contains_key("JJ") {
+                                    result.insert("JJ", EndfValue::new_dict());
+                                }
+                                result.get_mut("JJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Int(intg_rec.jj as i64));
+                                var_jj = intg_rec.jj as f64;
+                                let kij_list = EndfValue::List(intg_rec.kij.iter().map(|&v| Some(EndfValue::Int(v))).collect());
+                                if !result.contains_key("KIJ") {
+                                    result.insert("KIJ", EndfValue::new_dict());
+                                }
+                                result.get_mut("KIJ").unwrap().insert(EndfKey::Int(var_k as f64 as i64), kij_list);
+                            }
                         }
                     } else if lookahead_ok_5 {
                         // HEAD/CONT record
@@ -10460,7 +10514,26 @@ pub fn parse_mf32_wildcard(
                         }
                         for var_q_loop_ in (1_f64 as i64)..=(var_nm as f64 as i64) {
                             var_q = var_q_loop_ as f64;
-                            // TODO: INTG record not yet supported by compiler
+                            // INTG record
+                            {
+                                let (intg_rec, _ctrl) = records::read_intg(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, var_ndigit as f64 as usize, read_opts)?;
+                                ofs += 1;
+                                if !result.contains_key("II") {
+                                    result.insert("II", EndfValue::new_dict());
+                                }
+                                result.get_mut("II").unwrap().insert(EndfKey::Int(var_q as f64 as i64), EndfValue::Int(intg_rec.ii as i64));
+                                var_ii = intg_rec.ii as f64;
+                                if !result.contains_key("JJ") {
+                                    result.insert("JJ", EndfValue::new_dict());
+                                }
+                                result.get_mut("JJ").unwrap().insert(EndfKey::Int(var_q as f64 as i64), EndfValue::Int(intg_rec.jj as i64));
+                                var_jj = intg_rec.jj as f64;
+                                let kij_list = EndfValue::List(intg_rec.kij.iter().map(|&v| Some(EndfValue::Int(v))).collect());
+                                if !result.contains_key("KIJ") {
+                                    result.insert("KIJ", EndfValue::new_dict());
+                                }
+                                result.get_mut("KIJ").unwrap().insert(EndfKey::Int(var_q as f64 as i64), kij_list);
+                            }
                         }
                     } else if (var_lru as f64 as i64) == (2_f64 as i64) {
                         // HEAD/CONT record

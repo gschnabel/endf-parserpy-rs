@@ -49,7 +49,7 @@ fn generate_header() -> String {
 
 #![allow(unused_variables, unused_mut, unused_assignments)]
 
-use endf_parser::records::{self, read_cont, read_tab1, read_tab1_body, read_tab2, read_tab2_body, read_list, read_endf_numbers};
+use endf_parser::records::{self, read_cont, read_tab1, read_tab1_body, read_tab2, read_tab2_body, read_list, read_intg, read_endf_numbers};
 use endf_parser::fortran::{fortstr_to_f64, read_fort_int};
 use endf_parser::value::{EndfKey, EndfValue, EndfTable};
 use endf_parser::options::{ReadOpts, ParseOpts};
@@ -546,12 +546,14 @@ impl CodeGen {
                 // Skip comments
             }
 
-            RecipeNode::Intg { .. } => {
-                self.line("// TODO: INTG record not yet supported by compiler");
-            }
+            RecipeNode::Intg {
+                ctrl: _,
+                fields,
+                ndigit,
+            } => self.emit_intg(fields, ndigit),
 
-            RecipeNode::RepeatLoop { .. } => {
-                self.line("// TODO: RepeatLoop not yet supported by compiler");
+            RecipeNode::RepeatLoop { var, body, until } => {
+                self.emit_repeat_loop(var, body, until)
             }
         }
     }
@@ -1293,6 +1295,13 @@ impl CodeGen {
                         Self::var_name(&v.name)
                     ));
                 }
+                Expr::Variable(v) | Expr::InconsistentVar(v) => {
+                    // Indexed DIR field: e.g., MFx[i]
+                    let val_expr = format!("EndfValue::Int(dir_rec.{} as i64)", dir_fields[i]);
+                    self.emit_nested_insert("result", &v.name, &v.indices, &val_expr);
+                    // Also set local variable
+                    self.declare_or_assign_i64(&v.name, &format!("dir_rec.{}", dir_fields[i]));
+                }
                 Expr::Number(_) | Expr::DesiredNumber(_) => {
                     self.line(&format!(
                         "// DIR field {} constant (validation skipped)",
@@ -1301,11 +1310,109 @@ impl CodeGen {
                 }
                 _ => {
                     self.line(&format!(
-                        "// TODO: complex DIR field expression for {}",
+                        "// DIR field {} complex expression (validation skipped)",
                         dir_fields[i]
                     ));
                 }
             }
+        }
+
+        self.indent -= 1;
+        self.line("}");
+    }
+
+    // -- INTG ---------------------------------------------------------------
+
+    fn emit_intg(&mut self, fields: &[Expr; 3], ndigit: &Expr) {
+        self.line("// INTG record");
+        self.line("{");
+        self.indent += 1;
+
+        let ndigit_rust = self.expr_to_rust(ndigit);
+        self.line(&format!(
+            "let (intg_rec, _ctrl) = records::read_intg(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput {{ line: ofs }})?, {} as usize, read_opts)?;",
+            ndigit_rust
+        ));
+        self.line("ofs += 1;");
+
+        // Map II (field 0) and JJ (field 1) as integer fields.
+        for (i, field_name) in ["ii", "jj"].iter().enumerate() {
+            match &fields[i] {
+                Expr::Variable(v) | Expr::InconsistentVar(v) => {
+                    if v.indices.is_empty() {
+                        self.declare_or_assign_i64(&v.name, &format!("intg_rec.{}", field_name));
+                        self.line(&format!(
+                            "result.insert(\"{}\", EndfValue::Int({} as i64));",
+                            v.name,
+                            Self::var_name(&v.name)
+                        ));
+                    } else {
+                        // Indexed II[k] or JJ[k]
+                        let val_expr = format!("EndfValue::Int(intg_rec.{} as i64)", field_name);
+                        self.emit_nested_insert("result", &v.name, &v.indices, &val_expr);
+                        // Also set local variable for expression use
+                        self.declare_or_assign_i64(&v.name, &format!("intg_rec.{}", field_name));
+                    }
+                }
+                _ => {
+                    self.line(&format!(
+                        "// INTG field {} (validation skipped)",
+                        field_name
+                    ));
+                }
+            }
+        }
+
+        // Map KIJ (field 2) as an integer list.
+        match &fields[2] {
+            Expr::Variable(v) | Expr::InconsistentVar(v) => {
+                self.line("let kij_list = EndfValue::List(intg_rec.kij.iter().map(|&v| Some(EndfValue::Int(v))).collect());");
+                if v.indices.is_empty() {
+                    self.line(&format!(
+                        "result.insert(\"{}\", kij_list);",
+                        v.name
+                    ));
+                } else {
+                    self.emit_nested_insert("result", &v.name, &v.indices, "kij_list");
+                }
+            }
+            _ => {
+                self.line("// INTG KIJ field (validation skipped)");
+            }
+        }
+
+        self.indent -= 1;
+        self.line("}");
+    }
+
+    // -- RepeatLoop ---------------------------------------------------------
+
+    fn emit_repeat_loop(
+        &mut self,
+        var: &Option<(String, Box<Expr>)>,
+        body: &[RecipeNode],
+        until: &BoolExpr,
+    ) {
+        // Initialize counter variable if present.
+        if let Some((ref var_name, ref init_expr)) = var {
+            let init_s = self.expr_to_rust(init_expr);
+            self.declare_or_assign_f64(var_name, &format!("({})", init_s));
+        }
+        self.line("loop {");
+        self.indent += 1;
+
+        for node in body {
+            self.emit_node(node);
+        }
+
+        // Check until condition.
+        let cond_s = self.bool_expr_to_rust(until);
+        self.line(&format!("if {} {{ break; }}", cond_s));
+
+        // Increment counter variable if present.
+        if let Some((ref var_name, _)) = var {
+            let vn = Self::var_name(var_name);
+            self.line(&format!("{} += 1.0;", vn));
         }
 
         self.indent -= 1;
