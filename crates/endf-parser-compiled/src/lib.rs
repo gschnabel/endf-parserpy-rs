@@ -433,7 +433,7 @@ pub fn write_mf1_mt452(
         let mut _vals: Vec<f64> = Vec::new();
         let _list_scope = &data;
         for _i_k in (1_f64 as i64)..=(get_float(data, "NC") as i64) {
-            _vals.push(_list_scope.get("C").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("C").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
         }
         lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
         lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -756,7 +756,7 @@ pub fn write_mf1_mt455(
         let mut _vals: Vec<f64> = Vec::new();
         let _list_scope = &data;
         for _i_k in (1_f64 as i64)..=(get_float(data, "NNF") as i64) {
-            _vals.push(_list_scope.get("lambda").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("lambda").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
         }
         lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
         lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -785,10 +785,10 @@ pub fn write_mf1_mt455(
             let mut _vals: Vec<f64> = Vec::new();
             let _list_scope = &data;
             for _i_l in (1_f64 as i64)..=(get_float(data, "NNF") as i64) {
-                _vals.push(_list_scope.get("lambda").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                _vals.push(_list_scope.get("alpha").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                _vals.push(_list_scope.get("lambda").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                _vals.push(_list_scope.get("alpha").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
             }
-            lines.push(write_cont(&ContRecord { c1: 0_f64, c2: data.get("E").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
+            lines.push(write_cont(&ContRecord { c1: 0_f64, c2: data.get("E").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
         }
         // Write TAB1
@@ -807,7 +807,7 @@ pub fn write_mf1_mt455(
         let mut _vals: Vec<f64> = Vec::new();
         let _list_scope = &data;
         for _i_k in (1_f64 as i64)..=(get_float(data, "NNF") as i64) {
-            _vals.push(_list_scope.get("lambda").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("lambda").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
         }
         lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
         lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -831,8 +831,8 @@ pub fn write_mf1_mt455(
             let mut _vals: Vec<f64> = Vec::new();
             let _list_scope = &data;
             for _i_l in (1_f64 as i64)..=(get_float(data, "NNF") as i64) {
-                _vals.push(_list_scope.get("lambda").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                _vals.push(_list_scope.get("alpha").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                _vals.push(_list_scope.get("lambda").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                _vals.push(_list_scope.get("alpha").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
             }
             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: get_float(data, "E1"), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -841,7 +841,7 @@ pub fn write_mf1_mt455(
         let mut _vals: Vec<f64> = Vec::new();
         let _list_scope = &data;
         for _i_k in (1_f64 as i64)..=(get_float(data, "NC") as i64) {
-            _vals.push(_list_scope.get("nubar_d").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("nubar_d").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
         }
         lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
         lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -1457,24 +1457,24 @@ pub fn write_mf1_mt458(
         let mut _vals: Vec<f64> = Vec::new();
         let _list_scope = &data;
         for _i_k in (0_f64 as i64)..=(get_float(data, "NPLY") as i64) {
-            _vals.push(_list_scope.get("c_EFR").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("dc_EFR").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("c_ENP").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("dc_ENP").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("c_END").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("dc_END").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("c_EGP").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("dc_EGP").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("c_EGD").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("dc_EGD").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("c_EB").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("dc_EB").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("c_ENU").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("dc_ENU").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("c_ER").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("dc_ER").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("c_ET").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("dc_ET").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("c_EFR").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("dc_EFR").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("c_ENP").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("dc_ENP").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("c_END").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("dc_END").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("c_EGP").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("dc_EGP").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("c_EGD").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("dc_EGD").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("c_EB").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("dc_EB").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("c_ENU").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("dc_ENU").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("c_ER").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("dc_ER").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("c_ET").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("dc_ET").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
         }
         lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: get_float(data, "NPLY") as i64, n1: _vals.len() as i64, n2: (9_f64 * ((get_float(data, "NPLY") + 1_f64))) as i64 }, &ctrl, write_opts));
         lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -1506,14 +1506,14 @@ pub fn write_mf1_mt458(
         lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
         for _i_k in (1_f64 as i64)..=(get_float(data, "NFC") as i64) {
             // Write TAB1
-            let _tab_scope = &data.get("fiscomp").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).unwrap();
+            let _tab_scope = &data.get("fiscomp").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).unwrap();
             let _nbt = get_int_vec(_tab_scope, "NBT");
             let _int = get_int_vec(_tab_scope, "INT");
             let _x = get_float_vec(_tab_scope, "Eint");
             let _y = get_float_vec(_tab_scope, "EIFC");
             let _nr = _nbt.len() as i64;
             let _np = _x.len() as i64;
-            lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: data.get("LDRV").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: data.get("IFC").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, n1: _nr, n2: _np }, &ctrl, write_opts));
+            lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: data.get("LDRV").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: data.get("IFC").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, n1: _nr, n2: _np }, &ctrl, write_opts));
             let _body = Tab1Body { nbt: _nbt, int: _int, x: _x, y: _y };
             lines.extend(write_tab1_body(&_body, &ctrl, write_opts));
         }
@@ -1674,14 +1674,14 @@ pub fn write_mf1_mt460(
         lines.push(write_cont(&ContRecord { c1: get_float(data, "ZA"), c2: get_float(data, "AWR"), l1: get_float(data, "LO") as i64, l2: 0_f64 as i64, n1: get_float(data, "NG") as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
         for _i_i in (1_f64 as i64)..=(get_float(data, "NG") as i64) {
             // Write TAB1
-            let _tab_scope = &data.get("table").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).unwrap();
+            let _tab_scope = &data.get("table").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).unwrap();
             let _nbt = get_int_vec(_tab_scope, "NBT");
             let _int = get_int_vec(_tab_scope, "INT");
             let _x = get_float_vec(_tab_scope, "tint");
             let _y = get_float_vec(_tab_scope, "T");
             let _nr = _nbt.len() as i64;
             let _np = _x.len() as i64;
-            lines.push(write_cont(&ContRecord { c1: data.get("E").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), c2: 0_f64, l1: get_float(data, "i") as i64, l2: 0_f64 as i64, n1: _nr, n2: _np }, &ctrl, write_opts));
+            lines.push(write_cont(&ContRecord { c1: data.get("E").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), c2: 0_f64, l1: _i_i as f64 as i64, l2: 0_f64 as i64, n1: _nr, n2: _np }, &ctrl, write_opts));
             let _body = Tab1Body { nbt: _nbt, int: _int, x: _x, y: _y };
             lines.extend(write_tab1_body(&_body, &ctrl, write_opts));
         }
@@ -1692,7 +1692,7 @@ pub fn write_mf1_mt460(
         let mut _vals: Vec<f64> = Vec::new();
         let _list_scope = &data;
         for _i_i in (1_f64 as i64)..=(get_float(data, "NNF") as i64) {
-            _vals.push(_list_scope.get("lambda").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("lambda").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
         }
         lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
         lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -3437,14 +3437,14 @@ pub fn write_mf2_mt151(
         // Write section: isotope
         {
             let _saved_data = data;
-            let data = data.get("isotope").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).unwrap();
+            let data = data.get("isotope").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).unwrap();
             // Write HEAD/CONT
             lines.push(write_cont(&ContRecord { c1: get_float(data, "ZAI"), c2: get_float(data, "ABN"), l1: 0_f64 as i64, l2: get_float(data, "LFW") as i64, n1: get_float(data, "NER") as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
             for _i_j in (1_f64 as i64)..=(get_float(data, "NER") as i64) {
                 // Write section: range
                 {
                     let _saved_data = data;
-                    let data = data.get("range").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).unwrap();
+                    let data = data.get("range").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).unwrap();
                     // Write HEAD/CONT
                     lines.push(write_cont(&ContRecord { c1: get_float(data, "EL"), c2: get_float(data, "EH"), l1: get_float(data, "LRU") as i64, l2: get_float(data, "LRF") as i64, n1: get_float(data, "NRO") as i64, n2: get_float(data, "NAPS") as i64 }, &ctrl, write_opts));
                     if ((((((get_float(data, "LRU") as i64) == (0_f64 as i64)) && ((get_float(data, "LRF") as i64) == (0_f64 as i64))) && ((get_float(data, "NRO") as i64) == (0_f64 as i64))) && ((get_float(data, "NAPS") as i64) == (0_f64 as i64))) && ((get_float(data, "LFW") as i64) == (0_f64 as i64))) && ((get_float(data, "NER") as i64) == (1_f64 as i64)) {
@@ -3476,17 +3476,17 @@ pub fn write_mf2_mt151(
                                 // Write section: l_group
                                 {
                                     let _saved_data = data;
-                                    let data = data.get("l_group").and_then(|d| d.get(EndfKey::Int(get_float(data, "m") as i64))).unwrap();
+                                    let data = data.get("l_group").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).unwrap();
                                     // Write LIST
                                     let mut _vals: Vec<f64> = Vec::new();
                                     let _list_scope = &data;
                                     for _i_k in (1_f64 as i64)..=(get_float(data, "NRS") as i64) {
-                                        _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("AJ").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GN").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GG").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("AJ").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GT").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GN").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GG").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GF").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                     }
                                     lines.push(write_cont(&ContRecord { c1: get_float(data, "AWRI"), c2: get_float(data, "QX"), l1: get_float(data, "L") as i64, l2: get_float(data, "LRX") as i64, n1: _vals.len() as i64, n2: get_float(data, "NRS") as i64 }, &ctrl, write_opts));
                                     lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -3518,17 +3518,17 @@ pub fn write_mf2_mt151(
                                 // Write section: l_group
                                 {
                                     let _saved_data = data;
-                                    let data = data.get("l_group").and_then(|d| d.get(EndfKey::Int(get_float(data, "m") as i64))).unwrap();
+                                    let data = data.get("l_group").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).unwrap();
                                     // Write LIST
                                     let mut _vals: Vec<f64> = Vec::new();
                                     let _list_scope = &data;
                                     for _i_k in (1_f64 as i64)..=(get_float(data, "NRS") as i64) {
-                                        _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("AJ").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GN").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GG").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GFA").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GFB").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("AJ").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GN").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GG").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GFA").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GFB").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                     }
                                     lines.push(write_cont(&ContRecord { c1: get_float(data, "AWRI"), c2: get_float(data, "APL"), l1: get_float(data, "L") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NRS") as i64 }, &ctrl, write_opts));
                                     lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -3561,10 +3561,10 @@ pub fn write_mf2_mt151(
                                 let mut _vals: Vec<f64> = Vec::new();
                                 let _list_scope = &data;
                                 for _i_k in (1_f64 as i64)..=(4_f64 as i64) {
-                                    _vals.push(_list_scope.get("AT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("AT").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 for _i_k in (1_f64 as i64)..=(2_f64 as i64) {
-                                    _vals.push(_list_scope.get("BT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("BT").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 lines.push(write_cont(&ContRecord { c1: get_float(data, "AWRI"), c2: 0_f64, l1: get_float(data, "LI") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NX") as i64 }, &ctrl, write_opts));
                                 lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -3573,16 +3573,16 @@ pub fn write_mf2_mt151(
                                 let mut _vals: Vec<f64> = Vec::new();
                                 let _list_scope = &data;
                                 for _i_k in (1_f64 as i64)..=(4_f64 as i64) {
-                                    _vals.push(_list_scope.get("AT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("AT").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 for _i_k in (1_f64 as i64)..=(2_f64 as i64) {
-                                    _vals.push(_list_scope.get("BT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("BT").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 for _i_k in (1_f64 as i64)..=(4_f64 as i64) {
-                                    _vals.push(_list_scope.get("AC").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("AC").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 for _i_k in (1_f64 as i64)..=(2_f64 as i64) {
-                                    _vals.push(_list_scope.get("BC").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("BC").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 lines.push(write_cont(&ContRecord { c1: get_float(data, "AWRI"), c2: 0_f64, l1: get_float(data, "LI") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NX") as i64 }, &ctrl, write_opts));
                                 lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -3591,22 +3591,22 @@ pub fn write_mf2_mt151(
                                 let mut _vals: Vec<f64> = Vec::new();
                                 let _list_scope = &data;
                                 for _i_k in (1_f64 as i64)..=(4_f64 as i64) {
-                                    _vals.push(_list_scope.get("AT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("AT").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 for _i_k in (1_f64 as i64)..=(2_f64 as i64) {
-                                    _vals.push(_list_scope.get("BT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("BT").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 for _i_k in (1_f64 as i64)..=(4_f64 as i64) {
-                                    _vals.push(_list_scope.get("AF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("AF").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 for _i_k in (1_f64 as i64)..=(2_f64 as i64) {
-                                    _vals.push(_list_scope.get("BF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("BF").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 for _i_k in (1_f64 as i64)..=(4_f64 as i64) {
-                                    _vals.push(_list_scope.get("AC").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("AC").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 for _i_k in (1_f64 as i64)..=(2_f64 as i64) {
-                                    _vals.push(_list_scope.get("BC").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("BC").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 lines.push(write_cont(&ContRecord { c1: get_float(data, "AWRI"), c2: 0_f64, l1: get_float(data, "LI") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NX") as i64 }, &ctrl, write_opts));
                                 lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -3616,30 +3616,30 @@ pub fn write_mf2_mt151(
                                 // Write section: l_group
                                 {
                                     let _saved_data = data;
-                                    let data = data.get("l_group").and_then(|d| d.get(EndfKey::Int(get_float(data, "m") as i64))).unwrap();
+                                    let data = data.get("l_group").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).unwrap();
                                     // Write HEAD/CONT
                                     lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "L") as i64, l2: 0_f64 as i64, n1: get_float(data, "NJS") as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
                                     for _i_n in (1_f64 as i64)..=(get_float(data, "NJS") as i64) {
                                         // Write section: j_group
                                         {
                                             let _saved_data = data;
-                                            let data = data.get("j_group").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).unwrap();
+                                            let data = data.get("j_group").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).unwrap();
                                             // Write LIST
                                             let mut _vals: Vec<f64> = Vec::new();
                                             let _list_scope = &data;
                                             for _i_k in (1_f64 as i64)..=(get_float(data, "NLJ") as i64) {
-                                                _vals.push(_list_scope.get("DET").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                                _vals.push(_list_scope.get("DWT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                                _vals.push(_list_scope.get("GRT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                                _vals.push(_list_scope.get("GIT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                                _vals.push(_list_scope.get("DEF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                                _vals.push(_list_scope.get("DWF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                                _vals.push(_list_scope.get("GRF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                                _vals.push(_list_scope.get("GIF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                                _vals.push(_list_scope.get("DEC").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                                _vals.push(_list_scope.get("DWC").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                                _vals.push(_list_scope.get("GRC").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                                _vals.push(_list_scope.get("GIC").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                                _vals.push(_list_scope.get("DET").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                                _vals.push(_list_scope.get("DWT").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                                _vals.push(_list_scope.get("GRT").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                                _vals.push(_list_scope.get("GIT").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                                _vals.push(_list_scope.get("DEF").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                                _vals.push(_list_scope.get("DWF").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                                _vals.push(_list_scope.get("GRF").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                                _vals.push(_list_scope.get("GIF").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                                _vals.push(_list_scope.get("DEC").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                                _vals.push(_list_scope.get("DWC").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                                _vals.push(_list_scope.get("GRC").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                                _vals.push(_list_scope.get("GIC").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                             }
                                             lines.push(write_cont(&ContRecord { c1: get_float(data, "AJ"), c2: 0_f64, l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NLJ") as i64 }, &ctrl, write_opts));
                                             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -3656,18 +3656,18 @@ pub fn write_mf2_mt151(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_k in (1_f64 as i64)..=(get_float(data, "NPP") as i64) {
-                                _vals.push(_list_scope.get("MA").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("MB").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("ZA").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("ZB").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("IA").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("IB").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("Q").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("PNT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("SHF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("MT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("PA").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("PB").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("MA").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("MB").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("ZA").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("ZB").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("IA").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("IB").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("Q").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("PNT").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("SHF").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("MT").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("PA").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("PB").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "NPP") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: (2_f64 * get_float(data, "NPP")) as i64 }, &ctrl, write_opts));
                             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -3675,17 +3675,17 @@ pub fn write_mf2_mt151(
                                 // Write section: j_group
                                 {
                                     let _saved_data = data;
-                                    let data = data.get("j_group").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).unwrap();
+                                    let data = data.get("j_group").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).unwrap();
                                     // Write LIST
                                     let mut _vals: Vec<f64> = Vec::new();
                                     let _list_scope = &data;
                                     for _i_l in (1_f64 as i64)..=(get_float(data, "NCH") as i64) {
-                                        _vals.push(_list_scope.get("PPI").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("L").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("SCH").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("BND").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("APE").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("APT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("PPI").and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("L").and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("SCH").and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("BND").and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("APE").and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("APT").and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                     }
                                     lines.push(write_cont(&ContRecord { c1: get_float(data, "AJ"), c2: get_float(data, "PJ"), l1: get_float(data, "KBK") as i64, l2: get_float(data, "KPS") as i64, n1: _vals.len() as i64, n2: get_float(data, "NCH") as i64 }, &ctrl, write_opts));
                                     lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -3694,9 +3694,9 @@ pub fn write_mf2_mt151(
                                         let mut _vals: Vec<f64> = Vec::new();
                                         let _list_scope = &data;
                                         for _i_n in (1_f64 as i64)..=(get_float(data, "NRS") as i64) {
-                                            _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                            _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                             for _i_m in (1_f64 as i64)..=(get_float(data, "NCH") as i64) {
-                                                _vals.push(_list_scope.get("GAM").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                                _vals.push(_list_scope.get("GAM").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                             }
                                             for _i_p in (1_f64 as i64)..=((((((5_f64 - get_float(data, "NCH")))) as i64 % (6_f64) as i64) as f64) as i64) {
                                                 _vals.push(0_f64);
@@ -3722,7 +3722,7 @@ pub fn write_mf2_mt151(
                                                 // Write HEAD/CONT
                                                 lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LCH") as i64, l2: get_float(data, "LBK") as i64, n1: 0_f64 as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
                                                 // Write TAB1
-                                                let _tab_scope = &data.get("real_part").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).unwrap();
+                                                let _tab_scope = &data.get("real_part").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).unwrap();
                                                 let _nbt = get_int_vec(_tab_scope, "NBT");
                                                 let _int = get_int_vec(_tab_scope, "INT");
                                                 let _x = get_float_vec(_tab_scope, "E");
@@ -3733,7 +3733,7 @@ pub fn write_mf2_mt151(
                                                 let _body = Tab1Body { nbt: _nbt, int: _int, x: _x, y: _y };
                                                 lines.extend(write_tab1_body(&_body, &ctrl, write_opts));
                                                 // Write TAB1
-                                                let _tab_scope = &data.get("imag_part").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).unwrap();
+                                                let _tab_scope = &data.get("imag_part").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).unwrap();
                                                 let _nbt = get_int_vec(_tab_scope, "NBT");
                                                 let _int = get_int_vec(_tab_scope, "INT");
                                                 let _x = get_float_vec(_tab_scope, "E");
@@ -3781,7 +3781,7 @@ pub fn write_mf2_mt151(
                                             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
                                             if (get_float(data, "LPS") as i64) == (1_f64 as i64) {
                                                 // Write TAB1
-                                                let _tab_scope = &data.get("real_part").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).unwrap();
+                                                let _tab_scope = &data.get("real_part").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).unwrap();
                                                 let _nbt = get_int_vec(_tab_scope, "NBT");
                                                 let _int = get_int_vec(_tab_scope, "INT");
                                                 let _x = get_float_vec(_tab_scope, "E");
@@ -3792,7 +3792,7 @@ pub fn write_mf2_mt151(
                                                 let _body = Tab1Body { nbt: _nbt, int: _int, x: _x, y: _y };
                                                 lines.extend(write_tab1_body(&_body, &ctrl, write_opts));
                                                 // Write TAB1
-                                                let _tab_scope = &data.get("imag_part").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).unwrap();
+                                                let _tab_scope = &data.get("imag_part").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).unwrap();
                                                 let _nbt = get_int_vec(_tab_scope, "NBT");
                                                 let _int = get_int_vec(_tab_scope, "INT");
                                                 let _x = get_float_vec(_tab_scope, "E");
@@ -3835,16 +3835,16 @@ pub fn write_mf2_mt151(
                                 // Write section: l_group
                                 {
                                     let _saved_data = data;
-                                    let data = data.get("l_group").and_then(|d| d.get(EndfKey::Int(get_float(data, "p") as i64))).unwrap();
+                                    let data = data.get("l_group").and_then(|d| d.get(EndfKey::Int(_i_p as f64 as i64))).unwrap();
                                     // Write LIST
                                     let mut _vals: Vec<f64> = Vec::new();
                                     let _list_scope = &data;
                                     for _i_m in (1_f64 as i64)..=(get_float(data, "NJS") as i64) {
-                                        _vals.push(_list_scope.get("D").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("AJ").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("AMUN").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GN0").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GG").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("D").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("AJ").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("AMUN").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GN0").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GG").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                         _vals.push(0_f64);
                                     }
                                     lines.push(write_cont(&ContRecord { c1: get_float(data, "AWRI"), c2: 0_f64, l1: get_float(data, "L") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NJS") as i64 }, &ctrl, write_opts));
@@ -3871,7 +3871,7 @@ pub fn write_mf2_mt151(
                                 let mut _vals: Vec<f64> = Vec::new();
                                 let _list_scope = &data;
                                 for _i_p in (1_f64 as i64)..=(get_float(data, "NE") as i64) {
-                                    _vals.push(_list_scope.get("ES").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "p") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("ES").and_then(|d| d.get(EndfKey::Int(_i_p as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 lines.push(write_cont(&ContRecord { c1: get_float(data, "SPI"), c2: 0_f64, l1: get_float(data, "LSSF") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NLS") as i64 }, &ctrl, write_opts));
                                 lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -3880,7 +3880,7 @@ pub fn write_mf2_mt151(
                                 let mut _vals: Vec<f64> = Vec::new();
                                 let _list_scope = &data;
                                 for _i_p in (1_f64 as i64)..=(get_float(data, "NE") as i64) {
-                                    _vals.push(_list_scope.get("ES").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "p") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("ES").and_then(|d| d.get(EndfKey::Int(_i_p as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 lines.push(write_cont(&ContRecord { c1: get_float(data, "SPI"), c2: get_float(data, "AP"), l1: get_float(data, "LSSF") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NLS") as i64 }, &ctrl, write_opts));
                                 lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -3889,14 +3889,14 @@ pub fn write_mf2_mt151(
                                 // Write section: l_group
                                 {
                                     let _saved_data = data;
-                                    let data = data.get("l_group").and_then(|d| d.get(EndfKey::Int(get_float(data, "p") as i64))).unwrap();
+                                    let data = data.get("l_group").and_then(|d| d.get(EndfKey::Int(_i_p as f64 as i64))).unwrap();
                                     // Write HEAD/CONT
                                     lines.push(write_cont(&ContRecord { c1: get_float(data, "AWRI"), c2: 0_f64, l1: get_float(data, "L") as i64, l2: 0_f64 as i64, n1: get_float(data, "NJS") as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
                                     for _i_n in (1_f64 as i64)..=(get_float(data, "NJS") as i64) {
                                         // Write section: j_group
                                         {
                                             let _saved_data = data;
-                                            let data = data.get("j_group").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).unwrap();
+                                            let data = data.get("j_group").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).unwrap();
                                             // Write LIST
                                             let mut _vals: Vec<f64> = Vec::new();
                                             let _list_scope = &data;
@@ -3907,7 +3907,7 @@ pub fn write_mf2_mt151(
                                             _vals.push(get_float(_list_scope, "GG"));
                                             _vals.push(0_f64);
                                             for _i_m in (1_f64 as i64)..=(get_float(data, "NE") as i64) {
-                                                _vals.push(_list_scope.get("GF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                                _vals.push(_list_scope.get("GF").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                             }
                                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "L") as i64, l2: get_float(data, "MUF") as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
                                             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -3942,14 +3942,14 @@ pub fn write_mf2_mt151(
                                 // Write section: l_group
                                 {
                                     let _saved_data = data;
-                                    let data = data.get("l_group").and_then(|d| d.get(EndfKey::Int(get_float(data, "p") as i64))).unwrap();
+                                    let data = data.get("l_group").and_then(|d| d.get(EndfKey::Int(_i_p as f64 as i64))).unwrap();
                                     // Write HEAD/CONT
                                     lines.push(write_cont(&ContRecord { c1: get_float(data, "AWRI"), c2: 0_f64, l1: get_float(data, "L") as i64, l2: 0_f64 as i64, n1: get_float(data, "NJS") as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
                                     for _i_n in (1_f64 as i64)..=(get_float(data, "NJS") as i64) {
                                         // Write section: j_group
                                         {
                                             let _saved_data = data;
-                                            let data = data.get("j_group").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).unwrap();
+                                            let data = data.get("j_group").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).unwrap();
                                             // Write LIST
                                             let mut _vals: Vec<f64> = Vec::new();
                                             let _list_scope = &data;
@@ -3960,12 +3960,12 @@ pub fn write_mf2_mt151(
                                             _vals.push(get_float(_list_scope, "AMUG"));
                                             _vals.push(get_float(_list_scope, "AMUF"));
                                             for _i_m in (1_f64 as i64)..=(get_float(data, "NE") as i64) {
-                                                _vals.push(_list_scope.get("ES").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                                _vals.push(_list_scope.get("D").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                                _vals.push(_list_scope.get("GX").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                                _vals.push(_list_scope.get("GN0").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                                _vals.push(_list_scope.get("GG").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                                _vals.push(_list_scope.get("GF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                                _vals.push(_list_scope.get("ES").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                                _vals.push(_list_scope.get("D").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                                _vals.push(_list_scope.get("GX").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                                _vals.push(_list_scope.get("GN0").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                                _vals.push(_list_scope.get("GG").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                                _vals.push(_list_scope.get("GF").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                             }
                                             lines.push(write_cont(&ContRecord { c1: get_float(data, "AJ"), c2: 0_f64, l1: get_float(data, "INT") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NE") as i64 }, &ctrl, write_opts));
                                             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -4410,10 +4410,10 @@ pub fn write_mf4_wildcard(
             // Write LIST
             let mut _vals: Vec<f64> = Vec::new();
             let _list_scope = &data;
-            for _i_l in (1_f64 as i64)..=(data.get("NL").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
-                _vals.push(_list_scope.get("a").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            for _i_l in (1_f64 as i64)..=(data.get("NL").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
+                _vals.push(_list_scope.get("a").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
             }
-            lines.push(write_cont(&ContRecord { c1: get_float(data, "T"), c2: data.get("E").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: get_float(data, "LT") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
+            lines.push(write_cont(&ContRecord { c1: get_float(data, "T"), c2: data.get("E").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: get_float(data, "LT") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
         }
     } else if ((get_float(data, "LTT") as i64) == (2_f64 as i64)) && ((get_float(data, "LI") as i64) == (0_f64 as i64)) {
@@ -4427,14 +4427,14 @@ pub fn write_mf4_wildcard(
         lines.extend(write_tab2_body(&_body, &ctrl, write_opts));
         for _i_i in (1_f64 as i64)..=(get_float(data, "NE") as i64) {
             // Write TAB1
-            let _tab_scope = &data.get("angtable").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).unwrap();
+            let _tab_scope = &data.get("angtable").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).unwrap();
             let _nbt = get_int_vec(_tab_scope, "NBT");
             let _int = get_int_vec(_tab_scope, "INT");
             let _x = get_float_vec(_tab_scope, "mu");
             let _y = get_float_vec(_tab_scope, "f");
             let _nr = _nbt.len() as i64;
             let _np = _x.len() as i64;
-            lines.push(write_cont(&ContRecord { c1: get_float(data, "T"), c2: data.get("E").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: get_float(data, "LT") as i64, l2: 0_f64 as i64, n1: _nr, n2: _np }, &ctrl, write_opts));
+            lines.push(write_cont(&ContRecord { c1: get_float(data, "T"), c2: data.get("E").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: get_float(data, "LT") as i64, l2: 0_f64 as i64, n1: _nr, n2: _np }, &ctrl, write_opts));
             let _body = Tab1Body { nbt: _nbt, int: _int, x: _x, y: _y };
             lines.extend(write_tab1_body(&_body, &ctrl, write_opts));
         }
@@ -4451,10 +4451,10 @@ pub fn write_mf4_wildcard(
             // Write LIST
             let mut _vals: Vec<f64> = Vec::new();
             let _list_scope = &data;
-            for _i_j in (1_f64 as i64)..=(data.get("NL").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
-                _vals.push(_list_scope.get("al").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            for _i_j in (1_f64 as i64)..=(data.get("NL").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
+                _vals.push(_list_scope.get("al").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
             }
-            lines.push(write_cont(&ContRecord { c1: get_float(data, "T"), c2: data.get("E").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: get_float(data, "LT") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
+            lines.push(write_cont(&ContRecord { c1: get_float(data, "T"), c2: data.get("E").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: get_float(data, "LT") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
         }
         // Write TAB2
@@ -4467,14 +4467,14 @@ pub fn write_mf4_wildcard(
         lines.extend(write_tab2_body(&_body, &ctrl, write_opts));
         for _i_i in (get_float(data, "NE1") as i64)..=(((get_float(data, "NE1") + get_float(data, "NE2")) - 1_f64) as i64) {
             // Write TAB1
-            let _tab_scope = &data.get("angtable").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).unwrap();
+            let _tab_scope = &data.get("angtable").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).unwrap();
             let _nbt = get_int_vec(_tab_scope, "NBT");
             let _int = get_int_vec(_tab_scope, "INT");
             let _x = get_float_vec(_tab_scope, "mu");
             let _y = get_float_vec(_tab_scope, "f");
             let _nr = _nbt.len() as i64;
             let _np = _x.len() as i64;
-            lines.push(write_cont(&ContRecord { c1: get_float(data, "T"), c2: data.get("E").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: get_float(data, "LT") as i64, l2: 0_f64 as i64, n1: _nr, n2: _np }, &ctrl, write_opts));
+            lines.push(write_cont(&ContRecord { c1: get_float(data, "T"), c2: data.get("E").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: get_float(data, "LT") as i64, l2: 0_f64 as i64, n1: _nr, n2: _np }, &ctrl, write_opts));
             let _body = Tab1Body { nbt: _nbt, int: _int, x: _x, y: _y };
             lines.extend(write_tab1_body(&_body, &ctrl, write_opts));
         }
@@ -4904,7 +4904,7 @@ pub fn write_mf5_wildcard(
         // Write section: contribution
         {
             let _saved_data = data;
-            let data = data.get("contribution").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).unwrap();
+            let data = data.get("contribution").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).unwrap();
             if (get_float(data, "LF") as i64) == (1_f64 as i64) {
                 // Write TAB1
                 let _tab_scope = &data.get("p_table").unwrap();
@@ -4927,14 +4927,14 @@ pub fn write_mf5_wildcard(
                 lines.extend(write_tab2_body(&_body, &ctrl, write_opts));
                 for _i_l in (1_f64 as i64)..=(get_float(data, "NE") as i64) {
                     // Write TAB1
-                    let _tab_scope = &data.get("spectrum").and_then(|d| d.get(EndfKey::Int(get_float(data, "l") as i64))).unwrap();
+                    let _tab_scope = &data.get("spectrum").and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).unwrap();
                     let _nbt = get_int_vec(_tab_scope, "NBT");
                     let _int = get_int_vec(_tab_scope, "INT");
                     let _x = get_float_vec(_tab_scope, "Eout");
                     let _y = get_float_vec(_tab_scope, "g");
                     let _nr = _nbt.len() as i64;
                     let _np = _x.len() as i64;
-                    lines.push(write_cont(&ContRecord { c1: 0_f64, c2: data.get("E").and_then(|d| d.get(EndfKey::Int(get_float(data, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _nr, n2: _np }, &ctrl, write_opts));
+                    lines.push(write_cont(&ContRecord { c1: 0_f64, c2: data.get("E").and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _nr, n2: _np }, &ctrl, write_opts));
                     let _body = Tab1Body { nbt: _nbt, int: _int, x: _x, y: _y };
                     lines.extend(write_tab1_body(&_body, &ctrl, write_opts));
                 }
@@ -5476,7 +5476,7 @@ pub fn write_mf6_wildcard(
         // Write section: subsection
         {
             let _saved_data = data;
-            let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).unwrap();
+            let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).unwrap();
             // Write TAB1
             let _tab_scope = &data.get("yields").unwrap();
             let _nbt = get_int_vec(_tab_scope, "NBT");
@@ -5501,13 +5501,13 @@ pub fn write_mf6_wildcard(
                     // Write LIST
                     let mut _vals: Vec<f64> = Vec::new();
                     let _list_scope = &data;
-                    for _i_k in (1_f64 as i64)..=(data.get("NEP").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
-                        _vals.push(_list_scope.get("Ep").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "j") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                        for _i_m in (0_f64 as i64)..=(data.get("NA").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
-                            _vals.push(_list_scope.get("b").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "j") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                    for _i_k in (1_f64 as i64)..=(data.get("NEP").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
+                        _vals.push(_list_scope.get("Ep").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                        for _i_m in (0_f64 as i64)..=(data.get("NA").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
+                            _vals.push(_list_scope.get("b").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                         }
                     }
-                    lines.push(write_cont(&ContRecord { c1: 0_f64, c2: data.get("E").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: data.get("ND").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: data.get("NA").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, n1: _vals.len() as i64, n2: data.get("NEP").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
+                    lines.push(write_cont(&ContRecord { c1: 0_f64, c2: data.get("E").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: data.get("ND").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: data.get("NA").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, n1: _vals.len() as i64, n2: data.get("NEP").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
                     lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
                 }
             } else if (get_float(data, "LAW") as i64) == (2_f64 as i64) {
@@ -5523,10 +5523,10 @@ pub fn write_mf6_wildcard(
                     // Write LIST
                     let mut _vals: Vec<f64> = Vec::new();
                     let _list_scope = &data;
-                    for _i_l in (1_f64 as i64)..=(data.get("NLW").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
-                        _vals.push(_list_scope.get("A").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "j") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                    for _i_l in (1_f64 as i64)..=(data.get("NLW").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
+                        _vals.push(_list_scope.get("A").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                     }
-                    lines.push(write_cont(&ContRecord { c1: 0_f64, c2: data.get("E").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: get_float(data, "LANG") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: data.get("NL").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
+                    lines.push(write_cont(&ContRecord { c1: 0_f64, c2: data.get("E").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: get_float(data, "LANG") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: data.get("NL").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
                     lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
                 }
             } else if (get_float(data, "LAW") as i64) == (5_f64 as i64) {
@@ -5542,10 +5542,10 @@ pub fn write_mf6_wildcard(
                     // Write LIST
                     let mut _vals: Vec<f64> = Vec::new();
                     let _list_scope = &data;
-                    for _i_k in (1_f64 as i64)..=(data.get("NW").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
-                        _vals.push(_list_scope.get("A").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "j") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                    for _i_k in (1_f64 as i64)..=(data.get("NW").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
+                        _vals.push(_list_scope.get("A").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                     }
-                    lines.push(write_cont(&ContRecord { c1: 0_f64, c2: data.get("E").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: data.get("LTP").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: data.get("NL").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
+                    lines.push(write_cont(&ContRecord { c1: 0_f64, c2: data.get("E").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: data.get("LTP").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: data.get("NL").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
                     lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
                 }
             } else if (get_float(data, "LAW") as i64) == (6_f64 as i64) {
@@ -5562,23 +5562,23 @@ pub fn write_mf6_wildcard(
                 lines.extend(write_tab2_body(&_body, &ctrl, write_opts));
                 for _i_j in (1_f64 as i64)..=(get_float(data, "NE") as i64) {
                     // Write TAB2
-                    let _tab_scope = &data.get("mu_interpol").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).unwrap();
+                    let _tab_scope = &data.get("mu_interpol").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).unwrap();
                     let _nbt = get_int_vec(_tab_scope, "NBT");
                     let _int = get_int_vec(_tab_scope, "INT");
                     let _nr = _nbt.len() as i64;
-                    lines.push(write_cont(&ContRecord { c1: 0_f64, c2: data.get("E").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _nr, n2: data.get("NMU").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
+                    lines.push(write_cont(&ContRecord { c1: 0_f64, c2: data.get("E").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _nr, n2: data.get("NMU").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
                     let _body = Tab2Body { nbt: _nbt, int: _int };
                     lines.extend(write_tab2_body(&_body, &ctrl, write_opts));
-                    for _i_k in (1_f64 as i64)..=(data.get("NMU").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
+                    for _i_k in (1_f64 as i64)..=(data.get("NMU").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
                         // Write TAB1
-                        let _tab_scope = &data.get("table").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).unwrap();
+                        let _tab_scope = &data.get("table").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).unwrap();
                         let _nbt = get_int_vec(_tab_scope, "NBT");
                         let _int = get_int_vec(_tab_scope, "INT");
                         let _x = get_float_vec(_tab_scope, "Ep");
                         let _y = get_float_vec(_tab_scope, "f");
                         let _nr = _nbt.len() as i64;
                         let _np = _x.len() as i64;
-                        lines.push(write_cont(&ContRecord { c1: 0_f64, c2: data.get("mu").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _nr, n2: _np }, &ctrl, write_opts));
+                        lines.push(write_cont(&ContRecord { c1: 0_f64, c2: data.get("mu").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _nr, n2: _np }, &ctrl, write_opts));
                         let _body = Tab1Body { nbt: _nbt, int: _int, x: _x, y: _y };
                         lines.extend(write_tab1_body(&_body, &ctrl, write_opts));
                     }
@@ -5811,9 +5811,9 @@ pub fn write_mf7_mt2(
             let mut _vals: Vec<f64> = Vec::new();
             let _list_scope = &data;
             for _i_q in (1_f64 as i64)..=(get_float(data, "NP") as i64) {
-                _vals.push(_list_scope.get("S").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "q") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                _vals.push(_list_scope.get("S").and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
             }
-            lines.push(write_cont(&ContRecord { c1: data.get("T").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), c2: 0_f64, l1: get_float(data, "LI") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
+            lines.push(write_cont(&ContRecord { c1: data.get("T").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), c2: 0_f64, l1: get_float(data, "LI") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
         }
     } else if (get_float(data, "LTHR") as i64) == (2_f64 as i64) {
@@ -5845,9 +5845,9 @@ pub fn write_mf7_mt2(
             let mut _vals: Vec<f64> = Vec::new();
             let _list_scope = &data;
             for _i_q in (1_f64 as i64)..=(get_float(data, "NP") as i64) {
-                _vals.push(_list_scope.get("S").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "q") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                _vals.push(_list_scope.get("S").and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
             }
-            lines.push(write_cont(&ContRecord { c1: data.get("T").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), c2: 0_f64, l1: get_float(data, "LI") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
+            lines.push(write_cont(&ContRecord { c1: data.get("T").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), c2: 0_f64, l1: get_float(data, "LI") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
         }
         // Write TAB1
@@ -6141,7 +6141,7 @@ pub fn write_mf7_mt4(
     let mut _vals: Vec<f64> = Vec::new();
     let _list_scope = &data;
     for _i_n in (1_f64 as i64)..=(get_float(data, "NI") as i64) {
-        _vals.push(_list_scope.get("B").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+        _vals.push(_list_scope.get("B").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
     }
     lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LLN") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NS") as i64 }, &ctrl, write_opts));
     lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -6155,24 +6155,24 @@ pub fn write_mf7_mt4(
     lines.extend(write_tab2_body(&_body, &ctrl, write_opts));
     for _i_i in (1_f64 as i64)..=(get_float(data, "NB") as i64) {
         // Write TAB1
-        let _tab_scope = &data.get("S_table").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).unwrap();
+        let _tab_scope = &data.get("S_table").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).unwrap();
         let _nbt = get_int_vec(_tab_scope, "NBT");
         let _int = get_int_vec(_tab_scope, "INT");
         let _x = get_float_vec(_tab_scope, "alpha");
         let _y = get_float_vec(_tab_scope, "S");
         let _nr = _nbt.len() as i64;
         let _np = _x.len() as i64;
-        lines.push(write_cont(&ContRecord { c1: get_float(data, "T0"), c2: data.get("beta").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: data.get("LT").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: 0_f64 as i64, n1: _nr, n2: _np }, &ctrl, write_opts));
+        lines.push(write_cont(&ContRecord { c1: get_float(data, "T0"), c2: data.get("beta").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: data.get("LT").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: 0_f64 as i64, n1: _nr, n2: _np }, &ctrl, write_opts));
         let _body = Tab1Body { nbt: _nbt, int: _int, x: _x, y: _y };
         lines.extend(write_tab1_body(&_body, &ctrl, write_opts));
-        for _i_j in (1_f64 as i64)..=(data.get("LT").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
+        for _i_j in (1_f64 as i64)..=(data.get("LT").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
             // Write LIST
             let mut _vals: Vec<f64> = Vec::new();
             let _list_scope = &data;
             for _i_q in (1_f64 as i64)..=(get_float(data, "NP") as i64) {
-                _vals.push(_list_scope.get("S").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "q") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                _vals.push(_list_scope.get("S").and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
             }
-            lines.push(write_cont(&ContRecord { c1: data.get("T").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), c2: data.get("beta").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: data.get("LI").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
+            lines.push(write_cont(&ContRecord { c1: data.get("T").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), c2: data.get("beta").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: data.get("LI").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
         }
     }
@@ -6345,15 +6345,15 @@ pub fn write_mf7_mt451(
         // Write LIST
         let mut _vals: Vec<f64> = Vec::new();
         let _list_scope = &data;
-        for _i_j in (1_f64 as i64)..=(data.get("NI").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
-            _vals.push(_list_scope.get("ZAI").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("LISI").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("AFI").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("AWRI").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("SFI").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+        for _i_j in (1_f64 as i64)..=(data.get("NI").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
+            _vals.push(_list_scope.get("ZAI").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("LISI").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("AFI").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("AWRI").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("SFI").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
             _vals.push(0_f64);
         }
-        lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "NAS") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: data.get("NI").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
+        lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "NAS") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: data.get("NI").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
         lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
     }
     // SEND
@@ -6521,17 +6521,17 @@ pub fn write_mf8_wildcard(
             // Write section: subsection
             {
                 let _saved_data = data;
-                let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).unwrap();
+                let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).unwrap();
                 // Write LIST
                 let mut _vals: Vec<f64> = Vec::new();
                 let _list_scope = &data;
                 for _i_l in (1_f64 as i64)..=(get_float(data, "ND") as i64) {
-                    _vals.push(_list_scope.get("HL").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                    _vals.push(_list_scope.get("RTYP").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                    _vals.push(_list_scope.get("ZAN").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                    _vals.push(_list_scope.get("BR").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                    _vals.push(_list_scope.get("END").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                    _vals.push(_list_scope.get("CT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                    _vals.push(_list_scope.get("HL").and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                    _vals.push(_list_scope.get("RTYP").and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                    _vals.push(_list_scope.get("ZAN").and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                    _vals.push(_list_scope.get("BR").and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                    _vals.push(_list_scope.get("END").and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                    _vals.push(_list_scope.get("CT").and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                 }
                 lines.push(write_cont(&ContRecord { c1: get_float(data, "ZAP"), c2: get_float(data, "ELFS"), l1: get_float(data, "LMF") as i64, l2: get_float(data, "LFS") as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
                 lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -6543,7 +6543,7 @@ pub fn write_mf8_wildcard(
             // Write section: subsection
             {
                 let _saved_data = data;
-                let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).unwrap();
+                let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).unwrap();
                 // Write HEAD/CONT
                 lines.push(write_cont(&ContRecord { c1: get_float(data, "ZAP"), c2: get_float(data, "ELFS"), l1: get_float(data, "LMF") as i64, l2: get_float(data, "LFS") as i64, n1: 0_f64 as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
                 let data = _saved_data;
@@ -6724,10 +6724,10 @@ pub fn write_mf8_mt454(
     let mut _vals: Vec<f64> = Vec::new();
     let _list_scope = &data;
     for _i_m in (1_f64 as i64)..=(data.get("NFP").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
-        _vals.push(_list_scope.get("ZAFP").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-        _vals.push(_list_scope.get("FPS").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-        _vals.push(_list_scope.get("YI").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-        _vals.push(_list_scope.get("DYI").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+        _vals.push(_list_scope.get("ZAFP").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+        _vals.push(_list_scope.get("FPS").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+        _vals.push(_list_scope.get("YI").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+        _vals.push(_list_scope.get("DYI").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
     }
     lines.push(write_cont(&ContRecord { c1: data.get("E").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), c2: 0_f64, l1: get_float(data, "LE") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: data.get("NFP").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
     lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -6735,13 +6735,13 @@ pub fn write_mf8_mt454(
         // Write LIST
         let mut _vals: Vec<f64> = Vec::new();
         let _list_scope = &data;
-        for _i_m in (1_f64 as i64)..=(data.get("NFP").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
-            _vals.push(_list_scope.get("ZAFP").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("FPS").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("YI").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("DYI").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+        for _i_m in (1_f64 as i64)..=(data.get("NFP").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
+            _vals.push(_list_scope.get("ZAFP").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("FPS").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("YI").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("DYI").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
         }
-        lines.push(write_cont(&ContRecord { c1: data.get("E").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), c2: 0_f64, l1: data.get("I").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: data.get("NFP").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
+        lines.push(write_cont(&ContRecord { c1: data.get("E").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), c2: 0_f64, l1: data.get("I").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: data.get("NFP").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
         lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
     }
     // SEND
@@ -7451,8 +7451,8 @@ pub fn write_mf8_mt457(
         let mut _vals: Vec<f64> = Vec::new();
         let _list_scope = &data;
         for _i_k in (1_f64 as i64)..=(get_float(data, "NC") as i64) {
-            _vals.push(_list_scope.get("Ebar_x").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("dEbar_x").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("Ebar_x").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("dEbar_x").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
         }
         lines.push(write_cont(&ContRecord { c1: get_float(data, "Thalf"), c2: get_float(data, "dThalf"), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
         lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -7460,12 +7460,12 @@ pub fn write_mf8_mt457(
         let mut _vals: Vec<f64> = Vec::new();
         let _list_scope = &data;
         for _i_k in (1_f64 as i64)..=(get_float(data, "NDK") as i64) {
-            _vals.push(_list_scope.get("RTYP").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("RFS").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("Q").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("dQ").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("BR").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("dBR").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("RTYP").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("RFS").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("Q").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("dQ").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("BR").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("dBR").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
         }
         lines.push(write_cont(&ContRecord { c1: get_float(data, "SPI"), c2: get_float(data, "PAR"), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NDK") as i64 }, &ctrl, write_opts));
         lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -7473,7 +7473,7 @@ pub fn write_mf8_mt457(
             // Write section: spectrum
             {
                 let _saved_data = data;
-                let data = data.get("spectrum").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).unwrap();
+                let data = data.get("spectrum").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).unwrap();
                 // Write LIST
                 let mut _vals: Vec<f64> = Vec::new();
                 let _list_scope = &data;
@@ -7494,7 +7494,7 @@ pub fn write_mf8_mt457(
                             // Write section: energysec
                             {
                                 let _saved_data = data;
-                                let data = data.get("energysec").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).unwrap();
+                                let data = data.get("energysec").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).unwrap();
                                 if (get_float(data, "NT") as i64) == (6_f64 as i64) {
                                     // Write LIST
                                     let mut _vals: Vec<f64> = Vec::new();
@@ -7574,8 +7574,8 @@ pub fn write_mf8_mt457(
                         let mut _vals: Vec<f64> = Vec::new();
                         let _list_scope = &data;
                         for _i_m in (1_f64 as i64)..=(get_float(data, "NPP") as i64) {
-                            _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                         }
                         lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: 2_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NPP") as i64 }, &ctrl, write_opts));
                         lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -7595,11 +7595,11 @@ pub fn write_mf8_mt457(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_m in (1_f64 as i64)..=(get_float(data, "NERP") as i64) {
-                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             for _i_m in (1_f64 as i64)..=((get_float(data, "NERP") - 2_f64) as i64) {
-                                for _i_n in (get_float(data, "m") as i64)..=((get_float(data, "NERP") - 2_f64) as i64) {
-                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                for _i_n in (_i_m as f64 as i64)..=((get_float(data, "NERP") - 2_f64) as i64) {
+                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LS") as i64, l2: 5_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NERP") as i64 }, &ctrl, write_opts));
@@ -7812,10 +7812,10 @@ pub fn write_mf8_mt459(
     let mut _vals: Vec<f64> = Vec::new();
     let _list_scope = &data;
     for _i_m in (1_f64 as i64)..=(data.get("NFP").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
-        _vals.push(_list_scope.get("ZAFP").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-        _vals.push(_list_scope.get("FPS").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-        _vals.push(_list_scope.get("YC").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-        _vals.push(_list_scope.get("DYC").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+        _vals.push(_list_scope.get("ZAFP").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+        _vals.push(_list_scope.get("FPS").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+        _vals.push(_list_scope.get("YC").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+        _vals.push(_list_scope.get("DYC").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
     }
     lines.push(write_cont(&ContRecord { c1: data.get("E").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), c2: 0_f64, l1: get_float(data, "LE") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: data.get("NFP").and_then(|d| d.get(EndfKey::Int(0_f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
     lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -7823,13 +7823,13 @@ pub fn write_mf8_mt459(
         // Write LIST
         let mut _vals: Vec<f64> = Vec::new();
         let _list_scope = &data;
-        for _i_m in (1_f64 as i64)..=(data.get("NFP").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
-            _vals.push(_list_scope.get("ZAFP").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("FPS").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("YC").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("DYC").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+        for _i_m in (1_f64 as i64)..=(data.get("NFP").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
+            _vals.push(_list_scope.get("ZAFP").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("FPS").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("YC").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("DYC").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
         }
-        lines.push(write_cont(&ContRecord { c1: data.get("E").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), c2: 0_f64, l1: data.get("I").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: data.get("NFP").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
+        lines.push(write_cont(&ContRecord { c1: data.get("E").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), c2: 0_f64, l1: data.get("I").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: data.get("NFP").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
         lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
     }
     // SEND
@@ -7928,7 +7928,7 @@ pub fn write_mf9_wildcard(
         // Write section: subsection
         {
             let _saved_data = data;
-            let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).unwrap();
+            let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).unwrap();
             // Write TAB1
             let _tab_scope = &data;
             let _nbt = get_int_vec(_tab_scope, "NBT");
@@ -8039,7 +8039,7 @@ pub fn write_mf10_wildcard(
         // Write section: subsection
         {
             let _saved_data = data;
-            let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).unwrap();
+            let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).unwrap();
             // Write TAB1
             let _tab_scope = &data;
             let _nbt = get_int_vec(_tab_scope, "NBT");
@@ -8305,14 +8305,14 @@ pub fn write_mf12_wildcard(
         }
         for _i_k in (1_f64 as i64)..=(get_float(data, "NK") as i64) {
             // Write TAB1
-            let _tab_scope = &data.get("table").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).unwrap();
+            let _tab_scope = &data.get("table").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).unwrap();
             let _nbt = get_int_vec(_tab_scope, "NBT");
             let _int = get_int_vec(_tab_scope, "INT");
             let _x = get_float_vec(_tab_scope, "Eint");
             let _y = get_float_vec(_tab_scope, "y");
             let _nr = _nbt.len() as i64;
             let _np = _x.len() as i64;
-            lines.push(write_cont(&ContRecord { c1: data.get("Eg").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), c2: data.get("ES").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: data.get("LP").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: data.get("LF").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, n1: _nr, n2: _np }, &ctrl, write_opts));
+            lines.push(write_cont(&ContRecord { c1: data.get("Eg").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), c2: data.get("ES").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: data.get("LP").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: data.get("LF").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, n1: _nr, n2: _np }, &ctrl, write_opts));
             let _body = Tab1Body { nbt: _nbt, int: _int, x: _x, y: _y };
             lines.extend(write_tab1_body(&_body, &ctrl, write_opts));
         }
@@ -8324,8 +8324,8 @@ pub fn write_mf12_wildcard(
             let mut _vals: Vec<f64> = Vec::new();
             let _list_scope = &data;
             for _i_i in (1_f64 as i64)..=(get_float(data, "NT") as i64) {
-                _vals.push(_list_scope.get("ES").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                _vals.push(_list_scope.get("TP").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                _vals.push(_list_scope.get("ES").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                _vals.push(_list_scope.get("TP").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
             }
             lines.push(write_cont(&ContRecord { c1: get_float(data, "ES_NS"), c2: 0_f64, l1: get_float(data, "LP") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NT") as i64 }, &ctrl, write_opts));
             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -8334,9 +8334,9 @@ pub fn write_mf12_wildcard(
             let mut _vals: Vec<f64> = Vec::new();
             let _list_scope = &data;
             for _i_i in (1_f64 as i64)..=(get_float(data, "NT") as i64) {
-                _vals.push(_list_scope.get("ES").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                _vals.push(_list_scope.get("TP").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                _vals.push(_list_scope.get("GP").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                _vals.push(_list_scope.get("ES").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                _vals.push(_list_scope.get("TP").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                _vals.push(_list_scope.get("GP").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
             }
             lines.push(write_cont(&ContRecord { c1: get_float(data, "ES_NS"), c2: 0_f64, l1: get_float(data, "LP") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NT") as i64 }, &ctrl, write_opts));
             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -8468,7 +8468,7 @@ pub fn write_mf13_wildcard(
         // Write section: subsection
         {
             let _saved_data = data;
-            let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).unwrap();
+            let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).unwrap();
             // Write TAB1
             let _tab_scope = &data;
             let _nbt = get_int_vec(_tab_scope, "NBT");
@@ -8730,25 +8730,25 @@ pub fn write_mf14_wildcard(
         lines.push(write_cont(&ContRecord { c1: get_float(data, "ZA"), c2: get_float(data, "AWR"), l1: get_float(data, "LI") as i64, l2: get_float(data, "LTT") as i64, n1: get_float(data, "NK") as i64, n2: get_float(data, "NI") as i64 }, &ctrl, write_opts));
         for _i_k in (1_f64 as i64)..=(get_float(data, "NI") as i64) {
             // Write HEAD/CONT
-            lines.push(write_cont(&ContRecord { c1: data.get("EG").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), c2: data.get("ES").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: 0_f64 as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
+            lines.push(write_cont(&ContRecord { c1: data.get("EG").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), c2: data.get("ES").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: 0_f64 as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
         }
         for _i_k in ((get_float(data, "NI") + 1_f64) as i64)..=((get_float(data, "NI") + ((get_float(data, "NK") - get_float(data, "NI")))) as i64) {
             // Write TAB2
-            let _tab_scope = &data.get("E_interpol").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).unwrap();
+            let _tab_scope = &data.get("E_interpol").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).unwrap();
             let _nbt = get_int_vec(_tab_scope, "NBT");
             let _int = get_int_vec(_tab_scope, "INT");
             let _nr = _nbt.len() as i64;
-            lines.push(write_cont(&ContRecord { c1: data.get("EG").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), c2: data.get("ES").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _nr, n2: data.get("NE").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
+            lines.push(write_cont(&ContRecord { c1: data.get("EG").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), c2: data.get("ES").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _nr, n2: data.get("NE").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
             let _body = Tab2Body { nbt: _nbt, int: _int };
             lines.extend(write_tab2_body(&_body, &ctrl, write_opts));
-            for _i_l in (1_f64 as i64)..=(data.get("NE").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
+            for _i_l in (1_f64 as i64)..=(data.get("NE").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
                 // Write LIST
                 let mut _vals: Vec<f64> = Vec::new();
                 let _list_scope = &data;
-                for _i_m in (1_f64 as i64)..=(data.get("NL").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(data, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
-                    _vals.push(_list_scope.get("a").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                for _i_m in (1_f64 as i64)..=(data.get("NL").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
+                    _vals.push(_list_scope.get("a").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                 }
-                lines.push(write_cont(&ContRecord { c1: 0_f64, c2: data.get("E").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(data, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
+                lines.push(write_cont(&ContRecord { c1: 0_f64, c2: data.get("E").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
                 lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
             }
         }
@@ -8910,7 +8910,7 @@ pub fn write_mf15_wildcard(
         // Write section: subsection
         {
             let _saved_data = data;
-            let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).unwrap();
+            let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).unwrap();
             if (get_float(data, "LF") as i64) == (1_f64 as i64) {
                 // Write TAB1
                 let _tab_scope = &data.get("rtfm_tab1").unwrap();
@@ -8933,14 +8933,14 @@ pub fn write_mf15_wildcard(
                 lines.extend(write_tab2_body(&_body, &ctrl, write_opts));
                 for _i_k in (1_f64 as i64)..=(get_float(data, "NE") as i64) {
                     // Write TAB1
-                    let _tab_scope = &data.get("rtfm1_tab").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).unwrap();
+                    let _tab_scope = &data.get("rtfm1_tab").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).unwrap();
                     let _nbt = get_int_vec(_tab_scope, "NBT");
                     let _int = get_int_vec(_tab_scope, "INT");
                     let _x = get_float_vec(_tab_scope, "Egamma");
                     let _y = get_float_vec(_tab_scope, "g");
                     let _nr = _nbt.len() as i64;
                     let _np = _x.len() as i64;
-                    lines.push(write_cont(&ContRecord { c1: 0_f64, c2: data.get("E").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _nr, n2: _np }, &ctrl, write_opts));
+                    lines.push(write_cont(&ContRecord { c1: 0_f64, c2: data.get("E").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _nr, n2: _np }, &ctrl, write_opts));
                     let _body = Tab1Body { nbt: _nbt, int: _int, x: _x, y: _y };
                     lines.extend(write_tab1_body(&_body, &ctrl, write_opts));
                 }
@@ -9284,8 +9284,8 @@ pub fn write_mf31_wildcard(
         let mut _vals: Vec<f64> = Vec::new();
         let _list_scope = &data;
         for _i_k in (1_f64 as i64)..=(get_float(data, "NCI") as i64) {
-            _vals.push(_list_scope.get("CI").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-            _vals.push(_list_scope.get("XMTI").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("CI").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+            _vals.push(_list_scope.get("XMTI").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
         }
         lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NCI") as i64 }, &ctrl, write_opts));
         lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -9827,14 +9827,14 @@ pub fn write_mf31_mt452(
             // Write section: subsection
             {
                 let _saved_data = data;
-                let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).unwrap();
+                let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).unwrap();
                 // Write HEAD/CONT
                 lines.push(write_cont(&ContRecord { c1: get_float(data, "XMF1"), c2: get_float(data, "XLFS1"), l1: get_float(data, "MAT1") as i64, l2: get_float(data, "MT1") as i64, n1: get_float(data, "NC") as i64, n2: get_float(data, "NI") as i64 }, &ctrl, write_opts));
                 for _i_m in (1_f64 as i64)..=(get_float(data, "NC") as i64) {
                     // Write section: nc_subsection
                     {
                         let _saved_data = data;
-                        let data = data.get("nc_subsection").and_then(|d| d.get(EndfKey::Int(get_float(data, "m") as i64))).unwrap();
+                        let data = data.get("nc_subsection").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).unwrap();
                         // Write HEAD/CONT
                         lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: get_float(data, "LTY") as i64, n1: 0_f64 as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
                         if (get_float(data, "LTY") as i64) == (0_f64 as i64) {
@@ -9842,8 +9842,8 @@ pub fn write_mf31_mt452(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_i in (1_f64 as i64)..=(get_float(data, "NCI") as i64) {
-                                _vals.push(_list_scope.get("C").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("XMT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("C").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("XMT").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             lines.push(write_cont(&ContRecord { c1: get_float(data, "E1"), c2: get_float(data, "E2"), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NCI") as i64 }, &ctrl, write_opts));
                             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -9854,8 +9854,8 @@ pub fn write_mf31_mt452(
                             _vals.push(get_float(_list_scope, "XMFS"));
                             _vals.push(get_float(_list_scope, "XLFSS"));
                             for _i_i in (1_f64 as i64)..=(get_float(data, "NEI") as i64) {
-                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("WE").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("WE").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             lines.push(write_cont(&ContRecord { c1: get_float(data, "E1"), c2: get_float(data, "E2"), l1: get_float(data, "MATS") as i64, l2: get_float(data, "MTS") as i64, n1: _vals.len() as i64, n2: get_float(data, "NEI") as i64 }, &ctrl, write_opts));
                             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -9867,18 +9867,18 @@ pub fn write_mf31_mt452(
                     // Write section: ni_subsection
                     {
                         let _saved_data = data;
-                        let data = data.get("ni_subsection").and_then(|d| d.get(EndfKey::Int(get_float(data, "m") as i64))).unwrap();
+                        let data = data.get("ni_subsection").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).unwrap();
                         if ((get_float(data, "LB") as i64) >= (0_f64 as i64)) && ((get_float(data, "LB") as i64) <= (4_f64 as i64)) {
                             // Write LIST
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_k in (1_f64 as i64)..=(((get_float(data, "NP") - get_float(data, "LT"))) as i64) {
-                                _vals.push(_list_scope.get("Ek").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("Fk").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("Ek").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("Fk").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             for _i_k in (1_f64 as i64)..=(get_float(data, "LT") as i64) {
-                                _vals.push(_list_scope.get("El").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("Fl").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("El").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("Fl").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LT") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NP") as i64 }, &ctrl, write_opts));
                             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -9887,11 +9887,11 @@ pub fn write_mf31_mt452(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_k in (1_f64 as i64)..=(get_float(data, "NE") as i64) {
-                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             for _i_k in (1_f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
                                 for _i_kp in (1_f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
-                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "kp") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_kp as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LS") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NE") as i64 }, &ctrl, write_opts));
@@ -9901,11 +9901,11 @@ pub fn write_mf31_mt452(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_k in (1_f64 as i64)..=(get_float(data, "NE") as i64) {
-                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             for _i_k in (1_f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
-                                for _i_kp in (get_float(data, "k") as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
-                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "kp") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                for _i_kp in (_i_k as f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
+                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_kp as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LS") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NE") as i64 }, &ctrl, write_opts));
@@ -9915,14 +9915,14 @@ pub fn write_mf31_mt452(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_k in (1_f64 as i64)..=(get_float(data, "NER") as i64) {
-                                _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             for _i_k in (1_f64 as i64)..=(get_float(data, "NEC") as i64) {
-                                _vals.push(_list_scope.get("EC").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("EC").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             for _i_k in (1_f64 as i64)..=((get_float(data, "NER") - 1_f64) as i64) {
                                 for _i_l in (1_f64 as i64)..=((get_float(data, "NEC") - 1_f64) as i64) {
-                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NER") as i64 }, &ctrl, write_opts));
@@ -9932,8 +9932,8 @@ pub fn write_mf31_mt452(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_k in (1_f64 as i64)..=(get_float(data, "NP") as i64) {
-                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LT") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NP") as i64 }, &ctrl, write_opts));
                             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -10471,14 +10471,14 @@ pub fn write_mf31_mt455(
             // Write section: subsection
             {
                 let _saved_data = data;
-                let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).unwrap();
+                let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).unwrap();
                 // Write HEAD/CONT
                 lines.push(write_cont(&ContRecord { c1: get_float(data, "XMF1"), c2: get_float(data, "XLFS1"), l1: get_float(data, "MAT1") as i64, l2: get_float(data, "MT1") as i64, n1: get_float(data, "NC") as i64, n2: get_float(data, "NI") as i64 }, &ctrl, write_opts));
                 for _i_m in (1_f64 as i64)..=(get_float(data, "NC") as i64) {
                     // Write section: nc_subsection
                     {
                         let _saved_data = data;
-                        let data = data.get("nc_subsection").and_then(|d| d.get(EndfKey::Int(get_float(data, "m") as i64))).unwrap();
+                        let data = data.get("nc_subsection").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).unwrap();
                         // Write HEAD/CONT
                         lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: get_float(data, "LTY") as i64, n1: 0_f64 as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
                         if (get_float(data, "LTY") as i64) == (0_f64 as i64) {
@@ -10486,8 +10486,8 @@ pub fn write_mf31_mt455(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_i in (1_f64 as i64)..=(get_float(data, "NCI") as i64) {
-                                _vals.push(_list_scope.get("C").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("XMT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("C").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("XMT").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             lines.push(write_cont(&ContRecord { c1: get_float(data, "E1"), c2: get_float(data, "E2"), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NCI") as i64 }, &ctrl, write_opts));
                             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -10498,8 +10498,8 @@ pub fn write_mf31_mt455(
                             _vals.push(get_float(_list_scope, "XMFS"));
                             _vals.push(get_float(_list_scope, "XLFSS"));
                             for _i_i in (1_f64 as i64)..=(get_float(data, "NEI") as i64) {
-                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("WE").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("WE").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             lines.push(write_cont(&ContRecord { c1: get_float(data, "E1"), c2: get_float(data, "E2"), l1: get_float(data, "MATS") as i64, l2: get_float(data, "MTS") as i64, n1: _vals.len() as i64, n2: get_float(data, "NEI") as i64 }, &ctrl, write_opts));
                             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -10511,18 +10511,18 @@ pub fn write_mf31_mt455(
                     // Write section: ni_subsection
                     {
                         let _saved_data = data;
-                        let data = data.get("ni_subsection").and_then(|d| d.get(EndfKey::Int(get_float(data, "m") as i64))).unwrap();
+                        let data = data.get("ni_subsection").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).unwrap();
                         if ((get_float(data, "LB") as i64) >= (0_f64 as i64)) && ((get_float(data, "LB") as i64) <= (4_f64 as i64)) {
                             // Write LIST
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_k in (1_f64 as i64)..=(((get_float(data, "NP") - get_float(data, "LT"))) as i64) {
-                                _vals.push(_list_scope.get("Ek").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("Fk").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("Ek").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("Fk").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             for _i_k in (1_f64 as i64)..=(get_float(data, "LT") as i64) {
-                                _vals.push(_list_scope.get("El").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("Fl").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("El").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("Fl").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LT") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NP") as i64 }, &ctrl, write_opts));
                             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -10531,11 +10531,11 @@ pub fn write_mf31_mt455(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_k in (1_f64 as i64)..=(get_float(data, "NE") as i64) {
-                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             for _i_k in (1_f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
                                 for _i_kp in (1_f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
-                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "kp") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_kp as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LS") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NE") as i64 }, &ctrl, write_opts));
@@ -10545,11 +10545,11 @@ pub fn write_mf31_mt455(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_k in (1_f64 as i64)..=(get_float(data, "NE") as i64) {
-                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             for _i_k in (1_f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
-                                for _i_kp in (get_float(data, "k") as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
-                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "kp") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                for _i_kp in (_i_k as f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
+                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_kp as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LS") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NE") as i64 }, &ctrl, write_opts));
@@ -10559,14 +10559,14 @@ pub fn write_mf31_mt455(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_k in (1_f64 as i64)..=(get_float(data, "NER") as i64) {
-                                _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             for _i_k in (1_f64 as i64)..=(get_float(data, "NEC") as i64) {
-                                _vals.push(_list_scope.get("EC").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("EC").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             for _i_k in (1_f64 as i64)..=((get_float(data, "NER") - 1_f64) as i64) {
                                 for _i_l in (1_f64 as i64)..=((get_float(data, "NEC") - 1_f64) as i64) {
-                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NER") as i64 }, &ctrl, write_opts));
@@ -10576,8 +10576,8 @@ pub fn write_mf31_mt455(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_k in (1_f64 as i64)..=(get_float(data, "NP") as i64) {
-                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LT") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NP") as i64 }, &ctrl, write_opts));
                             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -11115,14 +11115,14 @@ pub fn write_mf31_mt456(
             // Write section: subsection
             {
                 let _saved_data = data;
-                let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).unwrap();
+                let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).unwrap();
                 // Write HEAD/CONT
                 lines.push(write_cont(&ContRecord { c1: get_float(data, "XMF1"), c2: get_float(data, "XLFS1"), l1: get_float(data, "MAT1") as i64, l2: get_float(data, "MT1") as i64, n1: get_float(data, "NC") as i64, n2: get_float(data, "NI") as i64 }, &ctrl, write_opts));
                 for _i_m in (1_f64 as i64)..=(get_float(data, "NC") as i64) {
                     // Write section: nc_subsection
                     {
                         let _saved_data = data;
-                        let data = data.get("nc_subsection").and_then(|d| d.get(EndfKey::Int(get_float(data, "m") as i64))).unwrap();
+                        let data = data.get("nc_subsection").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).unwrap();
                         // Write HEAD/CONT
                         lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: get_float(data, "LTY") as i64, n1: 0_f64 as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
                         if (get_float(data, "LTY") as i64) == (0_f64 as i64) {
@@ -11130,8 +11130,8 @@ pub fn write_mf31_mt456(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_i in (1_f64 as i64)..=(get_float(data, "NCI") as i64) {
-                                _vals.push(_list_scope.get("C").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("XMT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("C").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("XMT").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             lines.push(write_cont(&ContRecord { c1: get_float(data, "E1"), c2: get_float(data, "E2"), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NCI") as i64 }, &ctrl, write_opts));
                             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -11142,8 +11142,8 @@ pub fn write_mf31_mt456(
                             _vals.push(get_float(_list_scope, "XMFS"));
                             _vals.push(get_float(_list_scope, "XLFSS"));
                             for _i_i in (1_f64 as i64)..=(get_float(data, "NEI") as i64) {
-                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("WE").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("WE").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             lines.push(write_cont(&ContRecord { c1: get_float(data, "E1"), c2: get_float(data, "E2"), l1: get_float(data, "MATS") as i64, l2: get_float(data, "MTS") as i64, n1: _vals.len() as i64, n2: get_float(data, "NEI") as i64 }, &ctrl, write_opts));
                             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -11155,18 +11155,18 @@ pub fn write_mf31_mt456(
                     // Write section: ni_subsection
                     {
                         let _saved_data = data;
-                        let data = data.get("ni_subsection").and_then(|d| d.get(EndfKey::Int(get_float(data, "m") as i64))).unwrap();
+                        let data = data.get("ni_subsection").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).unwrap();
                         if ((get_float(data, "LB") as i64) >= (0_f64 as i64)) && ((get_float(data, "LB") as i64) <= (4_f64 as i64)) {
                             // Write LIST
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_k in (1_f64 as i64)..=(((get_float(data, "NP") - get_float(data, "LT"))) as i64) {
-                                _vals.push(_list_scope.get("Ek").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("Fk").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("Ek").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("Fk").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             for _i_k in (1_f64 as i64)..=(get_float(data, "LT") as i64) {
-                                _vals.push(_list_scope.get("El").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("Fl").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("El").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("Fl").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LT") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NP") as i64 }, &ctrl, write_opts));
                             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -11175,11 +11175,11 @@ pub fn write_mf31_mt456(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_k in (1_f64 as i64)..=(get_float(data, "NE") as i64) {
-                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             for _i_k in (1_f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
                                 for _i_kp in (1_f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
-                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "kp") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_kp as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LS") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NE") as i64 }, &ctrl, write_opts));
@@ -11189,11 +11189,11 @@ pub fn write_mf31_mt456(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_k in (1_f64 as i64)..=(get_float(data, "NE") as i64) {
-                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             for _i_k in (1_f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
-                                for _i_kp in (get_float(data, "k") as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
-                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "kp") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                for _i_kp in (_i_k as f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
+                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_kp as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LS") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NE") as i64 }, &ctrl, write_opts));
@@ -11203,14 +11203,14 @@ pub fn write_mf31_mt456(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_k in (1_f64 as i64)..=(get_float(data, "NER") as i64) {
-                                _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             for _i_k in (1_f64 as i64)..=(get_float(data, "NEC") as i64) {
-                                _vals.push(_list_scope.get("EC").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("EC").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             for _i_k in (1_f64 as i64)..=((get_float(data, "NER") - 1_f64) as i64) {
                                 for _i_l in (1_f64 as i64)..=((get_float(data, "NEC") - 1_f64) as i64) {
-                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NER") as i64 }, &ctrl, write_opts));
@@ -11220,8 +11220,8 @@ pub fn write_mf31_mt456(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_k in (1_f64 as i64)..=(get_float(data, "NP") as i64) {
-                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LT") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NP") as i64 }, &ctrl, write_opts));
                             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -13240,14 +13240,14 @@ pub fn write_mf32_wildcard(
         // Write section: isotope
         {
             let _saved_data = data;
-            let data = data.get("isotope").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).unwrap();
+            let data = data.get("isotope").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).unwrap();
             // Write HEAD/CONT
             lines.push(write_cont(&ContRecord { c1: get_float(data, "ZAI"), c2: get_float(data, "ABN"), l1: 0_f64 as i64, l2: get_float(data, "LFW") as i64, n1: get_float(data, "NER") as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
             for _i_j in (1_f64 as i64)..=(get_float(data, "NER") as i64) {
                 // Write section: range
                 {
                     let _saved_data = data;
-                    let data = data.get("range").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).unwrap();
+                    let data = data.get("range").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).unwrap();
                     // Write HEAD/CONT
                     lines.push(write_cont(&ContRecord { c1: get_float(data, "EL"), c2: get_float(data, "EH"), l1: get_float(data, "LRU") as i64, l2: get_float(data, "LRF") as i64, n1: get_float(data, "NRO") as i64, n2: get_float(data, "NAPS") as i64 }, &ctrl, write_opts));
                     if (get_float(data, "NRO") as i64) != (0_f64 as i64) {
@@ -13257,18 +13257,18 @@ pub fn write_mf32_wildcard(
                             // Write section: AP_subsec
                             {
                                 let _saved_data = data;
-                                let data = data.get("AP_subsec").and_then(|d| d.get(EndfKey::Int(get_float(data, "m") as i64))).unwrap();
+                                let data = data.get("AP_subsec").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).unwrap();
                                 if ((get_float(data, "LB") as i64) >= (0_f64 as i64)) && ((get_float(data, "LB") as i64) <= (4_f64 as i64)) {
                                     // Write LIST
                                     let mut _vals: Vec<f64> = Vec::new();
                                     let _list_scope = &data;
                                     for _i_k in (1_f64 as i64)..=(((get_float(data, "NP") - get_float(data, "LT"))) as i64) {
-                                        _vals.push(_list_scope.get("Ek").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("Fk").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("Ek").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("Fk").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                     }
                                     for _i_k in (1_f64 as i64)..=(get_float(data, "LT") as i64) {
-                                        _vals.push(_list_scope.get("El").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("Fl").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("El").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("Fl").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                     }
                                     lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LT") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NP") as i64 }, &ctrl, write_opts));
                                     lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -13277,11 +13277,11 @@ pub fn write_mf32_wildcard(
                                     let mut _vals: Vec<f64> = Vec::new();
                                     let _list_scope = &data;
                                     for _i_k in (1_f64 as i64)..=(get_float(data, "NE") as i64) {
-                                        _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                     }
                                     for _i_k in (1_f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
                                         for _i_kp in (1_f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
-                                            _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "kp") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                            _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_kp as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                         }
                                     }
                                     lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LS") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NE") as i64 }, &ctrl, write_opts));
@@ -13291,11 +13291,11 @@ pub fn write_mf32_wildcard(
                                     let mut _vals: Vec<f64> = Vec::new();
                                     let _list_scope = &data;
                                     for _i_k in (1_f64 as i64)..=(get_float(data, "NE") as i64) {
-                                        _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                     }
                                     for _i_k in (1_f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
-                                        for _i_kp in (get_float(data, "k") as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
-                                            _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "kp") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        for _i_kp in (_i_k as f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
+                                            _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_kp as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                         }
                                     }
                                     lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LS") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NE") as i64 }, &ctrl, write_opts));
@@ -13317,28 +13317,28 @@ pub fn write_mf32_wildcard(
                             // Write section: l_group
                             {
                                 let _saved_data = data;
-                                let data = data.get("l_group").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).unwrap();
+                                let data = data.get("l_group").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).unwrap();
                                 // Write LIST
                                 let mut _vals: Vec<f64> = Vec::new();
                                 let _list_scope = &data;
                                 for _i_m in (1_f64 as i64)..=(get_float(data, "NRS") as i64) {
-                                    _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("AJ").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("GT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("GN").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("GG").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("GF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("DE2").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("DN2").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("DNDG").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("DG2").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("DNDF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("DGDF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("DF2").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("DJDN").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("DJDG").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("DJDF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("DJ2").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("AJ").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("GT").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("GN").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("GG").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("GF").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("DE2").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("DN2").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("DNDG").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("DG2").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("DNDF").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("DGDF").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("DF2").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("DJDN").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("DJDG").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("DJDF").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("DJ2").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                     _vals.push(0_f64);
                                 }
                                 lines.push(write_cont(&ContRecord { c1: get_float(data, "AWRI"), c2: 0_f64, l1: get_float(data, "L") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NRS") as i64 }, &ctrl, write_opts));
@@ -13360,21 +13360,21 @@ pub fn write_mf32_wildcard(
                                 // Write section: sr_subsec
                                 {
                                     let _saved_data = data;
-                                    let data = data.get("sr_subsec").and_then(|d| d.get(EndfKey::Int(get_float(data, "p") as i64))).unwrap();
+                                    let data = data.get("sr_subsec").and_then(|d| d.get(EndfKey::Int(_i_p as f64 as i64))).unwrap();
                                     // Write LIST
                                     let mut _vals: Vec<f64> = Vec::new();
                                     let _list_scope = &data;
                                     for _i_k in (1_f64 as i64)..=(get_float(data, "NRB") as i64) {
-                                        _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("AJ").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GN").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GG").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("AJ").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GT").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GN").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GG").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GF").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                     }
                                     for _i_m in (1_f64 as i64)..=((get_float(data, "MPAR") * get_float(data, "NRB")) as i64) {
-                                        for _i_n in (get_float(data, "m") as i64)..=((get_float(data, "MPAR") * get_float(data, "NRB")) as i64) {
-                                            _vals.push(_list_scope.get("V").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        for _i_n in (_i_m as f64 as i64)..=((get_float(data, "MPAR") * get_float(data, "NRB")) as i64) {
+                                            _vals.push(_list_scope.get("V").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                         }
                                     }
                                     lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "MPAR") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NRB") as i64 }, &ctrl, write_opts));
@@ -13388,7 +13388,7 @@ pub fn write_mf32_wildcard(
                                 let mut _vals: Vec<f64> = Vec::new();
                                 let _list_scope = &data;
                                 for _i_k in (1_f64 as i64)..=(get_float(data, "MLS") as i64) {
-                                    _vals.push(_list_scope.get("DAP").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("DAP").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 1_f64 as i64 }, &ctrl, write_opts));
                                 lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -13399,21 +13399,21 @@ pub fn write_mf32_wildcard(
                                 // Write section: sr_subsec
                                 {
                                     let _saved_data = data;
-                                    let data = data.get("sr_subsec").and_then(|d| d.get(EndfKey::Int(get_float(data, "p") as i64))).unwrap();
+                                    let data = data.get("sr_subsec").and_then(|d| d.get(EndfKey::Int(_i_p as f64 as i64))).unwrap();
                                     // Write LIST
                                     let mut _vals: Vec<f64> = Vec::new();
                                     let _list_scope = &data;
                                     for _i_k in (1_f64 as i64)..=(get_float(data, "NRB") as i64) {
-                                        _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("AJ").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GN").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GG").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GFA").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GFB").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("AJ").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GN").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GG").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GFA").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GFB").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                     }
                                     for _i_m in (1_f64 as i64)..=((get_float(data, "MPAR") * get_float(data, "NRB")) as i64) {
-                                        for _i_n in (get_float(data, "m") as i64)..=((get_float(data, "MPAR") * get_float(data, "NRB")) as i64) {
-                                            _vals.push(_list_scope.get("V").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        for _i_n in (_i_m as f64 as i64)..=((get_float(data, "MPAR") * get_float(data, "NRB")) as i64) {
+                                            _vals.push(_list_scope.get("V").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                         }
                                     }
                                     lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "MPAR") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NRB") as i64 }, &ctrl, write_opts));
@@ -13432,27 +13432,27 @@ pub fn write_mf32_wildcard(
                                 // Write section: sr_subsec
                                 {
                                     let _saved_data = data;
-                                    let data = data.get("sr_subsec").and_then(|d| d.get(EndfKey::Int(get_float(data, "p") as i64))).unwrap();
+                                    let data = data.get("sr_subsec").and_then(|d| d.get(EndfKey::Int(_i_p as f64 as i64))).unwrap();
                                     // Write LIST
                                     let mut _vals: Vec<f64> = Vec::new();
                                     let _list_scope = &data;
                                     for _i_k in (1_f64 as i64)..=(get_float(data, "NRB") as i64) {
-                                        _vals.push(_list_scope.get("DET").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("DWT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GRT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GIT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("DEF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("DWF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GRF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GIF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("DEC").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("DWC").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GRC").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                        _vals.push(_list_scope.get("GIC").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("DET").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("DWT").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GRT").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GIT").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("DEF").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("DWF").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GRF").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GIF").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("DEC").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("DWC").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GRC").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GIC").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                     }
                                     for _i_m in (1_f64 as i64)..=((get_float(data, "MPAR") * get_float(data, "NRB")) as i64) {
-                                        for _i_n in (get_float(data, "m") as i64)..=((get_float(data, "MPAR") * get_float(data, "NRB")) as i64) {
-                                            _vals.push(_list_scope.get("V").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        for _i_n in (_i_m as f64 as i64)..=((get_float(data, "MPAR") * get_float(data, "NRB")) as i64) {
+                                            _vals.push(_list_scope.get("V").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                         }
                                     }
                                     lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "MPAR") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NRB") as i64 }, &ctrl, write_opts));
@@ -13466,14 +13466,14 @@ pub fn write_mf32_wildcard(
                                 // Write section: lr_subsec
                                 {
                                     let _saved_data = data;
-                                    let data = data.get("lr_subsec").and_then(|d| d.get(EndfKey::Int(get_float(data, "p") as i64))).unwrap();
+                                    let data = data.get("lr_subsec").and_then(|d| d.get(EndfKey::Int(_i_p as f64 as i64))).unwrap();
                                     if ((get_float(data, "LB")) >= (-(1_f64))) && ((get_float(data, "LB") as i64) <= (2_f64 as i64)) {
                                         // Write LIST
                                         let mut _vals: Vec<f64> = Vec::new();
                                         let _list_scope = &data;
                                         for _i_k in (1_f64 as i64)..=(get_float(data, "NEB") as i64) {
-                                            _vals.push(_list_scope.get("Ek").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                            _vals.push(_list_scope.get("Fk").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                            _vals.push(_list_scope.get("Ek").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                            _vals.push(_list_scope.get("Fk").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                         }
                                         lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "IDP") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NEB") as i64 }, &ctrl, write_opts));
                                         lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -13482,11 +13482,11 @@ pub fn write_mf32_wildcard(
                                         let mut _vals: Vec<f64> = Vec::new();
                                         let _list_scope = &data;
                                         for _i_k in (1_f64 as i64)..=(get_float(data, "NEB") as i64) {
-                                            _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                            _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                         }
                                         for _i_k in (1_f64 as i64)..=((get_float(data, "NEB") - 1_f64) as i64) {
-                                            for _i_kp in (get_float(data, "k") as i64)..=((get_float(data, "NEB") - 1_f64) as i64) {
-                                                _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "kp") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                            for _i_kp in (_i_k as f64 as i64)..=((get_float(data, "NEB") - 1_f64) as i64) {
+                                                _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_kp as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                             }
                                         }
                                         lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "IDP") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NEB") as i64 }, &ctrl, write_opts));
@@ -13506,7 +13506,7 @@ pub fn write_mf32_wildcard(
                             let _list_scope = &data;
                             for _i_m in (1_f64 as i64)..=((get_float(data, "JCH") / get_float(data, "NCH")) as i64) {
                                 for _i_n in (1_f64 as i64)..=(get_float(data, "NCH") as i64) {
-                                    _vals.push(_list_scope.get("DAP").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("DAP").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: ((1_f64 + (((get_float(data, "NCH") - 1_f64)) / 6_f64))) as i64 }, &ctrl, write_opts));
@@ -13518,21 +13518,21 @@ pub fn write_mf32_wildcard(
                             // Write section: sr_subsec
                             {
                                 let _saved_data = data;
-                                let data = data.get("sr_subsec").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).unwrap();
+                                let data = data.get("sr_subsec").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).unwrap();
                                 // Write HEAD/CONT
                                 lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "NJSX") as i64, l2: 0_f64 as i64, n1: 0_f64 as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
                                 for _i_m in (1_f64 as i64)..=(get_float(data, "NJSX") as i64) {
                                     // Write section: j_group
                                     {
                                         let _saved_data = data;
-                                        let data = data.get("j_group").and_then(|d| d.get(EndfKey::Int(get_float(data, "m") as i64))).unwrap();
+                                        let data = data.get("j_group").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).unwrap();
                                         // Write LIST
                                         let mut _vals: Vec<f64> = Vec::new();
                                         let _list_scope = &data;
                                         for _i_p in (1_f64 as i64)..=(get_float(data, "NRB") as i64) {
-                                            _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "p") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                            _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(_i_p as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                             for _i_q in (1_f64 as i64)..=(get_float(data, "NCH") as i64) {
-                                                _vals.push(_list_scope.get("GAM").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "q") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "p") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                                _vals.push(_list_scope.get("GAM").and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_p as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                             }
                                             for _i_r in (1_f64 as i64)..=((((((5_f64 - get_float(data, "NCH")))) as i64 % (6_f64) as i64) as f64) as i64) {
                                                 _vals.push(0_f64);
@@ -13547,8 +13547,8 @@ pub fn write_mf32_wildcard(
                                 let mut _vals: Vec<f64> = Vec::new();
                                 let _list_scope = &data;
                                 for _i_p in (1_f64 as i64)..=(get_float(data, "NPARB") as i64) {
-                                    for _i_q in (get_float(data, "p") as i64)..=(get_float(data, "NPARB") as i64) {
-                                        _vals.push(_list_scope.get("V").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "p") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "q") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    for _i_q in (_i_p as f64 as i64)..=(get_float(data, "NPARB") as i64) {
+                                        _vals.push(_list_scope.get("V").and_then(|d| d.get(EndfKey::Int(_i_p as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                     }
                                 }
                                 lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NPARB") as i64 }, &ctrl, write_opts));
@@ -13567,18 +13567,18 @@ pub fn write_mf32_wildcard(
                         let mut _vals: Vec<f64> = Vec::new();
                         let _list_scope = &data;
                         for _i_k in (1_f64 as i64)..=(get_float(data, "NRSA") as i64) {
-                            _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("AJ").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("GT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("GN").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("GG").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("GF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("DER").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("AJ").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("GT").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("GN").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("GG").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("GF").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("DER").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             _vals.push(0_f64);
                             _vals.push(0_f64);
-                            _vals.push(_list_scope.get("DGN").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("DGG").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("DGF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("DGN").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("DGG").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("DGF").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                         }
                         lines.push(write_cont(&ContRecord { c1: get_float(data, "AWRI"), c2: get_float(data, "QX"), l1: 0_f64 as i64, l2: get_float(data, "LRX") as i64, n1: _vals.len() as i64, n2: get_float(data, "NRSA") as i64 }, &ctrl, write_opts));
                         lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -13596,7 +13596,7 @@ pub fn write_mf32_wildcard(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_k in (1_f64 as i64)..=(get_float(data, "MLS") as i64) {
-                                _vals.push(_list_scope.get("DAP").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("DAP").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: 1_f64 as i64 }, &ctrl, write_opts));
                             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -13605,18 +13605,18 @@ pub fn write_mf32_wildcard(
                         let mut _vals: Vec<f64> = Vec::new();
                         let _list_scope = &data;
                         for _i_k in (1_f64 as i64)..=(get_float(data, "NRSA") as i64) {
-                            _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("AJ").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("GN").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("GG").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("GFA").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("GFB").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("DER").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("AJ").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("GN").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("GG").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("GFA").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("GFB").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("DER").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             _vals.push(0_f64);
-                            _vals.push(_list_scope.get("DGN").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("DGG").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("DGFA").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("DGFB").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("DGN").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("DGG").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("DGFA").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("DGFB").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                         }
                         lines.push(write_cont(&ContRecord { c1: get_float(data, "AWRI"), c2: get_float(data, "APL"), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NRSA") as i64 }, &ctrl, write_opts));
                         lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -13635,7 +13635,7 @@ pub fn write_mf32_wildcard(
                             let _list_scope = &data;
                             for _i_m in (1_f64 as i64)..=(get_float(data, "NJS") as i64) {
                                 for _i_n in (1_f64 as i64)..=((get_float(data, "NJCH") / get_float(data, "NJS")) as i64) {
-                                    _vals.push(_list_scope.get("DAP").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("DAP").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: ((1_f64 + (((get_float(data, "NJCH") - 1_f64)) / 6_f64))) as i64 }, &ctrl, write_opts));
@@ -13645,18 +13645,18 @@ pub fn write_mf32_wildcard(
                         let mut _vals: Vec<f64> = Vec::new();
                         let _list_scope = &data;
                         for _i_k in (1_f64 as i64)..=(get_float(data, "NPP") as i64) {
-                            _vals.push(_list_scope.get("MA").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("MB").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("ZA").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("ZB").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("IA").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("IB").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("Q").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("PNT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("SHF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("MT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("PA").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                            _vals.push(_list_scope.get("PB").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("MA").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("MB").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("ZA").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("ZB").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("IA").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("IB").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("Q").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("PNT").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("SHF").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("MT").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("PA").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            _vals.push(_list_scope.get("PB").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                         }
                         lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "NPP") as i64, l2: get_float(data, "NJSX") as i64, n1: _vals.len() as i64, n2: (2_f64 * get_float(data, "NPP")) as i64 }, &ctrl, write_opts));
                         lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -13664,17 +13664,17 @@ pub fn write_mf32_wildcard(
                             // Write section: j_group
                             {
                                 let _saved_data = data;
-                                let data = data.get("j_group").and_then(|d| d.get(EndfKey::Int(get_float(data, "q") as i64))).unwrap();
+                                let data = data.get("j_group").and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).unwrap();
                                 // Write LIST
                                 let mut _vals: Vec<f64> = Vec::new();
                                 let _list_scope = &data;
                                 for _i_k in (1_f64 as i64)..=(get_float(data, "NCH") as i64) {
-                                    _vals.push(_list_scope.get("PPI").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("L").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("SCH").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("BND").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("APE").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("APT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("PPI").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("L").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("SCH").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("BND").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("APE").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("APT").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 lines.push(write_cont(&ContRecord { c1: get_float(data, "AJ"), c2: get_float(data, "PJ"), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NCH") as i64 }, &ctrl, write_opts));
                                 lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -13682,16 +13682,16 @@ pub fn write_mf32_wildcard(
                                 let mut _vals: Vec<f64> = Vec::new();
                                 let _list_scope = &data;
                                 for _i_k in (1_f64 as i64)..=(get_float(data, "NRSA") as i64) {
-                                    _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                     for _i_p in (1_f64 as i64)..=(get_float(data, "NCH") as i64) {
-                                        _vals.push(_list_scope.get("GAM").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "p") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("GAM").and_then(|d| d.get(EndfKey::Int(_i_p as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                     }
                                     for _i_r in (1_f64 as i64)..=((((((5_f64 - get_float(data, "NCH")))) as i64 % (6_f64) as i64) as f64) as i64) {
                                         _vals.push(0_f64);
                                     }
-                                    _vals.push(_list_scope.get("DER").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("DER").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                     for _i_p in (1_f64 as i64)..=(get_float(data, "NCH") as i64) {
-                                        _vals.push(_list_scope.get("DGAM").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "p") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("DGAM").and_then(|d| d.get(EndfKey::Int(_i_p as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                     }
                                     for _i_r in (1_f64 as i64)..=((((((5_f64 - get_float(data, "NCH")))) as i64 % (6_f64) as i64) as f64) as i64) {
                                         _vals.push(0_f64);
@@ -13715,17 +13715,17 @@ pub fn write_mf32_wildcard(
                             // Write section: l_group
                             {
                                 let _saved_data = data;
-                                let data = data.get("l_group").and_then(|d| d.get(EndfKey::Int(get_float(data, "q") as i64))).unwrap();
+                                let data = data.get("l_group").and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).unwrap();
                                 // Write LIST
                                 let mut _vals: Vec<f64> = Vec::new();
                                 let _list_scope = &data;
                                 for _i_k in (1_f64 as i64)..=(get_float(data, "NJS") as i64) {
-                                    _vals.push(_list_scope.get("D").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("AJ").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("GN0").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("GG").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("GF").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("GX").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("D").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("AJ").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("GN0").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("GG").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("GF").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("GX").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 lines.push(write_cont(&ContRecord { c1: get_float(data, "AWRI"), c2: 0_f64, l1: get_float(data, "L") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NJS") as i64 }, &ctrl, write_opts));
                                 lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -13736,8 +13736,8 @@ pub fn write_mf32_wildcard(
                         let mut _vals: Vec<f64> = Vec::new();
                         let _list_scope = &data;
                         for _i_p in (1_f64 as i64)..=(get_float(data, "NPAR") as i64) {
-                            for _i_q in (get_float(data, "p") as i64)..=(get_float(data, "NPAR") as i64) {
-                                _vals.push(_list_scope.get("RV").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "p") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "q") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                            for _i_q in (_i_p as f64 as i64)..=(get_float(data, "NPAR") as i64) {
+                                _vals.push(_list_scope.get("RV").and_then(|d| d.get(EndfKey::Int(_i_p as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                         }
                         lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "MPAR") as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NPAR") as i64 }, &ctrl, write_opts));
@@ -14275,14 +14275,14 @@ pub fn write_mf33_wildcard(
             // Write section: subsection
             {
                 let _saved_data = data;
-                let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).unwrap();
+                let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).unwrap();
                 // Write HEAD/CONT
                 lines.push(write_cont(&ContRecord { c1: get_float(data, "XMF1"), c2: get_float(data, "XLFS1"), l1: get_float(data, "MAT1") as i64, l2: get_float(data, "MT1") as i64, n1: get_float(data, "NC") as i64, n2: get_float(data, "NI") as i64 }, &ctrl, write_opts));
                 for _i_m in (1_f64 as i64)..=(get_float(data, "NC") as i64) {
                     // Write section: nc_subsection
                     {
                         let _saved_data = data;
-                        let data = data.get("nc_subsection").and_then(|d| d.get(EndfKey::Int(get_float(data, "m") as i64))).unwrap();
+                        let data = data.get("nc_subsection").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).unwrap();
                         // Write HEAD/CONT
                         lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: get_float(data, "LTY") as i64, n1: 0_f64 as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
                         if (get_float(data, "LTY") as i64) == (0_f64 as i64) {
@@ -14290,8 +14290,8 @@ pub fn write_mf33_wildcard(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_i in (1_f64 as i64)..=(get_float(data, "NCI") as i64) {
-                                _vals.push(_list_scope.get("C").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("XMT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("C").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("XMT").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             lines.push(write_cont(&ContRecord { c1: get_float(data, "E1"), c2: get_float(data, "E2"), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NCI") as i64 }, &ctrl, write_opts));
                             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -14302,8 +14302,8 @@ pub fn write_mf33_wildcard(
                             _vals.push(get_float(_list_scope, "XMFS"));
                             _vals.push(get_float(_list_scope, "XLFSS"));
                             for _i_i in (1_f64 as i64)..=(get_float(data, "NEI") as i64) {
-                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("WE").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("WE").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             lines.push(write_cont(&ContRecord { c1: get_float(data, "E1"), c2: get_float(data, "E2"), l1: get_float(data, "MATS") as i64, l2: get_float(data, "MTS") as i64, n1: _vals.len() as i64, n2: get_float(data, "NEI") as i64 }, &ctrl, write_opts));
                             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -14315,18 +14315,18 @@ pub fn write_mf33_wildcard(
                     // Write section: ni_subsection
                     {
                         let _saved_data = data;
-                        let data = data.get("ni_subsection").and_then(|d| d.get(EndfKey::Int(get_float(data, "m") as i64))).unwrap();
+                        let data = data.get("ni_subsection").and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).unwrap();
                         if ((get_float(data, "LB") as i64) >= (0_f64 as i64)) && ((get_float(data, "LB") as i64) <= (4_f64 as i64)) {
                             // Write LIST
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_k in (1_f64 as i64)..=(((get_float(data, "NP") - get_float(data, "LT"))) as i64) {
-                                _vals.push(_list_scope.get("Ek").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("Fk").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("Ek").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("Fk").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             for _i_k in (1_f64 as i64)..=(get_float(data, "LT") as i64) {
-                                _vals.push(_list_scope.get("El").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("Fl").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("El").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("Fl").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LT") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NP") as i64 }, &ctrl, write_opts));
                             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -14335,11 +14335,11 @@ pub fn write_mf33_wildcard(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_k in (1_f64 as i64)..=(get_float(data, "NE") as i64) {
-                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             for _i_k in (1_f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
                                 for _i_kp in (1_f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
-                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "kp") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_kp as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LS") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NE") as i64 }, &ctrl, write_opts));
@@ -14349,11 +14349,11 @@ pub fn write_mf33_wildcard(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_k in (1_f64 as i64)..=(get_float(data, "NE") as i64) {
-                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             for _i_k in (1_f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
-                                for _i_kp in (get_float(data, "k") as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
-                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "kp") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                for _i_kp in (_i_k as f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
+                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_kp as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LS") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NE") as i64 }, &ctrl, write_opts));
@@ -14363,14 +14363,14 @@ pub fn write_mf33_wildcard(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_k in (1_f64 as i64)..=(get_float(data, "NER") as i64) {
-                                _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             for _i_k in (1_f64 as i64)..=(get_float(data, "NEC") as i64) {
-                                _vals.push(_list_scope.get("EC").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("EC").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             for _i_k in (1_f64 as i64)..=((get_float(data, "NER") - 1_f64) as i64) {
                                 for _i_l in (1_f64 as i64)..=((get_float(data, "NEC") - 1_f64) as i64) {
-                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NER") as i64 }, &ctrl, write_opts));
@@ -14380,8 +14380,8 @@ pub fn write_mf33_wildcard(
                             let mut _vals: Vec<f64> = Vec::new();
                             let _list_scope = &data;
                             for _i_k in (1_f64 as i64)..=(get_float(data, "NP") as i64) {
-                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "k") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                             }
                             lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LT") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NP") as i64 }, &ctrl, write_opts));
                             lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -14737,26 +14737,26 @@ pub fn write_mf34_wildcard(
         // Write section: subsection
         {
             let _saved_data = data;
-            let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).unwrap();
+            let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).unwrap();
             if ((get_float(data, "MT1") as i64) == (0_f64 as i64)) || ((get_float(data, "MT")) == (get_float(data, "MT1"))) {
                 // Write HEAD/CONT
                 lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "MAT1") as i64, l2: get_float(data, "MT1") as i64, n1: get_float(data, "NL") as i64, n2: get_float(data, "NL") as i64 }, &ctrl, write_opts));
                 for _i_n in (1_f64 as i64)..=(((get_float(data, "NL") * ((get_float(data, "NL") + 1_f64))) / 2_f64) as i64) {
-                    if (get_float(data, "n") as i64) == (1_f64 as i64) {
+                    if (_i_n as f64 as i64) == (1_f64 as i64) {
                         // Write HEAD/CONT
-                        lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: data.get("L").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: data.get("L1").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, n1: get_float(data, "LCT") as i64, n2: data.get("NI").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
+                        lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: data.get("L").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: data.get("L1").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, n1: get_float(data, "LCT") as i64, n2: data.get("NI").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
                     } else {
                         // Write HEAD/CONT
-                        lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: data.get("L").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: data.get("L1").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, n1: 0_f64 as i64, n2: data.get("NI").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
+                        lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: data.get("L").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: data.get("L1").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, n1: 0_f64 as i64, n2: data.get("NI").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
                     }
-                    for _i_m in (1_f64 as i64)..=(data.get("NI").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
+                    for _i_m in (1_f64 as i64)..=(data.get("NI").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
                         // Write LIST
                         let mut _vals: Vec<f64> = Vec::new();
                         let _list_scope = &data;
-                        for _i_q in (1_f64 as i64)..=(data.get("NT").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(data, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
-                            _vals.push(_list_scope.get("Data").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "n") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "q") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                        for _i_q in (1_f64 as i64)..=(data.get("NT").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
+                            _vals.push(_list_scope.get("Data").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                         }
-                        lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: data.get("LS").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(data, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: data.get("LB").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(data, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, n1: _vals.len() as i64, n2: data.get("NE").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(data, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
+                        lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: data.get("LS").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: data.get("LB").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, n1: _vals.len() as i64, n2: data.get("NE").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
                         lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
                     }
                 }
@@ -14764,21 +14764,21 @@ pub fn write_mf34_wildcard(
                 // Write HEAD/CONT
                 lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "MAT1") as i64, l2: get_float(data, "MT1") as i64, n1: get_float(data, "NL") as i64, n2: get_float(data, "NL1") as i64 }, &ctrl, write_opts));
                 for _i_n in (1_f64 as i64)..=((get_float(data, "NL") * get_float(data, "NL1")) as i64) {
-                    if (get_float(data, "n") as i64) == (1_f64 as i64) {
+                    if (_i_n as f64 as i64) == (1_f64 as i64) {
                         // Write HEAD/CONT
-                        lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: data.get("L").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: data.get("L1").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, n1: get_float(data, "LCT") as i64, n2: data.get("NI").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
+                        lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: data.get("L").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: data.get("L1").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, n1: get_float(data, "LCT") as i64, n2: data.get("NI").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
                     } else {
                         // Write HEAD/CONT
-                        lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: data.get("L").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: data.get("L1").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, n1: 0_f64 as i64, n2: data.get("NI").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
+                        lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: data.get("L").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: data.get("L1").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, n1: 0_f64 as i64, n2: data.get("NI").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
                     }
-                    for _i_m in (1_f64 as i64)..=(data.get("NI").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
+                    for _i_m in (1_f64 as i64)..=(data.get("NI").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
                         // Write LIST
                         let mut _vals: Vec<f64> = Vec::new();
                         let _list_scope = &data;
-                        for _i_q in (1_f64 as i64)..=(data.get("NT").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(data, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
-                            _vals.push(_list_scope.get("Data").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "n") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "m") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "q") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                        for _i_q in (1_f64 as i64)..=(data.get("NT").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
+                            _vals.push(_list_scope.get("Data").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                         }
-                        lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: data.get("LS").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(data, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: data.get("LB").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(data, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, n1: _vals.len() as i64, n2: data.get("NE").and_then(|d| d.get(EndfKey::Int(get_float(data, "n") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(data, "m") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
+                        lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: data.get("LS").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, l2: data.get("LB").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64, n1: _vals.len() as i64, n2: data.get("NE").and_then(|d| d.get(EndfKey::Int(_i_n as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64 }, &ctrl, write_opts));
                         lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
                     }
                 }
@@ -14926,17 +14926,17 @@ pub fn write_mf35_wildcard(
         // Write section: subsection
         {
             let _saved_data = data;
-            let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).unwrap();
+            let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).unwrap();
             if ((get_float(data, "LS") as i64) == (1_f64 as i64)) && ((get_float(data, "LB") as i64) == (7_f64 as i64)) {
                 // Write LIST
                 let mut _vals: Vec<f64> = Vec::new();
                 let _list_scope = &data;
                 for _i_i in (1_f64 as i64)..=(get_float(data, "NE") as i64) {
-                    _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                    _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                 }
                 for _i_i in (1_f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
-                    for _i_j in (get_float(data, "i") as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
-                        _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "j") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                    for _i_j in (_i_i as f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
+                        _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                     }
                 }
                 lines.push(write_cont(&ContRecord { c1: get_float(data, "E1"), c2: get_float(data, "E2"), l1: get_float(data, "LS") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NE") as i64 }, &ctrl, write_opts));
@@ -15536,21 +15536,21 @@ pub fn write_mf40_wildcard(
         // Write section: subsection
         {
             let _saved_data = data;
-            let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(get_float(data, "k") as i64))).unwrap();
+            let data = data.get("subsection").and_then(|d| d.get(EndfKey::Int(_i_k as f64 as i64))).unwrap();
             // Write HEAD/CONT
             lines.push(write_cont(&ContRecord { c1: get_float(data, "QM"), c2: get_float(data, "QI"), l1: get_float(data, "IZAP") as i64, l2: get_float(data, "LFS") as i64, n1: 0_f64 as i64, n2: get_float(data, "NL") as i64 }, &ctrl, write_opts));
             for _i_i in (1_f64 as i64)..=(get_float(data, "NL") as i64) {
                 // Write section: subsubsec
                 {
                     let _saved_data = data;
-                    let data = data.get("subsubsec").and_then(|d| d.get(EndfKey::Int(get_float(data, "i") as i64))).unwrap();
+                    let data = data.get("subsubsec").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).unwrap();
                     // Write HEAD/CONT
                     lines.push(write_cont(&ContRecord { c1: get_float(data, "XMF1"), c2: get_float(data, "XLFS1"), l1: get_float(data, "MAT1") as i64, l2: get_float(data, "MT1") as i64, n1: get_float(data, "NC") as i64, n2: get_float(data, "NI") as i64 }, &ctrl, write_opts));
                     for _i_j in (1_f64 as i64)..=(get_float(data, "NC") as i64) {
                         // Write section: nc_subsubsubsec
                         {
                             let _saved_data = data;
-                            let data = data.get("nc_subsubsubsec").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).unwrap();
+                            let data = data.get("nc_subsubsubsec").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).unwrap();
                             if (get_float(data, "LTY") as i64) == (0_f64 as i64) {
                                 // Write HEAD/CONT
                                 lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: get_float(data, "LTY") as i64, n1: 0_f64 as i64, n2: 0_f64 as i64 }, &ctrl, write_opts));
@@ -15558,8 +15558,8 @@ pub fn write_mf40_wildcard(
                                 let mut _vals: Vec<f64> = Vec::new();
                                 let _list_scope = &data;
                                 for _i_i in (1_f64 as i64)..=(get_float(data, "NCI") as i64) {
-                                    _vals.push(_list_scope.get("C").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("XMT").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("C").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("XMT").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 lines.push(write_cont(&ContRecord { c1: get_float(data, "E1"), c2: get_float(data, "E2"), l1: 0_f64 as i64, l2: 0_f64 as i64, n1: _vals.len() as i64, n2: get_float(data, "NCI") as i64 }, &ctrl, write_opts));
                                 lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -15572,8 +15572,8 @@ pub fn write_mf40_wildcard(
                                 _vals.push(get_float(_list_scope, "XMFS"));
                                 _vals.push(get_float(_list_scope, "XLFSS"));
                                 for _i_i in (1_f64 as i64)..=(get_float(data, "NEI") as i64) {
-                                    _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("WE").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "i") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("WE").and_then(|d| d.get(EndfKey::Int(_i_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 lines.push(write_cont(&ContRecord { c1: get_float(data, "E1"), c2: get_float(data, "E2"), l1: get_float(data, "MATS") as i64, l2: get_float(data, "MTS") as i64, n1: _vals.len() as i64, n2: get_float(data, "NEI") as i64 }, &ctrl, write_opts));
                                 lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -15585,18 +15585,18 @@ pub fn write_mf40_wildcard(
                         // Write section: ni_subsubsubsec
                         {
                             let _saved_data = data;
-                            let data = data.get("ni_subsubsubsec").and_then(|d| d.get(EndfKey::Int(get_float(data, "j") as i64))).unwrap();
+                            let data = data.get("ni_subsubsubsec").and_then(|d| d.get(EndfKey::Int(_i_j as f64 as i64))).unwrap();
                             if ((get_float(data, "LB") as i64) >= (0_f64 as i64)) && ((get_float(data, "LB") as i64) <= (4_f64 as i64)) {
                                 // Write LIST
                                 let mut _vals: Vec<f64> = Vec::new();
                                 let _list_scope = &data;
                                 for _i_q in (1_f64 as i64)..=(((get_float(data, "NP") - get_float(data, "LT"))) as i64) {
-                                    _vals.push(_list_scope.get("Ek").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "q") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("Fk").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "q") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("Ek").and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("Fk").and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 for _i_q in (1_f64 as i64)..=(get_float(data, "LT") as i64) {
-                                    _vals.push(_list_scope.get("El").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "q") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("Fl").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "q") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("El").and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("Fl").and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LT") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NP") as i64 }, &ctrl, write_opts));
                                 lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));
@@ -15605,11 +15605,11 @@ pub fn write_mf40_wildcard(
                                 let mut _vals: Vec<f64> = Vec::new();
                                 let _list_scope = &data;
                                 for _i_q in (1_f64 as i64)..=(get_float(data, "NE") as i64) {
-                                    _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "q") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 for _i_q in (1_f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
                                     for _i_qp in (1_f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
-                                        _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "q") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "qp") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_qp as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                     }
                                 }
                                 lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LS") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NE") as i64 }, &ctrl, write_opts));
@@ -15619,11 +15619,11 @@ pub fn write_mf40_wildcard(
                                 let mut _vals: Vec<f64> = Vec::new();
                                 let _list_scope = &data;
                                 for _i_q in (1_f64 as i64)..=(get_float(data, "NE") as i64) {
-                                    _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "q") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 for _i_q in (1_f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
-                                    for _i_qp in (get_float(data, "q") as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
-                                        _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "q") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "qp") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    for _i_qp in (_i_q as f64 as i64)..=((get_float(data, "NE") - 1_f64) as i64) {
+                                        _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_qp as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                     }
                                 }
                                 lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LS") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NE") as i64 }, &ctrl, write_opts));
@@ -15633,14 +15633,14 @@ pub fn write_mf40_wildcard(
                                 let mut _vals: Vec<f64> = Vec::new();
                                 let _list_scope = &data;
                                 for _i_q in (1_f64 as i64)..=(get_float(data, "NER") as i64) {
-                                    _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "q") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("ER").and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 for _i_q in (1_f64 as i64)..=((((get_float(data, "NT") - 1_f64)) / get_float(data, "NER")) as i64) {
-                                    _vals.push(_list_scope.get("EC").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "q") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("EC").and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 for _i_q in (1_f64 as i64)..=((get_float(data, "NER") - 1_f64) as i64) {
                                     for _i_l in (1_f64 as i64)..=(((((get_float(data, "NT") - 1_f64)) / get_float(data, "NER")) - 1_f64) as i64) {
-                                        _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "q") as i64))).and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "l") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                        _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|d| d.get(EndfKey::Int(_i_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                     }
                                 }
                                 lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: 0_f64 as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NER") as i64 }, &ctrl, write_opts));
@@ -15650,8 +15650,8 @@ pub fn write_mf40_wildcard(
                                 let mut _vals: Vec<f64> = Vec::new();
                                 let _list_scope = &data;
                                 for _i_q in (1_f64 as i64)..=(get_float(data, "NP") as i64) {
-                                    _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "q") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
-                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(get_float(_list_scope, "q") as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("E").and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
+                                    _vals.push(_list_scope.get("F").and_then(|d| d.get(EndfKey::Int(_i_q as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0));
                                 }
                                 lines.push(write_cont(&ContRecord { c1: 0_f64, c2: 0_f64, l1: get_float(data, "LT") as i64, l2: get_float(data, "LB") as i64, n1: _vals.len() as i64, n2: get_float(data, "NP") as i64 }, &ctrl, write_opts));
                                 lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));

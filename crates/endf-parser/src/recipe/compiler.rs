@@ -2063,6 +2063,8 @@ struct WriteCodeGen {
     mt: i32,
     /// Track abbreviation scopes (same as read CodeGen).
     abbreviations: Vec<HashMap<String, Expr>>,
+    /// Active loop variable names (for resolving indexed references).
+    loop_vars: Vec<String>,
 }
 
 impl WriteCodeGen {
@@ -2073,6 +2075,7 @@ impl WriteCodeGen {
             mf,
             mt,
             abbreviations: vec![HashMap::new()],
+            loop_vars: Vec::new(),
         }
     }
 
@@ -2127,6 +2130,10 @@ impl WriteCodeGen {
                 }
             }
             Expr::Variable(v) if v.indices.is_empty() => {
+                // Check loop variables first
+                if self.loop_vars.iter().any(|lv| lv.eq_ignore_ascii_case(&v.name)) {
+                    return format!("_i_{} as f64", v.name);
+                }
                 // Check abbreviation
                 let lower = v.name.to_lowercase();
                 for s in self.abbreviations.iter().rev() {
@@ -2145,6 +2152,9 @@ impl WriteCodeGen {
                 format!("{}.and_then(|v| v.as_float()).unwrap_or(0.0)", e)
             }
             Expr::InconsistentVar(v) if v.indices.is_empty() => {
+                if self.loop_vars.iter().any(|lv| lv.eq_ignore_ascii_case(&v.name)) {
+                    return format!("_i_{} as f64", v.name);
+                }
                 let lower = v.name.to_lowercase();
                 for s in self.abbreviations.iter().rev() {
                     if let Some(abbrev_expr) = s.get(&lower) {
@@ -2393,8 +2403,9 @@ impl WriteCodeGen {
                         var, start_s, stop_s
                     ));
                     self.indent += 1;
-                    // Inside the loop, indexed variables use the loop var
+                    self.loop_vars.push(var.clone());
                     self.emit_write_list_body(loop_body, list_scope, data_scope);
+                    self.loop_vars.pop();
                     self.indent -= 1;
                     self.line("}");
                 }
@@ -2428,9 +2439,11 @@ impl WriteCodeGen {
             var, start_s, stop_s
         ));
         self.indent += 1;
+        self.loop_vars.push(var.to_string());
         for node in body {
             self.emit_node(node);
         }
+        self.loop_vars.pop();
         self.indent -= 1;
         self.line("}");
     }
