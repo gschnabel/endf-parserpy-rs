@@ -1229,20 +1229,9 @@ fn try_fast_list_body(
     let mut ops = Vec::new();
     build_list_plan(body, &mut ops, &state.abbreviations);
 
-    // Pre-create containers for all indexed variables.
-    {
-        let mut created = HashSet::new();
-        for op in &ops {
-            if let ListBodyOp::Indexed(name, _) = op {
-                if created.insert(*name) {
-                    let scope = state.current_scope_mut();
-                    if !scope.contains_key(*name) {
-                        scope.insert(*name, EndfValue::new_dict());
-                    }
-                }
-            }
-        }
-    }
+    // Note: we do NOT pre-create containers for indexed variables globally
+    // because some loops may not execute (e.g., LT=0). Containers are
+    // created on first insertion inside execute_list_plan instead.
 
     // Execute the plan.
     execute_list_plan(&ops, vals, val_idx, state, parse_opts)?;
@@ -1279,8 +1268,11 @@ fn execute_list_plan(
                         indices.push(idx);
                     }
                 }
-                // Insert using pre-created container.
+                // Ensure container exists (created on first use).
                 let scope = state.current_scope_mut();
+                if !scope.contains_key(*name) {
+                    scope.insert(*name, EndfValue::new_dict());
+                }
                 let mut current = scope.get_mut(*name).unwrap();
                 for (depth, &idx) in indices[..indices.len()-1].iter().enumerate() {
                     let key = EndfKey::Int(idx);
