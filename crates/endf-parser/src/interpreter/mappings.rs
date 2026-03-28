@@ -1155,14 +1155,38 @@ fn process_list_items_read(
                     });
                 }
                 let fv = vals[*val_idx];
-                // Map this single expression against the value.
-                map_fields_to_datadic(
-                    std::slice::from_ref(expr),
-                    &[fv],
-                    &["val"],
-                    state,
-                    parse_opts,
-                )?;
+                // Fast path: for simple indexed or scalar variables,
+                // store directly as Float without going through the
+                // expensive multi-pass field mapper.
+                match expr {
+                    Expr::Variable(v) if v.indices.is_empty() => {
+                        // Scalar LIST body variable — store as Float.
+                        let val = EndfValue::Float(fv);
+                        eval_and_set_var(&v.name, &v.indices, val, state, parse_opts)?;
+                    }
+                    Expr::Variable(v) => {
+                        // Indexed LIST body variable — store as Float.
+                        let val = EndfValue::Float(fv);
+                        eval_and_set_var(&v.name, &v.indices, val, state, parse_opts)?;
+                    }
+                    Expr::InconsistentVar(v) => {
+                        let val = EndfValue::Float(fv);
+                        eval_and_set_var(&v.name, &v.indices, val, state, parse_opts)?;
+                    }
+                    Expr::Number(_) | Expr::DesiredNumber(_) => {
+                        // Constant — validation only, skip.
+                    }
+                    _ => {
+                        // Complex expression — fall back to generic mapper.
+                        map_fields_to_datadic(
+                            std::slice::from_ref(expr),
+                            &[fv],
+                            &["val"],
+                            state,
+                            parse_opts,
+                        )?;
+                    }
+                }
                 *val_idx += 1;
             }
             ListItem::Loop {

@@ -10,6 +10,7 @@
 //! This module detects qualifying for-loop bodies at the AST level and provides
 //! specialized readers that bypass expression evaluation entirely.
 
+use std::collections::HashSet;
 use crate::error::{EndfError, EndfResult};
 use crate::options::{ParseOpts, ReadOpts};
 use crate::recipe::ast::*;
@@ -596,7 +597,8 @@ pub fn execute_fast_list_loop(
                 }
                 match mapping {
                     ListBodyMapping::IndexedVar { name, indices } => {
-                        let val = f64_to_endf_value(vals[val_idx]);
+                        // All LIST body values are floats by design.
+                        let val = EndfValue::Float(vals[val_idx]);
                         if indices.is_empty() {
                             assignments.push((name.as_str(), Vec::new(), val));
                         } else {
@@ -625,13 +627,31 @@ pub fn execute_fast_list_loop(
                 }
             }
 
-            // Now apply all assignments with mutable scope.
+            // Pre-create top-level containers for indexed variables to
+            // avoid repeated contains_key checks inside set_indexed_value.
+            {
+                let scope = state.current_scope_mut();
+                let mut created: HashSet<&str> = HashSet::new();
+                for (name, indices, _) in &assignments {
+                    if !indices.is_empty() && created.insert(name) {
+                        if !scope.contains_key(*name) {
+                            let container = match parse_opts.array_type {
+                                crate::options::ArrayType::Dict => EndfValue::new_dict(),
+                                crate::options::ArrayType::List => EndfValue::new_list(),
+                            };
+                            scope.insert(*name, container);
+                        }
+                    }
+                }
+            }
+
+            // Apply all assignments.
             let scope = state.current_scope_mut();
             for (name, indices, val) in assignments {
                 if indices.is_empty() {
                     scope.insert(name, val);
                 } else {
-                    set_indexed_value(scope, name, &indices, val, parse_opts)?;
+                    set_indexed_value_precreated(scope, name, &indices, val, parse_opts)?;
                 }
             }
 
@@ -665,7 +685,6 @@ fn set_indexed_value(
 ) -> EndfResult<()> {
     use crate::options::ArrayType;
 
-    // Ensure the top-level entry exists
     if !scope.contains_key(name) {
         let container = match opts.array_type {
             ArrayType::Dict => EndfValue::new_dict(),
@@ -673,6 +692,68 @@ fn set_indexed_value(
         };
         scope.insert(name, container);
     }
+
+    let mut current = scope.get_mut(name).unwrap();
+
+    for (i, &idx) in indices.iter().enumerate() {
+        let is_last = i == indices.len() - 1;
+
+        match current {
+            EndfValue::Dict(ref mut d) => {
+                let key = EndfKey::Int(idx);
+                if is_last {
+                    d.insert(key, value);
+                    return Ok(());
+                }
+                if !d.contains_key(&key) {
+                    let container = match opts.array_type {
+                        ArrayType::Dict => EndfValue::new_dict(),
+                        ArrayType::List => EndfValue::new_list(),
+                    };
+                    d.insert(key.clone(), container);
+                }
+                current = d.get_mut(&key).unwrap();
+            }
+            EndfValue::List(ref mut l) => {
+                let uidx = idx as usize;
+                if is_last {
+                    while l.len() <= uidx {
+                        l.push(None);
+                    }
+                    l[uidx] = Some(value);
+                    return Ok(());
+                }
+                while l.len() <= uidx {
+                    l.push(None);
+                }
+                if l[uidx].is_none() {
+                    let container = match opts.array_type {
+                        ArrayType::Dict => EndfValue::new_dict(),
+                        ArrayType::List => EndfValue::new_list(),
+                    };
+                    l[uidx] = Some(container);
+                }
+                current = l[uidx].as_mut().unwrap();
+            }
+            _ => {
+                return Err(EndfError::VariableNotFound {
+                    name: name.to_string(),
+                });
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Like set_indexed_value but assumes top-level container already exists.
+fn set_indexed_value_precreated(
+    scope: &mut EndfValue,
+    name: &str,
+    indices: &[i64],
+    value: EndfValue,
+    opts: &ParseOpts,
+) -> EndfResult<()> {
+    use crate::options::ArrayType;
 
     let mut current = scope.get_mut(name).unwrap();
 
