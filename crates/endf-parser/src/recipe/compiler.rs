@@ -675,39 +675,92 @@ impl CodeGen {
         is_int: bool,
         target: &str,
     ) {
-        // For indexed variables like E[i], we need to insert into nested dicts.
         let val_expr = if is_int {
             format!("EndfValue::Int(cont.{} as i64)", cont_field)
         } else {
             format!("f64_to_endf_value(cont.{})", cont_field)
         };
+        self.emit_nested_insert(target, &v.name, &v.indices, &val_expr);
+    }
 
-        // Ensure the container exists
+    /// Generate code to insert a value into a nested dict structure.
+    /// For `name[i1, i2, ..., iN]`, this creates intermediate dicts as
+    /// needed and inserts the value at the leaf:
+    ///   target["name"][i1][i2]...[iN] = val_expr
+    fn emit_nested_insert(
+        &mut self,
+        target: &str,
+        name: &str,
+        indices: &[Expr],
+        val_expr: &str,
+    ) {
+        // Ensure the top-level container exists.
         self.line(&format!(
             "if !{}.contains_key(\"{}\") {{",
-            target, v.name
+            target, name
         ));
         self.indent += 1;
         self.line(&format!(
             "{}.insert(\"{}\", EndfValue::new_dict());",
-            target, v.name
+            target, name
         ));
         self.indent -= 1;
         self.line("}");
 
-        // Build the index path
-        if v.indices.len() == 1 {
-            let idx = self.expr_to_rust(&v.indices[0]);
+        if indices.is_empty() {
+            // Scalar store (shouldn't happen here but handle gracefully)
             self.line(&format!(
-                "{}.get_mut(\"{}\").unwrap().insert(EndfKey::Int({} as i64), {});",
-                target, v.name, idx, val_expr
+                "{}.insert(\"{}\", {});",
+                target, name, val_expr
             ));
-        } else {
-            self.line(&format!(
-                "// TODO: multi-index variable store for {}",
-                v.name
-            ));
+            return;
         }
+
+        // Build chain of get_mut/ensure-exists for all but the last index.
+        // Use a local variable to navigate into the nested structure.
+        let mut current = format!("{}.get_mut(\"{}\").unwrap()", target, name);
+        for (depth, idx_expr) in indices[..indices.len() - 1].iter().enumerate() {
+            let idx = self.expr_to_rust(idx_expr);
+            let key_expr = format!("EndfKey::Int({} as i64)", idx);
+            self.line(&format!(
+                "if !{}.contains_key({}.clone()) {{",
+                current, key_expr
+            ));
+            self.indent += 1;
+            self.line(&format!(
+                "{}.insert({}.clone(), EndfValue::new_dict());",
+                current, key_expr
+            ));
+            self.indent -= 1;
+            self.line("}");
+            let nav_var = format!("_nav_{}", depth);
+            self.line(&format!(
+                "let {} = {}.get_mut({}).unwrap();",
+                nav_var, current, key_expr
+            ));
+            current = nav_var;
+        }
+
+        // Insert value at the last index.
+        let last_idx = self.expr_to_rust(indices.last().unwrap());
+        self.line(&format!(
+            "{}.insert(EndfKey::Int({} as i64), {});",
+            current, last_idx, val_expr
+        ));
+    }
+
+    /// Generate a Rust expression that reads an indexed variable from the
+    /// result dict. Supports any number of indices via chained `.get()` calls.
+    fn indexed_var_access(&self, name: &str, indices: &[Expr]) -> String {
+        let mut expr = format!("result.get(\"{}\")", name);
+        for idx in indices {
+            let idx_rust = self.expr_to_rust(idx);
+            expr = format!(
+                "{}.and_then(|d| d.get(EndfKey::Int({} as i64)))",
+                expr, idx_rust
+            );
+        }
+        format!("{}.and_then(|v| v.as_float()).unwrap_or(0.0)", expr)
     }
 
     // -- TAB1 ---------------------------------------------------------------
@@ -935,35 +988,12 @@ impl CodeGen {
                 }
             }
             Expr::Variable(v) => {
-                // Indexed: e.g., ER[j]
+                // Indexed: e.g., ER[j] or F[k,kp]
                 self.line(&format!(
                     "let _val = {};",
                     vals_get
                 ));
-                self.line(&format!(
-                    "if !{}.contains_key(\"{}\") {{",
-                    target, v.name
-                ));
-                self.indent += 1;
-                self.line(&format!(
-                    "{}.insert(\"{}\", EndfValue::new_dict());",
-                    target, v.name
-                ));
-                self.indent -= 1;
-                self.line("}");
-
-                if v.indices.len() == 1 {
-                    let idx = self.expr_to_rust(&v.indices[0]);
-                    self.line(&format!(
-                        "{}.get_mut(\"{}\").unwrap().insert(EndfKey::Int({} as i64), f64_to_endf_value(_val));",
-                        target, v.name, idx
-                    ));
-                } else {
-                    self.line(&format!(
-                        "// TODO: multi-index list store for {}",
-                        v.name
-                    ));
-                }
+                self.emit_nested_insert(target, &v.name, &v.indices, "f64_to_endf_value(_val)");
                 self.line("vi += 1;");
             }
             Expr::Number(n) => {
@@ -991,9 +1021,18 @@ impl CodeGen {
                     self.line("vi += 1;");
                 }
             }
+            Expr::InconsistentVar(v) if !v.indices.is_empty() => {
+                // Indexed inconsistent variable — same as Variable
+                self.line(&format!(
+                    "let _val = {};",
+                    vals_get
+                ));
+                self.emit_nested_insert(target, &v.name, &v.indices, "f64_to_endf_value(_val)");
+                self.line("vi += 1;");
+            }
             _ => {
-                // Complex expression
-                self.line("// TODO: complex list body expression");
+                // Complex expression (e.g., DesiredNumber) — validation only
+                self.line("// list body expression (validation skipped)");
                 self.line("vi += 1;");
             }
         }
@@ -1303,16 +1342,7 @@ impl CodeGen {
                 format!("{} as f64", Self::var_name(&v.name))
             }
             Expr::Variable(v) => {
-                // Indexed variable access: look up in result dict.
-                if v.indices.len() == 1 {
-                    let idx = self.expr_to_rust(&v.indices[0]);
-                    format!(
-                        "result.get(\"{}\").and_then(|d| d.get(EndfKey::Int({} as i64))).and_then(|v| v.as_float()).unwrap_or(0.0)",
-                        v.name, idx
-                    )
-                } else {
-                    format!("0.0 /* TODO: indexed var {} */", v.name)
-                }
+                self.indexed_var_access(&v.name, &v.indices)
             }
             Expr::InconsistentVar(v) if v.indices.is_empty() => {
                 let lower = v.name.to_lowercase();
@@ -1324,7 +1354,7 @@ impl CodeGen {
                 format!("{} as f64", Self::var_name(&v.name))
             }
             Expr::InconsistentVar(v) => {
-                format!("0.0 /* TODO: inconsistent indexed var {} */", v.name)
+                self.indexed_var_access(&v.name, &v.indices)
             }
             Expr::Neg(inner) => {
                 format!("-({})", self.expr_to_rust(inner))

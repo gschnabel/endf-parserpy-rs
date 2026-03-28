@@ -435,13 +435,21 @@ pub fn parse_mf1_mt455(
                     if !result.contains_key("lambda") {
                         result.insert("lambda", EndfValue::new_dict());
                     }
-                    // TODO: multi-index list store for lambda
+                    if !result.get_mut("lambda").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                        result.get_mut("lambda").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                    }
+                    let _nav_0 = result.get_mut("lambda").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                    _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                     vi += 1;
                     let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                     if !result.contains_key("alpha") {
                         result.insert("alpha", EndfValue::new_dict());
                     }
-                    // TODO: multi-index list store for alpha
+                    if !result.get_mut("alpha").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                        result.get_mut("alpha").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                    }
+                    let _nav_0 = result.get_mut("alpha").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                    _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                     vi += 1;
                 }
             }
@@ -545,13 +553,21 @@ pub fn parse_mf1_mt455(
                     if !result.contains_key("lambda") {
                         result.insert("lambda", EndfValue::new_dict());
                     }
-                    // TODO: multi-index list store for lambda
+                    if !result.get_mut("lambda").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                        result.get_mut("lambda").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                    }
+                    let _nav_0 = result.get_mut("lambda").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                    _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                     vi += 1;
                     let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                     if !result.contains_key("alpha") {
                         result.insert("alpha", EndfValue::new_dict());
                     }
-                    // TODO: multi-index list store for alpha
+                    if !result.get_mut("alpha").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                        result.get_mut("alpha").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                    }
+                    let _nav_0 = result.get_mut("alpha").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                    _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                     vi += 1;
                 }
             }
@@ -2322,7 +2338,11 @@ pub fn parse_mf2_mt151(
                                                     if !result.contains_key("GAM") {
                                                         result.insert("GAM", EndfValue::new_dict());
                                                     }
-                                                    // TODO: multi-index list store for GAM
+                                                    if !result.get_mut("GAM").unwrap().contains_key(EndfKey::Int(var_m as f64 as i64).clone()) {
+                                                        result.get_mut("GAM").unwrap().insert(EndfKey::Int(var_m as f64 as i64).clone(), EndfValue::new_dict());
+                                                    }
+                                                    let _nav_0 = result.get_mut("GAM").unwrap().get_mut(EndfKey::Int(var_m as f64 as i64)).unwrap();
+                                                    _nav_0.insert(EndfKey::Int(var_n as f64 as i64), f64_to_endf_value(_val));
                                                     vi += 1;
                                                 }
                                                 for var_p_loop_ in (1_f64 as i64)..=((((((5_f64 - var_nch as f64))) as i64 % (6_f64) as i64) as f64) as i64) {
@@ -3253,7 +3273,11 @@ pub fn parse_mf4_wildcard(
                     if !result.contains_key("a") {
                         result.insert("a", EndfValue::new_dict());
                     }
-                    // TODO: multi-index list store for a
+                    if !result.get_mut("a").unwrap().contains_key(EndfKey::Int(var_i as f64 as i64).clone()) {
+                        result.get_mut("a").unwrap().insert(EndfKey::Int(var_i as f64 as i64).clone(), EndfValue::new_dict());
+                    }
+                    let _nav_0 = result.get_mut("a").unwrap().get_mut(EndfKey::Int(var_i as f64 as i64)).unwrap();
+                    _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                     vi += 1;
                 }
             }
@@ -3348,7 +3372,11 @@ pub fn parse_mf4_wildcard(
                     if !result.contains_key("al") {
                         result.insert("al", EndfValue::new_dict());
                     }
-                    // TODO: multi-index list store for al
+                    if !result.get_mut("al").unwrap().contains_key(EndfKey::Int(var_i as f64 as i64).clone()) {
+                        result.get_mut("al").unwrap().insert(EndfKey::Int(var_i as f64 as i64).clone(), EndfValue::new_dict());
+                    }
+                    let _nav_0 = result.get_mut("al").unwrap().get_mut(EndfKey::Int(var_i as f64 as i64)).unwrap();
+                    _nav_0.insert(EndfKey::Int(var_j as f64 as i64), f64_to_endf_value(_val));
                     vi += 1;
                 }
             }
@@ -3415,8 +3443,30 @@ pub fn parse_mf5_wildcard(
     }
     let mut var_awr: f64 = 0.0;
     let mut var_contribution: f64 = 0.0;
+    let mut var_e: f64 = 0.0;
+    let mut var_e_interp: f64 = 0.0;
+    let mut var_efh: f64 = 0.0;
+    let mut var_efl: f64 = 0.0;
+    let mut var_eout: f64 = 0.0;
+    let mut var_g: f64 = 0.0;
+    let mut var_g_table: f64 = 0.0;
     let mut var_k: f64 = 0.0;
+    let mut var_l: f64 = 0.0;
+    let mut var_lf: f64 = 0.0;
+    let mut var_ne: f64 = 0.0;
+    let mut var_nf: f64 = 0.0;
     let mut var_nk: f64 = 0.0;
+    let mut var_np: f64 = 0.0;
+    let mut var_nr: f64 = 0.0;
+    let mut var_p: f64 = 0.0;
+    let mut var_p_table: f64 = 0.0;
+    let mut var_spectrum: f64 = 0.0;
+    let mut var_theta: f64 = 0.0;
+    let mut var_theta_table: f64 = 0.0;
+    let mut var_tm: f64 = 0.0;
+    let mut var_tm_table: f64 = 0.0;
+    let mut var_u: f64 = 0.0;
+    let mut var_x: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
     // HEAD/CONT record
@@ -3439,6 +3489,316 @@ pub fn parse_mf5_wildcard(
         {
             let mut section_contribution = EndfValue::new_dict();
             std::mem::swap(&mut result, &mut section_contribution);
+            let lookahead_ok_0 = {
+                let saved_ofs = ofs;
+                let ok = (|| -> Result<bool, EndfError> {
+                    if ofs >= lines.len() { return Ok(false); }
+                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    Ok((var_lf as f64 as i64) == (1_f64 as i64))
+                })().unwrap_or(false);
+                ok
+            };
+            let lookahead_ok_1 = {
+                let saved_ofs = ofs;
+                let ok = (|| -> Result<bool, EndfError> {
+                    if ofs >= lines.len() { return Ok(false); }
+                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    Ok((var_lf as f64 as i64) == (5_f64 as i64))
+                })().unwrap_or(false);
+                ok
+            };
+            let lookahead_ok_2 = {
+                let saved_ofs = ofs;
+                let ok = (|| -> Result<bool, EndfError> {
+                    if ofs >= lines.len() { return Ok(false); }
+                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    Ok((var_lf as f64 as i64) == (7_f64 as i64))
+                })().unwrap_or(false);
+                ok
+            };
+            let lookahead_ok_3 = {
+                let saved_ofs = ofs;
+                let ok = (|| -> Result<bool, EndfError> {
+                    if ofs >= lines.len() { return Ok(false); }
+                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    Ok((var_lf as f64 as i64) == (9_f64 as i64))
+                })().unwrap_or(false);
+                ok
+            };
+            let lookahead_ok_4 = {
+                let saved_ofs = ofs;
+                let ok = (|| -> Result<bool, EndfError> {
+                    if ofs >= lines.len() { return Ok(false); }
+                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    Ok((var_lf as f64 as i64) == (11_f64 as i64))
+                })().unwrap_or(false);
+                ok
+            };
+            let lookahead_ok_5 = {
+                let saved_ofs = ofs;
+                let ok = (|| -> Result<bool, EndfError> {
+                    if ofs >= lines.len() { return Ok(false); }
+                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    Ok((var_lf as f64 as i64) == (12_f64 as i64))
+                })().unwrap_or(false);
+                ok
+            };
+            if lookahead_ok_0 {
+                // TAB1 record
+                {
+                    let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
+                    let (cont, body, _ctrl, consumed) = read_tab1(&line_refs, 0, read_opts)?;
+                    ofs += consumed;
+
+                    // field c1 expected 0 (validation skipped in compiled mode)
+                    // field c2 expected 0 (validation skipped in compiled mode)
+                    // field l1 expected 0 (validation skipped in compiled mode)
+                    var_lf = cont.l2 as f64;
+                    result.insert("LF", EndfValue::Int(var_lf as i64));
+
+                    let mut tab_section = EndfValue::new_dict();
+                    tab_section.insert("NBT", list_from_i64(&body.nbt));
+                    tab_section.insert("INT", list_from_i64(&body.int));
+                    tab_section.insert("E", list_from_f64(&body.x));
+                    tab_section.insert("p", list_from_f64(&body.y));
+                    result.insert("p_table", tab_section);
+                }
+                // TAB2 record
+                {
+                    let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
+                    let (cont, body, _ctrl, consumed) = read_tab2(&line_refs, 0, read_opts)?;
+                    ofs += consumed;
+
+                    // field c1 expected 0 (validation skipped in compiled mode)
+                    // field c2 expected 0 (validation skipped in compiled mode)
+                    // field l1 expected 0 (validation skipped in compiled mode)
+                    // field l2 expected 0 (validation skipped in compiled mode)
+
+                    let mut tab_section = EndfValue::new_dict();
+                    tab_section.insert("NBT", list_from_i64(&body.nbt));
+                    tab_section.insert("INT", list_from_i64(&body.int));
+                    result.insert("E_interp", tab_section);
+                }
+                for var_l_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
+                    var_l = var_l_loop_ as f64;
+                    // TAB1 record
+                    {
+                        let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
+                        let (cont, body, _ctrl, consumed) = read_tab1(&line_refs, 0, read_opts)?;
+                        ofs += consumed;
+
+                        // field c1 expected 0 (validation skipped in compiled mode)
+                        if !result.contains_key("E") {
+                            result.insert("E", EndfValue::new_dict());
+                        }
+                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(cont.c2));
+                        // field l1 expected 0 (validation skipped in compiled mode)
+                        // field l2 expected 0 (validation skipped in compiled mode)
+
+                        let mut tab_section = EndfValue::new_dict();
+                        tab_section.insert("NBT", list_from_i64(&body.nbt));
+                        tab_section.insert("INT", list_from_i64(&body.int));
+                        tab_section.insert("Eout", list_from_f64(&body.x));
+                        tab_section.insert("g", list_from_f64(&body.y));
+                        result.insert("spectrum", tab_section);
+                    }
+                }
+            } else if lookahead_ok_1 {
+                // TAB1 record
+                {
+                    let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
+                    let (cont, body, _ctrl, consumed) = read_tab1(&line_refs, 0, read_opts)?;
+                    ofs += consumed;
+
+                    var_u = cont.c1;
+                    result.insert("U", f64_to_endf_value(var_u));
+                    // field c2 expected 0 (validation skipped in compiled mode)
+                    // field l1 expected 0 (validation skipped in compiled mode)
+                    var_lf = cont.l2 as f64;
+                    result.insert("LF", EndfValue::Int(var_lf as i64));
+
+                    let mut tab_section = EndfValue::new_dict();
+                    tab_section.insert("NBT", list_from_i64(&body.nbt));
+                    tab_section.insert("INT", list_from_i64(&body.int));
+                    tab_section.insert("E", list_from_f64(&body.x));
+                    tab_section.insert("p", list_from_f64(&body.y));
+                    result.insert("p_table", tab_section);
+                }
+                // TAB1 record
+                {
+                    let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
+                    let (cont, body, _ctrl, consumed) = read_tab1(&line_refs, 0, read_opts)?;
+                    ofs += consumed;
+
+                    // field c1 expected 0 (validation skipped in compiled mode)
+                    // field c2 expected 0 (validation skipped in compiled mode)
+                    // field l1 expected 0 (validation skipped in compiled mode)
+                    // field l2 expected 0 (validation skipped in compiled mode)
+
+                    let mut tab_section = EndfValue::new_dict();
+                    tab_section.insert("NBT", list_from_i64(&body.nbt));
+                    tab_section.insert("INT", list_from_i64(&body.int));
+                    tab_section.insert("E", list_from_f64(&body.x));
+                    tab_section.insert("theta", list_from_f64(&body.y));
+                    result.insert("theta_table", tab_section);
+                }
+                // TAB1 record
+                {
+                    let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
+                    let (cont, body, _ctrl, consumed) = read_tab1(&line_refs, 0, read_opts)?;
+                    ofs += consumed;
+
+                    // field c1 expected 0 (validation skipped in compiled mode)
+                    // field c2 expected 0 (validation skipped in compiled mode)
+                    // field l1 expected 0 (validation skipped in compiled mode)
+                    // field l2 expected 0 (validation skipped in compiled mode)
+
+                    let mut tab_section = EndfValue::new_dict();
+                    tab_section.insert("NBT", list_from_i64(&body.nbt));
+                    tab_section.insert("INT", list_from_i64(&body.int));
+                    tab_section.insert("x", list_from_f64(&body.x));
+                    tab_section.insert("g", list_from_f64(&body.y));
+                    result.insert("g_table", tab_section);
+                }
+            } else if lookahead_ok_2 {
+                // TAB1 record
+                {
+                    let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
+                    let (cont, body, _ctrl, consumed) = read_tab1(&line_refs, 0, read_opts)?;
+                    ofs += consumed;
+
+                    var_u = cont.c1;
+                    result.insert("U", f64_to_endf_value(var_u));
+                    // field c2 expected 0 (validation skipped in compiled mode)
+                    // field l1 expected 0 (validation skipped in compiled mode)
+                    var_lf = cont.l2 as f64;
+                    result.insert("LF", EndfValue::Int(var_lf as i64));
+
+                    let mut tab_section = EndfValue::new_dict();
+                    tab_section.insert("NBT", list_from_i64(&body.nbt));
+                    tab_section.insert("INT", list_from_i64(&body.int));
+                    tab_section.insert("E", list_from_f64(&body.x));
+                    tab_section.insert("p", list_from_f64(&body.y));
+                    result.insert("p_table", tab_section);
+                }
+                // TAB1 record
+                {
+                    let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
+                    let (cont, body, _ctrl, consumed) = read_tab1(&line_refs, 0, read_opts)?;
+                    ofs += consumed;
+
+                    // field c1 expected 0 (validation skipped in compiled mode)
+                    // field c2 expected 0 (validation skipped in compiled mode)
+                    // field l1 expected 0 (validation skipped in compiled mode)
+                    // field l2 expected 0 (validation skipped in compiled mode)
+
+                    let mut tab_section = EndfValue::new_dict();
+                    tab_section.insert("NBT", list_from_i64(&body.nbt));
+                    tab_section.insert("INT", list_from_i64(&body.int));
+                    tab_section.insert("E", list_from_f64(&body.x));
+                    tab_section.insert("theta", list_from_f64(&body.y));
+                    result.insert("theta_table", tab_section);
+                }
+            } else if lookahead_ok_3 {
+                // TAB1 record
+                {
+                    let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
+                    let (cont, body, _ctrl, consumed) = read_tab1(&line_refs, 0, read_opts)?;
+                    ofs += consumed;
+
+                    var_u = cont.c1;
+                    result.insert("U", f64_to_endf_value(var_u));
+                    // field c2 expected 0 (validation skipped in compiled mode)
+                    // field l1 expected 0 (validation skipped in compiled mode)
+                    var_lf = cont.l2 as f64;
+                    result.insert("LF", EndfValue::Int(var_lf as i64));
+
+                    let mut tab_section = EndfValue::new_dict();
+                    tab_section.insert("NBT", list_from_i64(&body.nbt));
+                    tab_section.insert("INT", list_from_i64(&body.int));
+                    tab_section.insert("E", list_from_f64(&body.x));
+                    tab_section.insert("p", list_from_f64(&body.y));
+                    result.insert("p_table", tab_section);
+                }
+                // TAB1 record
+                {
+                    let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
+                    let (cont, body, _ctrl, consumed) = read_tab1(&line_refs, 0, read_opts)?;
+                    ofs += consumed;
+
+                    // field c1 expected 0 (validation skipped in compiled mode)
+                    // field c2 expected 0 (validation skipped in compiled mode)
+                    // field l1 expected 0 (validation skipped in compiled mode)
+                    // field l2 expected 0 (validation skipped in compiled mode)
+
+                    let mut tab_section = EndfValue::new_dict();
+                    tab_section.insert("NBT", list_from_i64(&body.nbt));
+                    tab_section.insert("INT", list_from_i64(&body.int));
+                    tab_section.insert("E", list_from_f64(&body.x));
+                    tab_section.insert("theta", list_from_f64(&body.y));
+                    result.insert("theta_table", tab_section);
+                }
+            } else if lookahead_ok_4 {
+                // TAB1 record
+                {
+                    let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
+                    let (cont, body, _ctrl, consumed) = read_tab1(&line_refs, 0, read_opts)?;
+                    ofs += consumed;
+
+                    var_u = cont.c1;
+                    result.insert("U", f64_to_endf_value(var_u));
+                    // field c2 expected 0 (validation skipped in compiled mode)
+                    // field l1 expected 0 (validation skipped in compiled mode)
+                    var_lf = cont.l2 as f64;
+                    result.insert("LF", EndfValue::Int(var_lf as i64));
+
+                    result.insert("NBT", list_from_i64(&body.nbt));
+                    result.insert("INT", list_from_i64(&body.int));
+                    result.insert("E", list_from_f64(&body.x));
+                    result.insert("p", list_from_f64(&body.y));
+                }
+                return Err(EndfError::Stop { message: "LF=11 case not implemented in ENDF recipe MF5".to_string() });
+            } else if lookahead_ok_5 {
+                // TAB1 record
+                {
+                    let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
+                    let (cont, body, _ctrl, consumed) = read_tab1(&line_refs, 0, read_opts)?;
+                    ofs += consumed;
+
+                    // field c1 expected 0 (validation skipped in compiled mode)
+                    // field c2 expected 0 (validation skipped in compiled mode)
+                    // field l1 expected 0 (validation skipped in compiled mode)
+                    var_lf = cont.l2 as f64;
+                    result.insert("LF", EndfValue::Int(var_lf as i64));
+
+                    let mut tab_section = EndfValue::new_dict();
+                    tab_section.insert("NBT", list_from_i64(&body.nbt));
+                    tab_section.insert("INT", list_from_i64(&body.int));
+                    tab_section.insert("E", list_from_f64(&body.x));
+                    tab_section.insert("p", list_from_f64(&body.y));
+                    result.insert("p_table", tab_section);
+                }
+                // TAB1 record
+                {
+                    let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
+                    let (cont, body, _ctrl, consumed) = read_tab1(&line_refs, 0, read_opts)?;
+                    ofs += consumed;
+
+                    var_efl = cont.c1;
+                    result.insert("EFL", f64_to_endf_value(var_efl));
+                    var_efh = cont.c2;
+                    result.insert("EFH", f64_to_endf_value(var_efh));
+                    // field l1 expected 0 (validation skipped in compiled mode)
+                    // field l2 expected 0 (validation skipped in compiled mode)
+
+                    let mut tab_section = EndfValue::new_dict();
+                    tab_section.insert("NBT", list_from_i64(&body.nbt));
+                    tab_section.insert("INT", list_from_i64(&body.int));
+                    tab_section.insert("E", list_from_f64(&body.x));
+                    tab_section.insert("TM", list_from_f64(&body.y));
+                    result.insert("Tm_table", tab_section);
+                }
+            }
             std::mem::swap(&mut result, &mut section_contribution);
             if !result.contains_key("contribution") {
                 result.insert("contribution", EndfValue::new_dict());
@@ -3605,7 +3965,11 @@ pub fn parse_mf6_wildcard(
                             if !result.contains_key("Ep") {
                                 result.insert("Ep", EndfValue::new_dict());
                             }
-                            // TODO: multi-index list store for Ep
+                            if !result.get_mut("Ep").unwrap().contains_key(EndfKey::Int(var_j as f64 as i64).clone()) {
+                                result.get_mut("Ep").unwrap().insert(EndfKey::Int(var_j as f64 as i64).clone(), EndfValue::new_dict());
+                            }
+                            let _nav_0 = result.get_mut("Ep").unwrap().get_mut(EndfKey::Int(var_j as f64 as i64)).unwrap();
+                            _nav_0.insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                             vi += 1;
                             for var_m_loop_ in (0_f64 as i64)..=(result.get("NA").and_then(|d| d.get(EndfKey::Int(var_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
                                 var_m = var_m_loop_ as f64;
@@ -3613,7 +3977,15 @@ pub fn parse_mf6_wildcard(
                                 if !result.contains_key("b") {
                                     result.insert("b", EndfValue::new_dict());
                                 }
-                                // TODO: multi-index list store for b
+                                if !result.get_mut("b").unwrap().contains_key(EndfKey::Int(var_j as f64 as i64).clone()) {
+                                    result.get_mut("b").unwrap().insert(EndfKey::Int(var_j as f64 as i64).clone(), EndfValue::new_dict());
+                                }
+                                let _nav_0 = result.get_mut("b").unwrap().get_mut(EndfKey::Int(var_j as f64 as i64)).unwrap();
+                                if !_nav_0.contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                                    _nav_0.insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                                }
+                                let _nav_1 = _nav_0.get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                                _nav_1.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
                             }
                         }
@@ -3666,7 +4038,11 @@ pub fn parse_mf6_wildcard(
                             if !result.contains_key("A") {
                                 result.insert("A", EndfValue::new_dict());
                             }
-                            // TODO: multi-index list store for A
+                            if !result.get_mut("A").unwrap().contains_key(EndfKey::Int(var_j as f64 as i64).clone()) {
+                                result.get_mut("A").unwrap().insert(EndfKey::Int(var_j as f64 as i64).clone(), EndfValue::new_dict());
+                            }
+                            let _nav_0 = result.get_mut("A").unwrap().get_mut(EndfKey::Int(var_j as f64 as i64)).unwrap();
+                            _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                             vi += 1;
                         }
                     }
@@ -3722,7 +4098,11 @@ pub fn parse_mf6_wildcard(
                             if !result.contains_key("A") {
                                 result.insert("A", EndfValue::new_dict());
                             }
-                            // TODO: multi-index list store for A
+                            if !result.get_mut("A").unwrap().contains_key(EndfKey::Int(var_j as f64 as i64).clone()) {
+                                result.get_mut("A").unwrap().insert(EndfKey::Int(var_j as f64 as i64).clone(), EndfValue::new_dict());
+                            }
+                            let _nav_0 = result.get_mut("A").unwrap().get_mut(EndfKey::Int(var_j as f64 as i64)).unwrap();
+                            _nav_0.insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                             vi += 1;
                         }
                     }
@@ -3791,7 +4171,11 @@ pub fn parse_mf6_wildcard(
                             if !result.contains_key("mu") {
                                 result.insert("mu", EndfValue::new_dict());
                             }
-                            // TODO: multi-index variable store for mu
+                            if !result.get_mut("mu").unwrap().contains_key(EndfKey::Int(var_j as f64 as i64).clone()) {
+                                result.get_mut("mu").unwrap().insert(EndfKey::Int(var_j as f64 as i64).clone(), EndfValue::new_dict());
+                            }
+                            let _nav_0 = result.get_mut("mu").unwrap().get_mut(EndfKey::Int(var_j as f64 as i64)).unwrap();
+                            _nav_0.insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(cont.c2));
                             // field l1 expected 0 (validation skipped in compiled mode)
                             // field l2 expected 0 (validation skipped in compiled mode)
 
@@ -3909,7 +4293,11 @@ pub fn parse_mf7_mt2(
                     if !result.contains_key("S") {
                         result.insert("S", EndfValue::new_dict());
                     }
-                    // TODO: multi-index list store for S
+                    if !result.get_mut("S").unwrap().contains_key(EndfKey::Int(var_q as f64 as i64).clone()) {
+                        result.get_mut("S").unwrap().insert(EndfKey::Int(var_q as f64 as i64).clone(), EndfValue::new_dict());
+                    }
+                    let _nav_0 = result.get_mut("S").unwrap().get_mut(EndfKey::Int(var_q as f64 as i64)).unwrap();
+                    _nav_0.insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                     vi += 1;
                 }
             }
@@ -3980,7 +4368,11 @@ pub fn parse_mf7_mt2(
                     if !result.contains_key("S") {
                         result.insert("S", EndfValue::new_dict());
                     }
-                    // TODO: multi-index list store for S
+                    if !result.get_mut("S").unwrap().contains_key(EndfKey::Int(var_q as f64 as i64).clone()) {
+                        result.get_mut("S").unwrap().insert(EndfKey::Int(var_q as f64 as i64).clone(), EndfValue::new_dict());
+                    }
+                    let _nav_0 = result.get_mut("S").unwrap().get_mut(EndfKey::Int(var_q as f64 as i64)).unwrap();
+                    _nav_0.insert(EndfKey::Int(var_i as f64 as i64), f64_to_endf_value(_val));
                     vi += 1;
                 }
             }
@@ -4173,7 +4565,15 @@ pub fn parse_mf7_mt4(
                     if !result.contains_key("S") {
                         result.insert("S", EndfValue::new_dict());
                     }
-                    // TODO: multi-index list store for S
+                    if !result.get_mut("S").unwrap().contains_key(EndfKey::Int(var_q as f64 as i64).clone()) {
+                        result.get_mut("S").unwrap().insert(EndfKey::Int(var_q as f64 as i64).clone(), EndfValue::new_dict());
+                    }
+                    let _nav_0 = result.get_mut("S").unwrap().get_mut(EndfKey::Int(var_q as f64 as i64)).unwrap();
+                    if !_nav_0.contains_key(EndfKey::Int(var_i as f64 as i64).clone()) {
+                        _nav_0.insert(EndfKey::Int(var_i as f64 as i64).clone(), EndfValue::new_dict());
+                    }
+                    let _nav_1 = _nav_0.get_mut(EndfKey::Int(var_i as f64 as i64)).unwrap();
+                    _nav_1.insert(EndfKey::Int(var_j as f64 as i64), f64_to_endf_value(_val));
                     vi += 1;
                 }
             }
@@ -4327,31 +4727,51 @@ pub fn parse_mf7_mt451(
                 if !result.contains_key("ZAI") {
                     result.insert("ZAI", EndfValue::new_dict());
                 }
-                // TODO: multi-index list store for ZAI
+                if !result.get_mut("ZAI").unwrap().contains_key(EndfKey::Int(var_i as f64 as i64).clone()) {
+                    result.get_mut("ZAI").unwrap().insert(EndfKey::Int(var_i as f64 as i64).clone(), EndfValue::new_dict());
+                }
+                let _nav_0 = result.get_mut("ZAI").unwrap().get_mut(EndfKey::Int(var_i as f64 as i64)).unwrap();
+                _nav_0.insert(EndfKey::Int(var_j as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
                 let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("LISI") {
                     result.insert("LISI", EndfValue::new_dict());
                 }
-                // TODO: multi-index list store for LISI
+                if !result.get_mut("LISI").unwrap().contains_key(EndfKey::Int(var_i as f64 as i64).clone()) {
+                    result.get_mut("LISI").unwrap().insert(EndfKey::Int(var_i as f64 as i64).clone(), EndfValue::new_dict());
+                }
+                let _nav_0 = result.get_mut("LISI").unwrap().get_mut(EndfKey::Int(var_i as f64 as i64)).unwrap();
+                _nav_0.insert(EndfKey::Int(var_j as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
                 let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("AFI") {
                     result.insert("AFI", EndfValue::new_dict());
                 }
-                // TODO: multi-index list store for AFI
+                if !result.get_mut("AFI").unwrap().contains_key(EndfKey::Int(var_i as f64 as i64).clone()) {
+                    result.get_mut("AFI").unwrap().insert(EndfKey::Int(var_i as f64 as i64).clone(), EndfValue::new_dict());
+                }
+                let _nav_0 = result.get_mut("AFI").unwrap().get_mut(EndfKey::Int(var_i as f64 as i64)).unwrap();
+                _nav_0.insert(EndfKey::Int(var_j as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
                 let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("AWRI") {
                     result.insert("AWRI", EndfValue::new_dict());
                 }
-                // TODO: multi-index list store for AWRI
+                if !result.get_mut("AWRI").unwrap().contains_key(EndfKey::Int(var_i as f64 as i64).clone()) {
+                    result.get_mut("AWRI").unwrap().insert(EndfKey::Int(var_i as f64 as i64).clone(), EndfValue::new_dict());
+                }
+                let _nav_0 = result.get_mut("AWRI").unwrap().get_mut(EndfKey::Int(var_i as f64 as i64)).unwrap();
+                _nav_0.insert(EndfKey::Int(var_j as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
                 let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("SFI") {
                     result.insert("SFI", EndfValue::new_dict());
                 }
-                // TODO: multi-index list store for SFI
+                if !result.get_mut("SFI").unwrap().contains_key(EndfKey::Int(var_i as f64 as i64).clone()) {
+                    result.get_mut("SFI").unwrap().insert(EndfKey::Int(var_i as f64 as i64).clone(), EndfValue::new_dict());
+                }
+                let _nav_0 = result.get_mut("SFI").unwrap().get_mut(EndfKey::Int(var_i as f64 as i64)).unwrap();
+                _nav_0.insert(EndfKey::Int(var_j as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
                 // list body constant 0 (validation skipped)
                 vi += 1;
@@ -4589,25 +5009,41 @@ pub fn parse_mf8_mt454(
             if !result.contains_key("ZAFP") {
                 result.insert("ZAFP", EndfValue::new_dict());
             }
-            // TODO: multi-index list store for ZAFP
+            if !result.get_mut("ZAFP").unwrap().contains_key(EndfKey::Int(0_f64 as i64).clone()) {
+                result.get_mut("ZAFP").unwrap().insert(EndfKey::Int(0_f64 as i64).clone(), EndfValue::new_dict());
+            }
+            let _nav_0 = result.get_mut("ZAFP").unwrap().get_mut(EndfKey::Int(0_f64 as i64)).unwrap();
+            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
             vi += 1;
             let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
             if !result.contains_key("FPS") {
                 result.insert("FPS", EndfValue::new_dict());
             }
-            // TODO: multi-index list store for FPS
+            if !result.get_mut("FPS").unwrap().contains_key(EndfKey::Int(0_f64 as i64).clone()) {
+                result.get_mut("FPS").unwrap().insert(EndfKey::Int(0_f64 as i64).clone(), EndfValue::new_dict());
+            }
+            let _nav_0 = result.get_mut("FPS").unwrap().get_mut(EndfKey::Int(0_f64 as i64)).unwrap();
+            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
             vi += 1;
             let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
             if !result.contains_key("YI") {
                 result.insert("YI", EndfValue::new_dict());
             }
-            // TODO: multi-index list store for YI
+            if !result.get_mut("YI").unwrap().contains_key(EndfKey::Int(0_f64 as i64).clone()) {
+                result.get_mut("YI").unwrap().insert(EndfKey::Int(0_f64 as i64).clone(), EndfValue::new_dict());
+            }
+            let _nav_0 = result.get_mut("YI").unwrap().get_mut(EndfKey::Int(0_f64 as i64)).unwrap();
+            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
             vi += 1;
             let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
             if !result.contains_key("DYI") {
                 result.insert("DYI", EndfValue::new_dict());
             }
-            // TODO: multi-index list store for DYI
+            if !result.get_mut("DYI").unwrap().contains_key(EndfKey::Int(0_f64 as i64).clone()) {
+                result.get_mut("DYI").unwrap().insert(EndfKey::Int(0_f64 as i64).clone(), EndfValue::new_dict());
+            }
+            let _nav_0 = result.get_mut("DYI").unwrap().get_mut(EndfKey::Int(0_f64 as i64)).unwrap();
+            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
             vi += 1;
         }
     }
@@ -4645,25 +5081,41 @@ pub fn parse_mf8_mt454(
                 if !result.contains_key("ZAFP") {
                     result.insert("ZAFP", EndfValue::new_dict());
                 }
-                // TODO: multi-index list store for ZAFP
+                if !result.get_mut("ZAFP").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                    result.get_mut("ZAFP").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                }
+                let _nav_0 = result.get_mut("ZAFP").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
                 let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("FPS") {
                     result.insert("FPS", EndfValue::new_dict());
                 }
-                // TODO: multi-index list store for FPS
+                if !result.get_mut("FPS").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                    result.get_mut("FPS").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                }
+                let _nav_0 = result.get_mut("FPS").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
                 let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("YI") {
                     result.insert("YI", EndfValue::new_dict());
                 }
-                // TODO: multi-index list store for YI
+                if !result.get_mut("YI").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                    result.get_mut("YI").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                }
+                let _nav_0 = result.get_mut("YI").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
                 let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("DYI") {
                     result.insert("DYI", EndfValue::new_dict());
                 }
-                // TODO: multi-index list store for DYI
+                if !result.get_mut("DYI").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                    result.get_mut("DYI").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                }
+                let _nav_0 = result.get_mut("DYI").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
             }
         }
@@ -5253,7 +5705,11 @@ pub fn parse_mf8_mt457(
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
-                                        // TODO: multi-index list store for F
+                                        if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_m as f64 as i64).clone()) {
+                                            result.get_mut("F").unwrap().insert(EndfKey::Int(var_m as f64 as i64).clone(), EndfValue::new_dict());
+                                        }
+                                        let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_m as f64 as i64)).unwrap();
+                                        _nav_0.insert(EndfKey::Int(var_n as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -5420,25 +5876,41 @@ pub fn parse_mf8_mt459(
             if !result.contains_key("ZAFP") {
                 result.insert("ZAFP", EndfValue::new_dict());
             }
-            // TODO: multi-index list store for ZAFP
+            if !result.get_mut("ZAFP").unwrap().contains_key(EndfKey::Int(0_f64 as i64).clone()) {
+                result.get_mut("ZAFP").unwrap().insert(EndfKey::Int(0_f64 as i64).clone(), EndfValue::new_dict());
+            }
+            let _nav_0 = result.get_mut("ZAFP").unwrap().get_mut(EndfKey::Int(0_f64 as i64)).unwrap();
+            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
             vi += 1;
             let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
             if !result.contains_key("FPS") {
                 result.insert("FPS", EndfValue::new_dict());
             }
-            // TODO: multi-index list store for FPS
+            if !result.get_mut("FPS").unwrap().contains_key(EndfKey::Int(0_f64 as i64).clone()) {
+                result.get_mut("FPS").unwrap().insert(EndfKey::Int(0_f64 as i64).clone(), EndfValue::new_dict());
+            }
+            let _nav_0 = result.get_mut("FPS").unwrap().get_mut(EndfKey::Int(0_f64 as i64)).unwrap();
+            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
             vi += 1;
             let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
             if !result.contains_key("YC") {
                 result.insert("YC", EndfValue::new_dict());
             }
-            // TODO: multi-index list store for YC
+            if !result.get_mut("YC").unwrap().contains_key(EndfKey::Int(0_f64 as i64).clone()) {
+                result.get_mut("YC").unwrap().insert(EndfKey::Int(0_f64 as i64).clone(), EndfValue::new_dict());
+            }
+            let _nav_0 = result.get_mut("YC").unwrap().get_mut(EndfKey::Int(0_f64 as i64)).unwrap();
+            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
             vi += 1;
             let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
             if !result.contains_key("DYC") {
                 result.insert("DYC", EndfValue::new_dict());
             }
-            // TODO: multi-index list store for DYC
+            if !result.get_mut("DYC").unwrap().contains_key(EndfKey::Int(0_f64 as i64).clone()) {
+                result.get_mut("DYC").unwrap().insert(EndfKey::Int(0_f64 as i64).clone(), EndfValue::new_dict());
+            }
+            let _nav_0 = result.get_mut("DYC").unwrap().get_mut(EndfKey::Int(0_f64 as i64)).unwrap();
+            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
             vi += 1;
         }
     }
@@ -5476,25 +5948,41 @@ pub fn parse_mf8_mt459(
                 if !result.contains_key("ZAFP") {
                     result.insert("ZAFP", EndfValue::new_dict());
                 }
-                // TODO: multi-index list store for ZAFP
+                if !result.get_mut("ZAFP").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                    result.get_mut("ZAFP").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                }
+                let _nav_0 = result.get_mut("ZAFP").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
                 let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("FPS") {
                     result.insert("FPS", EndfValue::new_dict());
                 }
-                // TODO: multi-index list store for FPS
+                if !result.get_mut("FPS").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                    result.get_mut("FPS").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                }
+                let _nav_0 = result.get_mut("FPS").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
                 let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("YC") {
                     result.insert("YC", EndfValue::new_dict());
                 }
-                // TODO: multi-index list store for YC
+                if !result.get_mut("YC").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                    result.get_mut("YC").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                }
+                let _nav_0 = result.get_mut("YC").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
                 let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                 if !result.contains_key("DYC") {
                     result.insert("DYC", EndfValue::new_dict());
                 }
-                // TODO: multi-index list store for DYC
+                if !result.get_mut("DYC").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                    result.get_mut("DYC").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                }
+                let _nav_0 = result.get_mut("DYC").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                _nav_0.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                 vi += 1;
             }
         }
@@ -6125,23 +6613,39 @@ pub fn parse_mf14_wildcard(
                     if !result.contains_key("E") {
                         result.insert("E", EndfValue::new_dict());
                     }
-                    // TODO: multi-index variable store for E
+                    if !result.get_mut("E").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                    }
+                    let _nav_0 = result.get_mut("E").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                    _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(cont.c2));
                     // field l1 expected 0 (validation skipped in compiled mode)
                     // field l2 expected 0 (validation skipped in compiled mode)
                     if !result.contains_key("NL") {
                         result.insert("NL", EndfValue::new_dict());
                     }
-                    // TODO: multi-index variable store for NL
+                    if !result.get_mut("NL").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                        result.get_mut("NL").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                    }
+                    let _nav_0 = result.get_mut("NL").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                    _nav_0.insert(EndfKey::Int(var_l as f64 as i64), EndfValue::Int(cont.n1 as i64));
                     // field n2 expected 0 (validation skipped in compiled mode)
 
                     let mut vi: usize = 0;
-                    for var_m_loop_ in (1_f64 as i64)..=(0.0 /* TODO: indexed var NL */ as i64) {
+                    for var_m_loop_ in (1_f64 as i64)..=(result.get("NL").and_then(|d| d.get(EndfKey::Int(var_k as f64 as i64))).and_then(|d| d.get(EndfKey::Int(var_l as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
                         var_m = var_m_loop_ as f64;
                         let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                         if !result.contains_key("a") {
                             result.insert("a", EndfValue::new_dict());
                         }
-                        // TODO: multi-index list store for a
+                        if !result.get_mut("a").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                            result.get_mut("a").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                        }
+                        let _nav_0 = result.get_mut("a").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                        if !_nav_0.contains_key(EndfKey::Int(var_l as f64 as i64).clone()) {
+                            _nav_0.insert(EndfKey::Int(var_l as f64 as i64).clone(), EndfValue::new_dict());
+                        }
+                        let _nav_1 = _nav_0.get_mut(EndfKey::Int(var_l as f64 as i64)).unwrap();
+                        _nav_1.insert(EndfKey::Int(var_m as f64 as i64), f64_to_endf_value(_val));
                         vi += 1;
                     }
                 }
@@ -6185,8 +6689,20 @@ pub fn parse_mf15_wildcard(
         result.insert("MT", EndfValue::Int(ctrl.mt as i64));
     }
     let mut var_awr: f64 = 0.0;
+    let mut var_e: f64 = 0.0;
+    let mut var_egamma: f64 = 0.0;
+    let mut var_eint: f64 = 0.0;
+    let mut var_g: f64 = 0.0;
     let mut var_j: f64 = 0.0;
+    let mut var_k: f64 = 0.0;
+    let mut var_lf: f64 = 0.0;
     let mut var_nc: f64 = 0.0;
+    let mut var_ne: f64 = 0.0;
+    let mut var_np: f64 = 0.0;
+    let mut var_nr: f64 = 0.0;
+    let mut var_p: f64 = 0.0;
+    let mut var_rtfm1_tab: f64 = 0.0;
+    let mut var_rtfm_tab1: f64 = 0.0;
     let mut var_subsection: f64 = 0.0;
     let mut var_za: f64 = 0.0;
 
@@ -6210,6 +6726,74 @@ pub fn parse_mf15_wildcard(
         {
             let mut section_subsection = EndfValue::new_dict();
             std::mem::swap(&mut result, &mut section_subsection);
+            let lookahead_ok_0 = {
+                let saved_ofs = ofs;
+                let ok = (|| -> Result<bool, EndfError> {
+                    if ofs >= lines.len() { return Ok(false); }
+                    let (cont, _ctrl) = read_cont(&lines[ofs], read_opts)?;
+                    Ok((var_lf as f64 as i64) == (1_f64 as i64))
+                })().unwrap_or(false);
+                ok
+            };
+            if lookahead_ok_0 {
+                // TAB1 record
+                {
+                    let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
+                    let (cont, body, _ctrl, consumed) = read_tab1(&line_refs, 0, read_opts)?;
+                    ofs += consumed;
+
+                    // field c1 expected 0 (validation skipped in compiled mode)
+                    // field c2 expected 0 (validation skipped in compiled mode)
+                    // field l1 expected 0 (validation skipped in compiled mode)
+                    var_lf = cont.l2 as f64;
+                    result.insert("LF", EndfValue::Int(var_lf as i64));
+
+                    let mut tab_section = EndfValue::new_dict();
+                    tab_section.insert("NBT", list_from_i64(&body.nbt));
+                    tab_section.insert("INT", list_from_i64(&body.int));
+                    tab_section.insert("Eint", list_from_f64(&body.x));
+                    tab_section.insert("p", list_from_f64(&body.y));
+                    result.insert("rtfm_tab1", tab_section);
+                }
+                // TAB2 record
+                {
+                    let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
+                    let (cont, body, _ctrl, consumed) = read_tab2(&line_refs, 0, read_opts)?;
+                    ofs += consumed;
+
+                    // field c1 expected 0 (validation skipped in compiled mode)
+                    // field c2 expected 0 (validation skipped in compiled mode)
+                    // field l1 expected 0 (validation skipped in compiled mode)
+                    // field l2 expected 0 (validation skipped in compiled mode)
+
+                    result.insert("NBT", list_from_i64(&body.nbt));
+                    result.insert("INT", list_from_i64(&body.int));
+                }
+                for var_k_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
+                    var_k = var_k_loop_ as f64;
+                    // TAB1 record
+                    {
+                        let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
+                        let (cont, body, _ctrl, consumed) = read_tab1(&line_refs, 0, read_opts)?;
+                        ofs += consumed;
+
+                        // field c1 expected 0 (validation skipped in compiled mode)
+                        if !result.contains_key("E") {
+                            result.insert("E", EndfValue::new_dict());
+                        }
+                        result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(cont.c2));
+                        // field l1 expected 0 (validation skipped in compiled mode)
+                        // field l2 expected 0 (validation skipped in compiled mode)
+
+                        let mut tab_section = EndfValue::new_dict();
+                        tab_section.insert("NBT", list_from_i64(&body.nbt));
+                        tab_section.insert("INT", list_from_i64(&body.int));
+                        tab_section.insert("Egamma", list_from_f64(&body.x));
+                        tab_section.insert("g", list_from_f64(&body.y));
+                        result.insert("rtfm1_tab", tab_section);
+                    }
+                }
+            }
             std::mem::swap(&mut result, &mut section_subsection);
             if !result.contains_key("subsection") {
                 result.insert("subsection", EndfValue::new_dict());
@@ -6815,7 +7399,11 @@ pub fn parse_mf31_mt452(
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
-                                        // TODO: multi-index list store for F
+                                        if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                                            result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                                        }
+                                        let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -6855,7 +7443,11 @@ pub fn parse_mf31_mt452(
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
-                                        // TODO: multi-index list store for F
+                                        if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                                            result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                                        }
+                                        let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -6903,7 +7495,11 @@ pub fn parse_mf31_mt452(
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
-                                        // TODO: multi-index list store for F
+                                        if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                                            result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                                        }
+                                        let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                                        _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -7301,7 +7897,11 @@ pub fn parse_mf31_mt455(
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
-                                        // TODO: multi-index list store for F
+                                        if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                                            result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                                        }
+                                        let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -7341,7 +7941,11 @@ pub fn parse_mf31_mt455(
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
-                                        // TODO: multi-index list store for F
+                                        if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                                            result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                                        }
+                                        let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -7389,7 +7993,11 @@ pub fn parse_mf31_mt455(
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
-                                        // TODO: multi-index list store for F
+                                        if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                                            result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                                        }
+                                        let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                                        _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -7787,7 +8395,11 @@ pub fn parse_mf31_mt456(
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
-                                        // TODO: multi-index list store for F
+                                        if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                                            result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                                        }
+                                        let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -7827,7 +8439,11 @@ pub fn parse_mf31_mt456(
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
-                                        // TODO: multi-index list store for F
+                                        if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                                            result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                                        }
+                                        let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -7875,7 +8491,11 @@ pub fn parse_mf31_mt456(
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
-                                        // TODO: multi-index list store for F
+                                        if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                                            result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                                        }
+                                        let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                                        _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -8275,7 +8895,11 @@ pub fn parse_mf32_wildcard(
                                                 if !result.contains_key("F") {
                                                     result.insert("F", EndfValue::new_dict());
                                                 }
-                                                // TODO: multi-index list store for F
+                                                if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                                                    result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                                                }
+                                                let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                                                _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), f64_to_endf_value(_val));
                                                 vi += 1;
                                             }
                                         }
@@ -8315,7 +8939,11 @@ pub fn parse_mf32_wildcard(
                                                 if !result.contains_key("F") {
                                                     result.insert("F", EndfValue::new_dict());
                                                 }
-                                                // TODO: multi-index list store for F
+                                                if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                                                    result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                                                }
+                                                let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                                                _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), f64_to_endf_value(_val));
                                                 vi += 1;
                                             }
                                         }
@@ -8669,7 +9297,11 @@ pub fn parse_mf32_wildcard(
                                                 if !result.contains_key("V") {
                                                     result.insert("V", EndfValue::new_dict());
                                                 }
-                                                // TODO: multi-index list store for V
+                                                if !result.get_mut("V").unwrap().contains_key(EndfKey::Int(var_m as f64 as i64).clone()) {
+                                                    result.get_mut("V").unwrap().insert(EndfKey::Int(var_m as f64 as i64).clone(), EndfValue::new_dict());
+                                                }
+                                                let _nav_0 = result.get_mut("V").unwrap().get_mut(EndfKey::Int(var_m as f64 as i64)).unwrap();
+                                                _nav_0.insert(EndfKey::Int(var_n as f64 as i64), f64_to_endf_value(_val));
                                                 vi += 1;
                                             }
                                         }
@@ -8792,7 +9424,11 @@ pub fn parse_mf32_wildcard(
                                                 if !result.contains_key("V") {
                                                     result.insert("V", EndfValue::new_dict());
                                                 }
-                                                // TODO: multi-index list store for V
+                                                if !result.get_mut("V").unwrap().contains_key(EndfKey::Int(var_m as f64 as i64).clone()) {
+                                                    result.get_mut("V").unwrap().insert(EndfKey::Int(var_m as f64 as i64).clone(), EndfValue::new_dict());
+                                                }
+                                                let _nav_0 = result.get_mut("V").unwrap().get_mut(EndfKey::Int(var_m as f64 as i64)).unwrap();
+                                                _nav_0.insert(EndfKey::Int(var_n as f64 as i64), f64_to_endf_value(_val));
                                                 vi += 1;
                                             }
                                         }
@@ -8938,7 +9574,11 @@ pub fn parse_mf32_wildcard(
                                                 if !result.contains_key("V") {
                                                     result.insert("V", EndfValue::new_dict());
                                                 }
-                                                // TODO: multi-index list store for V
+                                                if !result.get_mut("V").unwrap().contains_key(EndfKey::Int(var_m as f64 as i64).clone()) {
+                                                    result.get_mut("V").unwrap().insert(EndfKey::Int(var_m as f64 as i64).clone(), EndfValue::new_dict());
+                                                }
+                                                let _nav_0 = result.get_mut("V").unwrap().get_mut(EndfKey::Int(var_m as f64 as i64)).unwrap();
+                                                _nav_0.insert(EndfKey::Int(var_n as f64 as i64), f64_to_endf_value(_val));
                                                 vi += 1;
                                             }
                                         }
@@ -9045,7 +9685,11 @@ pub fn parse_mf32_wildcard(
                                                     if !result.contains_key("F") {
                                                         result.insert("F", EndfValue::new_dict());
                                                     }
-                                                    // TODO: multi-index list store for F
+                                                    if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                                                        result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                                                    }
+                                                    let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                                                    _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), f64_to_endf_value(_val));
                                                     vi += 1;
                                                 }
                                             }
@@ -9099,7 +9743,11 @@ pub fn parse_mf32_wildcard(
                                         if !result.contains_key("DAP") {
                                             result.insert("DAP", EndfValue::new_dict());
                                         }
-                                        // TODO: multi-index list store for DAP
+                                        if !result.get_mut("DAP").unwrap().contains_key(EndfKey::Int(var_m as f64 as i64).clone()) {
+                                            result.get_mut("DAP").unwrap().insert(EndfKey::Int(var_m as f64 as i64).clone(), EndfValue::new_dict());
+                                        }
+                                        let _nav_0 = result.get_mut("DAP").unwrap().get_mut(EndfKey::Int(var_m as f64 as i64)).unwrap();
+                                        _nav_0.insert(EndfKey::Int(var_n as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -9172,7 +9820,11 @@ pub fn parse_mf32_wildcard(
                                                     if !result.contains_key("GAM") {
                                                         result.insert("GAM", EndfValue::new_dict());
                                                     }
-                                                    // TODO: multi-index list store for GAM
+                                                    if !result.get_mut("GAM").unwrap().contains_key(EndfKey::Int(var_q as f64 as i64).clone()) {
+                                                        result.get_mut("GAM").unwrap().insert(EndfKey::Int(var_q as f64 as i64).clone(), EndfValue::new_dict());
+                                                    }
+                                                    let _nav_0 = result.get_mut("GAM").unwrap().get_mut(EndfKey::Int(var_q as f64 as i64)).unwrap();
+                                                    _nav_0.insert(EndfKey::Int(var_p as f64 as i64), f64_to_endf_value(_val));
                                                     vi += 1;
                                                 }
                                                 for var_r_loop_ in (1_f64 as i64)..=((((((5_f64 - var_nch as f64))) as i64 % (6_f64) as i64) as f64) as i64) {
@@ -9212,7 +9864,11 @@ pub fn parse_mf32_wildcard(
                                             if !result.contains_key("V") {
                                                 result.insert("V", EndfValue::new_dict());
                                             }
-                                            // TODO: multi-index list store for V
+                                            if !result.get_mut("V").unwrap().contains_key(EndfKey::Int(var_p as f64 as i64).clone()) {
+                                                result.get_mut("V").unwrap().insert(EndfKey::Int(var_p as f64 as i64).clone(), EndfValue::new_dict());
+                                            }
+                                            let _nav_0 = result.get_mut("V").unwrap().get_mut(EndfKey::Int(var_p as f64 as i64)).unwrap();
+                                            _nav_0.insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
                                         }
                                     }
@@ -9549,7 +10205,11 @@ pub fn parse_mf32_wildcard(
                                         if !result.contains_key("DAP") {
                                             result.insert("DAP", EndfValue::new_dict());
                                         }
-                                        // TODO: multi-index list store for DAP
+                                        if !result.get_mut("DAP").unwrap().contains_key(EndfKey::Int(var_m as f64 as i64).clone()) {
+                                            result.get_mut("DAP").unwrap().insert(EndfKey::Int(var_m as f64 as i64).clone(), EndfValue::new_dict());
+                                        }
+                                        let _nav_0 = result.get_mut("DAP").unwrap().get_mut(EndfKey::Int(var_m as f64 as i64)).unwrap();
+                                        _nav_0.insert(EndfKey::Int(var_n as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -9739,7 +10399,11 @@ pub fn parse_mf32_wildcard(
                                             if !result.contains_key("GAM") {
                                                 result.insert("GAM", EndfValue::new_dict());
                                             }
-                                            // TODO: multi-index list store for GAM
+                                            if !result.get_mut("GAM").unwrap().contains_key(EndfKey::Int(var_p as f64 as i64).clone()) {
+                                                result.get_mut("GAM").unwrap().insert(EndfKey::Int(var_p as f64 as i64).clone(), EndfValue::new_dict());
+                                            }
+                                            let _nav_0 = result.get_mut("GAM").unwrap().get_mut(EndfKey::Int(var_p as f64 as i64)).unwrap();
+                                            _nav_0.insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
                                         }
                                         for var_r_loop_ in (1_f64 as i64)..=((((((5_f64 - var_nch as f64))) as i64 % (6_f64) as i64) as f64) as i64) {
@@ -9759,7 +10423,11 @@ pub fn parse_mf32_wildcard(
                                             if !result.contains_key("DGAM") {
                                                 result.insert("DGAM", EndfValue::new_dict());
                                             }
-                                            // TODO: multi-index list store for DGAM
+                                            if !result.get_mut("DGAM").unwrap().contains_key(EndfKey::Int(var_p as f64 as i64).clone()) {
+                                                result.get_mut("DGAM").unwrap().insert(EndfKey::Int(var_p as f64 as i64).clone(), EndfValue::new_dict());
+                                            }
+                                            let _nav_0 = result.get_mut("DGAM").unwrap().get_mut(EndfKey::Int(var_p as f64 as i64)).unwrap();
+                                            _nav_0.insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
                                         }
                                         for var_r_loop_ in (1_f64 as i64)..=((((((5_f64 - var_nch as f64))) as i64 % (6_f64) as i64) as f64) as i64) {
@@ -9903,7 +10571,11 @@ pub fn parse_mf32_wildcard(
                                     if !result.contains_key("RV") {
                                         result.insert("RV", EndfValue::new_dict());
                                     }
-                                    // TODO: multi-index list store for RV
+                                    if !result.get_mut("RV").unwrap().contains_key(EndfKey::Int(var_p as f64 as i64).clone()) {
+                                        result.get_mut("RV").unwrap().insert(EndfKey::Int(var_p as f64 as i64).clone(), EndfValue::new_dict());
+                                    }
+                                    let _nav_0 = result.get_mut("RV").unwrap().get_mut(EndfKey::Int(var_p as f64 as i64)).unwrap();
+                                    _nav_0.insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
                                     vi += 1;
                                 }
                             }
@@ -10266,7 +10938,11 @@ pub fn parse_mf33_wildcard(
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
-                                        // TODO: multi-index list store for F
+                                        if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                                            result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                                        }
+                                        let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -10306,7 +10982,11 @@ pub fn parse_mf33_wildcard(
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
-                                        // TODO: multi-index list store for F
+                                        if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                                            result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                                        }
+                                        let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                                        _nav_0.insert(EndfKey::Int(var_kp as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -10354,7 +11034,11 @@ pub fn parse_mf33_wildcard(
                                         if !result.contains_key("F") {
                                             result.insert("F", EndfValue::new_dict());
                                         }
-                                        // TODO: multi-index list store for F
+                                        if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_k as f64 as i64).clone()) {
+                                            result.get_mut("F").unwrap().insert(EndfKey::Int(var_k as f64 as i64).clone(), EndfValue::new_dict());
+                                        }
+                                        let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_k as f64 as i64)).unwrap();
+                                        _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                                         vi += 1;
                                     }
                                 }
@@ -10555,28 +11239,52 @@ pub fn parse_mf34_wildcard(
                             if !result.contains_key("LS") {
                                 result.insert("LS", EndfValue::new_dict());
                             }
-                            // TODO: multi-index variable store for LS
+                            if !result.get_mut("LS").unwrap().contains_key(EndfKey::Int(var_n as f64 as i64).clone()) {
+                                result.get_mut("LS").unwrap().insert(EndfKey::Int(var_n as f64 as i64).clone(), EndfValue::new_dict());
+                            }
+                            let _nav_0 = result.get_mut("LS").unwrap().get_mut(EndfKey::Int(var_n as f64 as i64)).unwrap();
+                            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Int(cont.l1 as i64));
                             if !result.contains_key("LB") {
                                 result.insert("LB", EndfValue::new_dict());
                             }
-                            // TODO: multi-index variable store for LB
+                            if !result.get_mut("LB").unwrap().contains_key(EndfKey::Int(var_n as f64 as i64).clone()) {
+                                result.get_mut("LB").unwrap().insert(EndfKey::Int(var_n as f64 as i64).clone(), EndfValue::new_dict());
+                            }
+                            let _nav_0 = result.get_mut("LB").unwrap().get_mut(EndfKey::Int(var_n as f64 as i64)).unwrap();
+                            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Int(cont.l2 as i64));
                             if !result.contains_key("NT") {
                                 result.insert("NT", EndfValue::new_dict());
                             }
-                            // TODO: multi-index variable store for NT
+                            if !result.get_mut("NT").unwrap().contains_key(EndfKey::Int(var_n as f64 as i64).clone()) {
+                                result.get_mut("NT").unwrap().insert(EndfKey::Int(var_n as f64 as i64).clone(), EndfValue::new_dict());
+                            }
+                            let _nav_0 = result.get_mut("NT").unwrap().get_mut(EndfKey::Int(var_n as f64 as i64)).unwrap();
+                            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Int(cont.n1 as i64));
                             if !result.contains_key("NE") {
                                 result.insert("NE", EndfValue::new_dict());
                             }
-                            // TODO: multi-index variable store for NE
+                            if !result.get_mut("NE").unwrap().contains_key(EndfKey::Int(var_n as f64 as i64).clone()) {
+                                result.get_mut("NE").unwrap().insert(EndfKey::Int(var_n as f64 as i64).clone(), EndfValue::new_dict());
+                            }
+                            let _nav_0 = result.get_mut("NE").unwrap().get_mut(EndfKey::Int(var_n as f64 as i64)).unwrap();
+                            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Int(cont.n2 as i64));
 
                             let mut vi: usize = 0;
-                            for var_q_loop_ in (1_f64 as i64)..=(0.0 /* TODO: indexed var NT */ as i64) {
+                            for var_q_loop_ in (1_f64 as i64)..=(result.get("NT").and_then(|d| d.get(EndfKey::Int(var_n as f64 as i64))).and_then(|d| d.get(EndfKey::Int(var_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
                                 var_q = var_q_loop_ as f64;
                                 let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("Data") {
                                     result.insert("Data", EndfValue::new_dict());
                                 }
-                                // TODO: multi-index list store for Data
+                                if !result.get_mut("Data").unwrap().contains_key(EndfKey::Int(var_n as f64 as i64).clone()) {
+                                    result.get_mut("Data").unwrap().insert(EndfKey::Int(var_n as f64 as i64).clone(), EndfValue::new_dict());
+                                }
+                                let _nav_0 = result.get_mut("Data").unwrap().get_mut(EndfKey::Int(var_n as f64 as i64)).unwrap();
+                                if !_nav_0.contains_key(EndfKey::Int(var_m as f64 as i64).clone()) {
+                                    _nav_0.insert(EndfKey::Int(var_m as f64 as i64).clone(), EndfValue::new_dict());
+                                }
+                                let _nav_1 = _nav_0.get_mut(EndfKey::Int(var_m as f64 as i64)).unwrap();
+                                _nav_1.insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
                             }
                         }
@@ -10657,28 +11365,52 @@ pub fn parse_mf34_wildcard(
                             if !result.contains_key("LS") {
                                 result.insert("LS", EndfValue::new_dict());
                             }
-                            // TODO: multi-index variable store for LS
+                            if !result.get_mut("LS").unwrap().contains_key(EndfKey::Int(var_n as f64 as i64).clone()) {
+                                result.get_mut("LS").unwrap().insert(EndfKey::Int(var_n as f64 as i64).clone(), EndfValue::new_dict());
+                            }
+                            let _nav_0 = result.get_mut("LS").unwrap().get_mut(EndfKey::Int(var_n as f64 as i64)).unwrap();
+                            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Int(cont.l1 as i64));
                             if !result.contains_key("LB") {
                                 result.insert("LB", EndfValue::new_dict());
                             }
-                            // TODO: multi-index variable store for LB
+                            if !result.get_mut("LB").unwrap().contains_key(EndfKey::Int(var_n as f64 as i64).clone()) {
+                                result.get_mut("LB").unwrap().insert(EndfKey::Int(var_n as f64 as i64).clone(), EndfValue::new_dict());
+                            }
+                            let _nav_0 = result.get_mut("LB").unwrap().get_mut(EndfKey::Int(var_n as f64 as i64)).unwrap();
+                            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Int(cont.l2 as i64));
                             if !result.contains_key("NT") {
                                 result.insert("NT", EndfValue::new_dict());
                             }
-                            // TODO: multi-index variable store for NT
+                            if !result.get_mut("NT").unwrap().contains_key(EndfKey::Int(var_n as f64 as i64).clone()) {
+                                result.get_mut("NT").unwrap().insert(EndfKey::Int(var_n as f64 as i64).clone(), EndfValue::new_dict());
+                            }
+                            let _nav_0 = result.get_mut("NT").unwrap().get_mut(EndfKey::Int(var_n as f64 as i64)).unwrap();
+                            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Int(cont.n1 as i64));
                             if !result.contains_key("NE") {
                                 result.insert("NE", EndfValue::new_dict());
                             }
-                            // TODO: multi-index variable store for NE
+                            if !result.get_mut("NE").unwrap().contains_key(EndfKey::Int(var_n as f64 as i64).clone()) {
+                                result.get_mut("NE").unwrap().insert(EndfKey::Int(var_n as f64 as i64).clone(), EndfValue::new_dict());
+                            }
+                            let _nav_0 = result.get_mut("NE").unwrap().get_mut(EndfKey::Int(var_n as f64 as i64)).unwrap();
+                            _nav_0.insert(EndfKey::Int(var_m as f64 as i64), EndfValue::Int(cont.n2 as i64));
 
                             let mut vi: usize = 0;
-                            for var_q_loop_ in (1_f64 as i64)..=(0.0 /* TODO: indexed var NT */ as i64) {
+                            for var_q_loop_ in (1_f64 as i64)..=(result.get("NT").and_then(|d| d.get(EndfKey::Int(var_n as f64 as i64))).and_then(|d| d.get(EndfKey::Int(var_m as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
                                 var_q = var_q_loop_ as f64;
                                 let _val = *vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!("LIST body index {} out of bounds (len={})", vi, vals.len()) })?;
                                 if !result.contains_key("Data") {
                                     result.insert("Data", EndfValue::new_dict());
                                 }
-                                // TODO: multi-index list store for Data
+                                if !result.get_mut("Data").unwrap().contains_key(EndfKey::Int(var_n as f64 as i64).clone()) {
+                                    result.get_mut("Data").unwrap().insert(EndfKey::Int(var_n as f64 as i64).clone(), EndfValue::new_dict());
+                                }
+                                let _nav_0 = result.get_mut("Data").unwrap().get_mut(EndfKey::Int(var_n as f64 as i64)).unwrap();
+                                if !_nav_0.contains_key(EndfKey::Int(var_m as f64 as i64).clone()) {
+                                    _nav_0.insert(EndfKey::Int(var_m as f64 as i64).clone(), EndfValue::new_dict());
+                                }
+                                let _nav_1 = _nav_0.get_mut(EndfKey::Int(var_m as f64 as i64)).unwrap();
+                                _nav_1.insert(EndfKey::Int(var_q as f64 as i64), f64_to_endf_value(_val));
                                 vi += 1;
                             }
                         }
@@ -10792,7 +11524,11 @@ pub fn parse_mf35_wildcard(
                             if !result.contains_key("F") {
                                 result.insert("F", EndfValue::new_dict());
                             }
-                            // TODO: multi-index list store for F
+                            if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_i as f64 as i64).clone()) {
+                                result.get_mut("F").unwrap().insert(EndfKey::Int(var_i as f64 as i64).clone(), EndfValue::new_dict());
+                            }
+                            let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_i as f64 as i64)).unwrap();
+                            _nav_0.insert(EndfKey::Int(var_j as f64 as i64), f64_to_endf_value(_val));
                             vi += 1;
                         }
                     }
@@ -11205,7 +11941,11 @@ pub fn parse_mf40_wildcard(
                                             if !result.contains_key("F") {
                                                 result.insert("F", EndfValue::new_dict());
                                             }
-                                            // TODO: multi-index list store for F
+                                            if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_q as f64 as i64).clone()) {
+                                                result.get_mut("F").unwrap().insert(EndfKey::Int(var_q as f64 as i64).clone(), EndfValue::new_dict());
+                                            }
+                                            let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_q as f64 as i64)).unwrap();
+                                            _nav_0.insert(EndfKey::Int(var_qp as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
                                         }
                                     }
@@ -11246,7 +11986,11 @@ pub fn parse_mf40_wildcard(
                                             if !result.contains_key("F") {
                                                 result.insert("F", EndfValue::new_dict());
                                             }
-                                            // TODO: multi-index list store for F
+                                            if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_q as f64 as i64).clone()) {
+                                                result.get_mut("F").unwrap().insert(EndfKey::Int(var_q as f64 as i64).clone(), EndfValue::new_dict());
+                                            }
+                                            let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_q as f64 as i64)).unwrap();
+                                            _nav_0.insert(EndfKey::Int(var_qp as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
                                         }
                                     }
@@ -11295,7 +12039,11 @@ pub fn parse_mf40_wildcard(
                                             if !result.contains_key("F") {
                                                 result.insert("F", EndfValue::new_dict());
                                             }
-                                            // TODO: multi-index list store for F
+                                            if !result.get_mut("F").unwrap().contains_key(EndfKey::Int(var_q as f64 as i64).clone()) {
+                                                result.get_mut("F").unwrap().insert(EndfKey::Int(var_q as f64 as i64).clone(), EndfValue::new_dict());
+                                            }
+                                            let _nav_0 = result.get_mut("F").unwrap().get_mut(EndfKey::Int(var_q as f64 as i64)).unwrap();
+                                            _nav_0.insert(EndfKey::Int(var_l as f64 as i64), f64_to_endf_value(_val));
                                             vi += 1;
                                         }
                                     }
