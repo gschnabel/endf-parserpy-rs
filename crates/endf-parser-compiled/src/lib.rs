@@ -425,7 +425,7 @@ pub fn parse_mf1_mt455(
                 result.get_mut("E").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(cont.c2));
                 // field l1 expected 0 (validation skipped in compiled mode)
                 // field l2 expected 0 (validation skipped in compiled mode)
-                // TODO: complex field expression for n1 (not yet compiled)
+                // field n1 complex expression (validation skipped in compiled mode)
                 // field n2 expected 0 (validation skipped in compiled mode)
 
                 let mut vi: usize = 0;
@@ -535,7 +535,7 @@ pub fn parse_mf1_mt455(
                 result.insert("E1", f64_to_endf_value(var_e1));
                 // field l1 expected 0 (validation skipped in compiled mode)
                 // field l2 expected 0 (validation skipped in compiled mode)
-                // TODO: complex field expression for n1 (not yet compiled)
+                // field n1 complex expression (validation skipped in compiled mode)
                 // field n2 expected 0 (validation skipped in compiled mode)
 
                 let mut vi: usize = 0;
@@ -882,8 +882,8 @@ pub fn parse_mf1_mt458(
             // field l1 expected 0 (validation skipped in compiled mode)
             var_nply = cont.l2 as f64;
             result.insert("NPLY", EndfValue::Int(var_nply as i64));
-            // TODO: complex field expression for n1 (not yet compiled)
-            // TODO: complex field expression for n2 (not yet compiled)
+            // field n1 complex expression (validation skipped in compiled mode)
+            // field n2 complex expression (validation skipped in compiled mode)
 
             let mut vi: usize = 0;
             for var_k_loop_ in (0_f64 as i64)..=(var_nply as f64 as i64) {
@@ -1547,7 +1547,7 @@ pub fn parse_mf2_mt151(
                                         result.insert("L", EndfValue::Int(var_l as i64));
                                         var_lrx = cont.l2 as f64;
                                         result.insert("LRX", EndfValue::Int(var_lrx as i64));
-                                        // TODO: complex field expression for n1 (not yet compiled)
+                                        // field n1 complex expression (validation skipped in compiled mode)
                                         var_nrs = cont.n2 as f64;
                                         result.insert("NRS", EndfValue::Int(var_nrs as i64));
 
@@ -1673,7 +1673,7 @@ pub fn parse_mf2_mt151(
                                         var_l = cont.l1 as f64;
                                         result.insert("L", EndfValue::Int(var_l as i64));
                                         // field l2 expected 0 (validation skipped in compiled mode)
-                                        // TODO: complex field expression for n1 (not yet compiled)
+                                        // field n1 complex expression (validation skipped in compiled mode)
                                         var_nrs = cont.n2 as f64;
                                         result.insert("NRS", EndfValue::Int(var_nrs as i64));
 
@@ -1816,7 +1816,7 @@ pub fn parse_mf2_mt151(
                                     var_li = cont.l1 as f64;
                                     result.insert("LI", EndfValue::Int(var_li as i64));
                                     // field l2 expected 0 (validation skipped in compiled mode)
-                                    // TODO: complex field expression for n1 (not yet compiled)
+                                    // field n1 complex expression (validation skipped in compiled mode)
                                     var_nx = cont.n2 as f64;
                                     result.insert("NX", EndfValue::Int(var_nx as i64));
 
@@ -1853,7 +1853,7 @@ pub fn parse_mf2_mt151(
                                     var_li = cont.l1 as f64;
                                     result.insert("LI", EndfValue::Int(var_li as i64));
                                     // field l2 expected 0 (validation skipped in compiled mode)
-                                    // TODO: complex field expression for n1 (not yet compiled)
+                                    // field n1 complex expression (validation skipped in compiled mode)
                                     var_nx = cont.n2 as f64;
                                     result.insert("NX", EndfValue::Int(var_nx as i64));
 
@@ -1908,7 +1908,7 @@ pub fn parse_mf2_mt151(
                                     var_li = cont.l1 as f64;
                                     result.insert("LI", EndfValue::Int(var_li as i64));
                                     // field l2 expected 0 (validation skipped in compiled mode)
-                                    // TODO: complex field expression for n1 (not yet compiled)
+                                    // field n1 complex expression (validation skipped in compiled mode)
                                     var_nx = cont.n2 as f64;
                                     result.insert("NX", EndfValue::Int(var_nx as i64));
 
@@ -2007,7 +2007,7 @@ pub fn parse_mf2_mt151(
                                                 // field c2 expected 0 (validation skipped in compiled mode)
                                                 // field l1 expected 0 (validation skipped in compiled mode)
                                                 // field l2 expected 0 (validation skipped in compiled mode)
-                                                // TODO: complex field expression for n1 (not yet compiled)
+                                                // field n1 complex expression (validation skipped in compiled mode)
                                                 var_nlj = cont.n2 as f64;
                                                 result.insert("NLJ", EndfValue::Int(var_nlj as i64));
 
@@ -2129,8 +2129,8 @@ pub fn parse_mf2_mt151(
                                 var_npp = cont.l1 as f64;
                                 result.insert("NPP", EndfValue::Int(var_npp as i64));
                                 // field l2 expected 0 (validation skipped in compiled mode)
-                                // TODO: complex field expression for n1 (not yet compiled)
-                                // TODO: complex field expression for n2 (not yet compiled)
+                                // field n1 complex expression (validation skipped in compiled mode)
+                                // field n2 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_k_loop_ in (1_f64 as i64)..=(var_npp as f64 as i64) {
@@ -2229,7 +2229,7 @@ pub fn parse_mf2_mt151(
                                         result.insert("KBK", EndfValue::Int(var_kbk as i64));
                                         var_kps = cont.l2 as f64;
                                         result.insert("KPS", EndfValue::Int(var_kps as i64));
-                                        // TODO: complex field expression for n1 (not yet compiled)
+                                        // field n1 complex expression (validation skipped in compiled mode)
                                         var_nch = cont.n2 as f64;
                                         result.insert("NCH", EndfValue::Int(var_nch as i64));
 
@@ -2293,8 +2293,6 @@ pub fn parse_mf2_mt151(
                                         ok
                                     };
                                     if lookahead_ok_0 {
-                                        var_nx = ((((((1_f64 + var_nch as f64) + ((((5_f64 - var_nch as f64))) as i64 % (6_f64) as i64) as f64)) * var_nrs as f64) / 6_f64));
-                                        var_num_zeros = (((((5_f64 - var_nch as f64))) as i64 % (6_f64) as i64) as f64);
                                         // LIST record
                                         {
                                             let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
@@ -2306,9 +2304,8 @@ pub fn parse_mf2_mt151(
                                             // field l1 expected 0 (validation skipped in compiled mode)
                                             var_nrs = cont.l2 as f64;
                                             result.insert("NRS", EndfValue::Int(var_nrs as i64));
-                                            // TODO: complex field expression for n1 (not yet compiled)
-                                            var_nx = cont.n2 as f64;
-                                            result.insert("NX", EndfValue::Int(var_nx as i64));
+                                            // field n1 complex expression (validation skipped in compiled mode)
+                                            // field n2 = abbreviation NX (validation skipped in compiled mode)
 
                                             let mut vi: usize = 0;
                                             for var_n_loop_ in (1_f64 as i64)..=(var_nrs as f64 as i64) {
@@ -2328,7 +2325,7 @@ pub fn parse_mf2_mt151(
                                                     // TODO: multi-index list store for GAM
                                                     vi += 1;
                                                 }
-                                                for var_p_loop_ in (1_f64 as i64)..=(var_num_zeros as f64 as i64) {
+                                                for var_p_loop_ in (1_f64 as i64)..=((((((5_f64 - var_nch as f64))) as i64 % (6_f64) as i64) as f64) as i64) {
                                                     var_p = var_p_loop_ as f64;
                                                     // list body constant 0 (validation skipped)
                                                     vi += 1;
@@ -2347,9 +2344,8 @@ pub fn parse_mf2_mt151(
                                             // field l1 expected 0 (validation skipped in compiled mode)
                                             var_nrs = cont.l2 as f64;
                                             result.insert("NRS", EndfValue::Int(var_nrs as i64));
-                                            // TODO: complex field expression for n1 (not yet compiled)
-                                            var_nx = cont.n2 as f64;
-                                            result.insert("NX", EndfValue::Int(var_nx as i64));
+                                            // field n1 complex expression (validation skipped in compiled mode)
+                                            // field n2 = abbreviation NX (validation skipped in compiled mode)
 
                                             let mut vi: usize = 0;
                                             for var_m_loop_ in (1_f64 as i64)..=(6_f64 as i64) {
@@ -2647,7 +2643,7 @@ pub fn parse_mf2_mt151(
                                         var_l = cont.l1 as f64;
                                         result.insert("L", EndfValue::Int(var_l as i64));
                                         // field l2 expected 0 (validation skipped in compiled mode)
-                                        // TODO: complex field expression for n1 (not yet compiled)
+                                        // field n1 complex expression (validation skipped in compiled mode)
                                         var_njs = cont.n2 as f64;
                                         result.insert("NJS", EndfValue::Int(var_njs as i64));
 
@@ -2814,7 +2810,7 @@ pub fn parse_mf2_mt151(
                                                 result.insert("L", EndfValue::Int(var_l as i64));
                                                 var_muf = cont.l2 as f64;
                                                 result.insert("MUF", EndfValue::Int(var_muf as i64));
-                                                // TODO: complex field expression for n1 (not yet compiled)
+                                                // field n1 complex expression (validation skipped in compiled mode)
                                                 // field n2 expected 0 (validation skipped in compiled mode)
 
                                                 let mut vi: usize = 0;
@@ -2955,7 +2951,7 @@ pub fn parse_mf2_mt151(
                                                 var_int = cont.l1 as f64;
                                                 result.insert("INT", EndfValue::Int(var_int as i64));
                                                 // field l2 expected 0 (validation skipped in compiled mode)
-                                                // TODO: complex field expression for n1 (not yet compiled)
+                                                // field n1 complex expression (validation skipped in compiled mode)
                                                 var_ne = cont.n2 as f64;
                                                 result.insert("NE", EndfValue::Int(var_ne as i64));
 
@@ -3577,7 +3573,6 @@ pub fn parse_mf6_wildcard(
                 }
                 for var_j_loop_ in (1_f64 as i64)..=(var_ne as f64 as i64) {
                     var_j = var_j_loop_ as f64;
-                    var_nw = ((result.get("NEP").and_then(|d| d.get(EndfKey::Int(var_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) * ((result.get("NA").and_then(|d| d.get(EndfKey::Int(var_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) + 2_f64))));
                     // LIST record
                     {
                         let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
@@ -3597,8 +3592,7 @@ pub fn parse_mf6_wildcard(
                             result.insert("NA", EndfValue::new_dict());
                         }
                         result.get_mut("NA").unwrap().insert(EndfKey::Int(var_j as f64 as i64), EndfValue::Int(cont.l2 as i64));
-                        var_nw = cont.n1 as f64;
-                        result.insert("NW", EndfValue::Int(var_nw as i64));
+                        // field n1 = abbreviation NW (validation skipped in compiled mode)
                         if !result.contains_key("NEP") {
                             result.insert("NEP", EndfValue::new_dict());
                         }
@@ -4320,7 +4314,7 @@ pub fn parse_mf7_mt451(
             var_nas = cont.l1 as f64;
             result.insert("NAS", EndfValue::Int(var_nas as i64));
             // field l2 expected 0 (validation skipped in compiled mode)
-            // TODO: complex field expression for n1 (not yet compiled)
+            // field n1 complex expression (validation skipped in compiled mode)
             if !result.contains_key("NI") {
                 result.insert("NI", EndfValue::new_dict());
             }
@@ -4440,7 +4434,7 @@ pub fn parse_mf8_wildcard(
                     result.insert("LMF", EndfValue::Int(var_lmf as i64));
                     var_lfs = cont.l2 as f64;
                     result.insert("LFS", EndfValue::Int(var_lfs as i64));
-                    // TODO: complex field expression for n1 (not yet compiled)
+                    // field n1 complex expression (validation skipped in compiled mode)
                     // field n2 expected 0 (validation skipped in compiled mode)
 
                     let mut vi: usize = 0;
@@ -4560,7 +4554,7 @@ pub fn parse_mf8_mt454(
         result.insert("ZA", f64_to_endf_value(var_za));
         var_awr = cont.c2;
         result.insert("AWR", f64_to_endf_value(var_awr));
-        // TODO: complex field expression for l1 (not yet compiled)
+        // field l1 complex expression (validation skipped in compiled mode)
         // field l2 expected 0 (validation skipped in compiled mode)
         // field n1 expected 0 (validation skipped in compiled mode)
         // field n2 expected 0 (validation skipped in compiled mode)
@@ -4803,7 +4797,7 @@ pub fn parse_mf8_mt457(
             result.insert("dThalf", f64_to_endf_value(var_dthalf));
             // field l1 expected 0 (validation skipped in compiled mode)
             // field l2 expected 0 (validation skipped in compiled mode)
-            // TODO: complex field expression for n1 (not yet compiled)
+            // field n1 complex expression (validation skipped in compiled mode)
             // field n2 expected 0 (validation skipped in compiled mode)
 
             let mut vi: usize = 0;
@@ -4835,7 +4829,7 @@ pub fn parse_mf8_mt457(
             result.insert("PAR", f64_to_endf_value(var_par));
             // field l1 expected 0 (validation skipped in compiled mode)
             // field l2 expected 0 (validation skipped in compiled mode)
-            // TODO: complex field expression for n1 (not yet compiled)
+            // field n1 complex expression (validation skipped in compiled mode)
             var_ndk = cont.n2 as f64;
             result.insert("NDK", EndfValue::Int(var_ndk as i64));
 
@@ -5187,7 +5181,7 @@ pub fn parse_mf8_mt457(
                             // field c2 expected 0 (validation skipped in compiled mode)
                             // field l1 expected 0 (validation skipped in compiled mode)
                             // field l2 expected 2 (validation skipped in compiled mode)
-                            // TODO: complex field expression for n1 (not yet compiled)
+                            // field n1 complex expression (validation skipped in compiled mode)
                             var_npp = cont.n2 as f64;
                             result.insert("NPP", EndfValue::Int(var_npp as i64));
 
@@ -5391,7 +5385,7 @@ pub fn parse_mf8_mt459(
         result.insert("ZA", f64_to_endf_value(var_za));
         var_awr = cont.c2;
         result.insert("AWR", f64_to_endf_value(var_awr));
-        // TODO: complex field expression for l1 (not yet compiled)
+        // field l1 complex expression (validation skipped in compiled mode)
         // field l2 expected 0 (validation skipped in compiled mode)
         // field n1 expected 0 (validation skipped in compiled mode)
         // field n2 expected 0 (validation skipped in compiled mode)
@@ -5819,7 +5813,7 @@ pub fn parse_mf12_wildcard(
                 var_lp = cont.l1 as f64;
                 result.insert("LP", EndfValue::Int(var_lp as i64));
                 // field l2 expected 0 (validation skipped in compiled mode)
-                // TODO: complex field expression for n1 (not yet compiled)
+                // field n1 complex expression (validation skipped in compiled mode)
                 var_nt = cont.n2 as f64;
                 result.insert("NT", EndfValue::Int(var_nt as i64));
 
@@ -5853,7 +5847,7 @@ pub fn parse_mf12_wildcard(
                 var_lp = cont.l1 as f64;
                 result.insert("LP", EndfValue::Int(var_lp as i64));
                 // field l2 expected 0 (validation skipped in compiled mode)
-                // TODO: complex field expression for n1 (not yet compiled)
+                // field n1 complex expression (validation skipped in compiled mode)
                 var_nt = cont.n2 as f64;
                 result.insert("NT", EndfValue::Int(var_nt as i64));
 
@@ -6422,7 +6416,7 @@ pub fn parse_mf31_wildcard(
             // field c2 expected 0 (validation skipped in compiled mode)
             // field l1 expected 0 (validation skipped in compiled mode)
             // field l2 expected 0 (validation skipped in compiled mode)
-            // TODO: complex field expression for n1 (not yet compiled)
+            // field n1 complex expression (validation skipped in compiled mode)
             var_nci = cont.n2 as f64;
             result.insert("NCI", EndfValue::Int(var_nci as i64));
 
@@ -6613,7 +6607,7 @@ pub fn parse_mf31_mt452(
                                 result.insert("E2", f64_to_endf_value(var_e2));
                                 // field l1 expected 0 (validation skipped in compiled mode)
                                 // field l2 expected 0 (validation skipped in compiled mode)
-                                // TODO: complex field expression for n1 (not yet compiled)
+                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_nci = cont.n2 as f64;
                                 result.insert("NCI", EndfValue::Int(var_nci as i64));
 
@@ -6649,7 +6643,7 @@ pub fn parse_mf31_mt452(
                                 result.insert("MATS", EndfValue::Int(var_mats as i64));
                                 var_mts = cont.l2 as f64;
                                 result.insert("MTS", EndfValue::Int(var_mts as i64));
-                                // TODO: complex field expression for n1 (not yet compiled)
+                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_nei = cont.n2 as f64;
                                 result.insert("NEI", EndfValue::Int(var_nei as i64));
 
@@ -6750,7 +6744,7 @@ pub fn parse_mf31_mt452(
                                 result.insert("LT", EndfValue::Int(var_lt as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // TODO: complex field expression for n1 (not yet compiled)
+                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_np = cont.n2 as f64;
                                 result.insert("NP", EndfValue::Int(var_np as i64));
 
@@ -6787,7 +6781,6 @@ pub fn parse_mf31_mt452(
                                 }
                             }
                         } else if lookahead_ok_1 {
-                            var_nt = (((var_ne as f64 * ((var_ne as f64 - 1_f64))) + 1_f64));
                             // LIST record
                             {
                                 let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
@@ -6800,8 +6793,7 @@ pub fn parse_mf31_mt452(
                                 result.insert("LS", EndfValue::Int(var_ls as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                var_nt = cont.n1 as f64;
-                                result.insert("NT", EndfValue::Int(var_nt as i64));
+                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ne = cont.n2 as f64;
                                 result.insert("NE", EndfValue::Int(var_ne as i64));
 
@@ -6829,7 +6821,6 @@ pub fn parse_mf31_mt452(
                                 }
                             }
                         } else if lookahead_ok_2 {
-                            var_nt = (((var_ne as f64 * ((var_ne as f64 + 1_f64))) / 2_f64));
                             // LIST record
                             {
                                 let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
@@ -6842,8 +6833,7 @@ pub fn parse_mf31_mt452(
                                 result.insert("LS", EndfValue::Int(var_ls as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                var_nt = cont.n1 as f64;
-                                result.insert("NT", EndfValue::Int(var_nt as i64));
+                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ne = cont.n2 as f64;
                                 result.insert("NE", EndfValue::Int(var_ne as i64));
 
@@ -6871,7 +6861,6 @@ pub fn parse_mf31_mt452(
                                 }
                             }
                         } else if lookahead_ok_3 {
-                            var_nt = ((1_f64 + (var_ner as f64 * var_nec as f64)));
                             // LIST record
                             {
                                 let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
@@ -6883,8 +6872,7 @@ pub fn parse_mf31_mt452(
                                 // field l1 expected 0 (validation skipped in compiled mode)
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                var_nt = cont.n1 as f64;
-                                result.insert("NT", EndfValue::Int(var_nt as i64));
+                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ner = cont.n2 as f64;
                                 result.insert("NER", EndfValue::Int(var_ner as i64));
 
@@ -6933,7 +6921,7 @@ pub fn parse_mf31_mt452(
                                 result.insert("LT", EndfValue::Int(var_lt as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // TODO: complex field expression for n1 (not yet compiled)
+                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_np = cont.n2 as f64;
                                 result.insert("NP", EndfValue::Int(var_np as i64));
 
@@ -7105,7 +7093,7 @@ pub fn parse_mf31_mt455(
                                 result.insert("E2", f64_to_endf_value(var_e2));
                                 // field l1 expected 0 (validation skipped in compiled mode)
                                 // field l2 expected 0 (validation skipped in compiled mode)
-                                // TODO: complex field expression for n1 (not yet compiled)
+                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_nci = cont.n2 as f64;
                                 result.insert("NCI", EndfValue::Int(var_nci as i64));
 
@@ -7141,7 +7129,7 @@ pub fn parse_mf31_mt455(
                                 result.insert("MATS", EndfValue::Int(var_mats as i64));
                                 var_mts = cont.l2 as f64;
                                 result.insert("MTS", EndfValue::Int(var_mts as i64));
-                                // TODO: complex field expression for n1 (not yet compiled)
+                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_nei = cont.n2 as f64;
                                 result.insert("NEI", EndfValue::Int(var_nei as i64));
 
@@ -7242,7 +7230,7 @@ pub fn parse_mf31_mt455(
                                 result.insert("LT", EndfValue::Int(var_lt as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // TODO: complex field expression for n1 (not yet compiled)
+                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_np = cont.n2 as f64;
                                 result.insert("NP", EndfValue::Int(var_np as i64));
 
@@ -7279,7 +7267,6 @@ pub fn parse_mf31_mt455(
                                 }
                             }
                         } else if lookahead_ok_1 {
-                            var_nt = (((var_ne as f64 * ((var_ne as f64 - 1_f64))) + 1_f64));
                             // LIST record
                             {
                                 let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
@@ -7292,8 +7279,7 @@ pub fn parse_mf31_mt455(
                                 result.insert("LS", EndfValue::Int(var_ls as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                var_nt = cont.n1 as f64;
-                                result.insert("NT", EndfValue::Int(var_nt as i64));
+                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ne = cont.n2 as f64;
                                 result.insert("NE", EndfValue::Int(var_ne as i64));
 
@@ -7321,7 +7307,6 @@ pub fn parse_mf31_mt455(
                                 }
                             }
                         } else if lookahead_ok_2 {
-                            var_nt = (((var_ne as f64 * ((var_ne as f64 + 1_f64))) / 2_f64));
                             // LIST record
                             {
                                 let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
@@ -7334,8 +7319,7 @@ pub fn parse_mf31_mt455(
                                 result.insert("LS", EndfValue::Int(var_ls as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                var_nt = cont.n1 as f64;
-                                result.insert("NT", EndfValue::Int(var_nt as i64));
+                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ne = cont.n2 as f64;
                                 result.insert("NE", EndfValue::Int(var_ne as i64));
 
@@ -7363,7 +7347,6 @@ pub fn parse_mf31_mt455(
                                 }
                             }
                         } else if lookahead_ok_3 {
-                            var_nt = ((1_f64 + (var_ner as f64 * var_nec as f64)));
                             // LIST record
                             {
                                 let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
@@ -7375,8 +7358,7 @@ pub fn parse_mf31_mt455(
                                 // field l1 expected 0 (validation skipped in compiled mode)
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                var_nt = cont.n1 as f64;
-                                result.insert("NT", EndfValue::Int(var_nt as i64));
+                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ner = cont.n2 as f64;
                                 result.insert("NER", EndfValue::Int(var_ner as i64));
 
@@ -7425,7 +7407,7 @@ pub fn parse_mf31_mt455(
                                 result.insert("LT", EndfValue::Int(var_lt as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // TODO: complex field expression for n1 (not yet compiled)
+                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_np = cont.n2 as f64;
                                 result.insert("NP", EndfValue::Int(var_np as i64));
 
@@ -7597,7 +7579,7 @@ pub fn parse_mf31_mt456(
                                 result.insert("E2", f64_to_endf_value(var_e2));
                                 // field l1 expected 0 (validation skipped in compiled mode)
                                 // field l2 expected 0 (validation skipped in compiled mode)
-                                // TODO: complex field expression for n1 (not yet compiled)
+                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_nci = cont.n2 as f64;
                                 result.insert("NCI", EndfValue::Int(var_nci as i64));
 
@@ -7633,7 +7615,7 @@ pub fn parse_mf31_mt456(
                                 result.insert("MATS", EndfValue::Int(var_mats as i64));
                                 var_mts = cont.l2 as f64;
                                 result.insert("MTS", EndfValue::Int(var_mts as i64));
-                                // TODO: complex field expression for n1 (not yet compiled)
+                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_nei = cont.n2 as f64;
                                 result.insert("NEI", EndfValue::Int(var_nei as i64));
 
@@ -7734,7 +7716,7 @@ pub fn parse_mf31_mt456(
                                 result.insert("LT", EndfValue::Int(var_lt as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // TODO: complex field expression for n1 (not yet compiled)
+                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_np = cont.n2 as f64;
                                 result.insert("NP", EndfValue::Int(var_np as i64));
 
@@ -7771,7 +7753,6 @@ pub fn parse_mf31_mt456(
                                 }
                             }
                         } else if lookahead_ok_1 {
-                            var_nt = (((var_ne as f64 * ((var_ne as f64 - 1_f64))) + 1_f64));
                             // LIST record
                             {
                                 let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
@@ -7784,8 +7765,7 @@ pub fn parse_mf31_mt456(
                                 result.insert("LS", EndfValue::Int(var_ls as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                var_nt = cont.n1 as f64;
-                                result.insert("NT", EndfValue::Int(var_nt as i64));
+                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ne = cont.n2 as f64;
                                 result.insert("NE", EndfValue::Int(var_ne as i64));
 
@@ -7813,7 +7793,6 @@ pub fn parse_mf31_mt456(
                                 }
                             }
                         } else if lookahead_ok_2 {
-                            var_nt = (((var_ne as f64 * ((var_ne as f64 + 1_f64))) / 2_f64));
                             // LIST record
                             {
                                 let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
@@ -7826,8 +7805,7 @@ pub fn parse_mf31_mt456(
                                 result.insert("LS", EndfValue::Int(var_ls as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                var_nt = cont.n1 as f64;
-                                result.insert("NT", EndfValue::Int(var_nt as i64));
+                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ne = cont.n2 as f64;
                                 result.insert("NE", EndfValue::Int(var_ne as i64));
 
@@ -7855,7 +7833,6 @@ pub fn parse_mf31_mt456(
                                 }
                             }
                         } else if lookahead_ok_3 {
-                            var_nt = ((1_f64 + (var_ner as f64 * var_nec as f64)));
                             // LIST record
                             {
                                 let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
@@ -7867,8 +7844,7 @@ pub fn parse_mf31_mt456(
                                 // field l1 expected 0 (validation skipped in compiled mode)
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                var_nt = cont.n1 as f64;
-                                result.insert("NT", EndfValue::Int(var_nt as i64));
+                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ner = cont.n2 as f64;
                                 result.insert("NER", EndfValue::Int(var_ner as i64));
 
@@ -7917,7 +7893,7 @@ pub fn parse_mf31_mt456(
                                 result.insert("LT", EndfValue::Int(var_lt as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // TODO: complex field expression for n1 (not yet compiled)
+                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_np = cont.n2 as f64;
                                 result.insert("NP", EndfValue::Int(var_np as i64));
 
@@ -8228,7 +8204,7 @@ pub fn parse_mf32_wildcard(
                                         result.insert("LT", EndfValue::Int(var_lt as i64));
                                         var_lb = cont.l2 as f64;
                                         result.insert("LB", EndfValue::Int(var_lb as i64));
-                                        // TODO: complex field expression for n1 (not yet compiled)
+                                        // field n1 complex expression (validation skipped in compiled mode)
                                         var_np = cont.n2 as f64;
                                         result.insert("NP", EndfValue::Int(var_np as i64));
 
@@ -8265,7 +8241,6 @@ pub fn parse_mf32_wildcard(
                                         }
                                     }
                                 } else if lookahead_ok_1 {
-                                    var_nt = (((var_ne as f64 * ((var_ne as f64 - 1_f64))) + 1_f64));
                                     // LIST record
                                     {
                                         let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
@@ -8278,8 +8253,7 @@ pub fn parse_mf32_wildcard(
                                         result.insert("LS", EndfValue::Int(var_ls as i64));
                                         var_lb = cont.l2 as f64;
                                         result.insert("LB", EndfValue::Int(var_lb as i64));
-                                        var_nt = cont.n1 as f64;
-                                        result.insert("NT", EndfValue::Int(var_nt as i64));
+                                        // field n1 = abbreviation NT (validation skipped in compiled mode)
                                         var_ne = cont.n2 as f64;
                                         result.insert("NE", EndfValue::Int(var_ne as i64));
 
@@ -8307,7 +8281,6 @@ pub fn parse_mf32_wildcard(
                                         }
                                     }
                                 } else if lookahead_ok_2 {
-                                    var_nt = (((var_ne as f64 * ((var_ne as f64 + 1_f64))) / 2_f64));
                                     // LIST record
                                     {
                                         let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
@@ -8320,8 +8293,7 @@ pub fn parse_mf32_wildcard(
                                         result.insert("LS", EndfValue::Int(var_ls as i64));
                                         var_lb = cont.l2 as f64;
                                         result.insert("LB", EndfValue::Int(var_lb as i64));
-                                        var_nt = cont.n1 as f64;
-                                        result.insert("NT", EndfValue::Int(var_nt as i64));
+                                        // field n1 = abbreviation NT (validation skipped in compiled mode)
                                         var_ne = cont.n2 as f64;
                                         result.insert("NE", EndfValue::Int(var_ne as i64));
 
@@ -8462,7 +8434,7 @@ pub fn parse_mf32_wildcard(
                                     var_l = cont.l1 as f64;
                                     result.insert("L", EndfValue::Int(var_l as i64));
                                     // field l2 expected 0 (validation skipped in compiled mode)
-                                    // TODO: complex field expression for n1 (not yet compiled)
+                                    // field n1 complex expression (validation skipped in compiled mode)
                                     var_nrs = cont.n2 as f64;
                                     result.insert("NRS", EndfValue::Int(var_nrs as i64));
 
@@ -8645,7 +8617,7 @@ pub fn parse_mf32_wildcard(
                                         var_mpar = cont.l1 as f64;
                                         result.insert("MPAR", EndfValue::Int(var_mpar as i64));
                                         // field l2 expected 0 (validation skipped in compiled mode)
-                                        // TODO: complex field expression for n1 (not yet compiled)
+                                        // field n1 complex expression (validation skipped in compiled mode)
                                         var_nrb = cont.n2 as f64;
                                         result.insert("NRB", EndfValue::Int(var_nrb as i64));
 
@@ -8768,7 +8740,7 @@ pub fn parse_mf32_wildcard(
                                         var_mpar = cont.l1 as f64;
                                         result.insert("MPAR", EndfValue::Int(var_mpar as i64));
                                         // field l2 expected 0 (validation skipped in compiled mode)
-                                        // TODO: complex field expression for n1 (not yet compiled)
+                                        // field n1 complex expression (validation skipped in compiled mode)
                                         var_nrb = cont.n2 as f64;
                                         result.insert("NRB", EndfValue::Int(var_nrb as i64));
 
@@ -8878,7 +8850,7 @@ pub fn parse_mf32_wildcard(
                                         var_mpar = cont.l1 as f64;
                                         result.insert("MPAR", EndfValue::Int(var_mpar as i64));
                                         // field l2 expected 0 (validation skipped in compiled mode)
-                                        // TODO: complex field expression for n1 (not yet compiled)
+                                        // field n1 complex expression (validation skipped in compiled mode)
                                         var_nrb = cont.n2 as f64;
                                         result.insert("NRB", EndfValue::Int(var_nrb as i64));
 
@@ -9017,7 +8989,7 @@ pub fn parse_mf32_wildcard(
                                             result.insert("IDP", EndfValue::Int(var_idp as i64));
                                             var_lb = cont.l2 as f64;
                                             result.insert("LB", EndfValue::Int(var_lb as i64));
-                                            // TODO: complex field expression for n1 (not yet compiled)
+                                            // field n1 complex expression (validation skipped in compiled mode)
                                             var_neb = cont.n2 as f64;
                                             result.insert("NEB", EndfValue::Int(var_neb as i64));
 
@@ -9051,7 +9023,7 @@ pub fn parse_mf32_wildcard(
                                             result.insert("IDP", EndfValue::Int(var_idp as i64));
                                             var_lb = cont.l2 as f64;
                                             result.insert("LB", EndfValue::Int(var_lb as i64));
-                                            // TODO: complex field expression for n1 (not yet compiled)
+                                            // field n1 complex expression (validation skipped in compiled mode)
                                             var_neb = cont.n2 as f64;
                                             result.insert("NEB", EndfValue::Int(var_neb as i64));
 
@@ -9116,7 +9088,7 @@ pub fn parse_mf32_wildcard(
                                 // field l2 expected 0 (validation skipped in compiled mode)
                                 var_jch = cont.n1 as f64;
                                 result.insert("JCH", EndfValue::Int(var_jch as i64));
-                                // TODO: complex field expression for n2 (not yet compiled)
+                                // field n2 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_m_loop_ in (1_f64 as i64)..=((var_jch as f64 / var_nch as f64) as i64) {
@@ -9170,8 +9142,6 @@ pub fn parse_mf32_wildcard(
                                     {
                                         let mut section_j_group = EndfValue::new_dict();
                                         std::mem::swap(&mut result, &mut section_j_group);
-                                        var_nx = ((((((1_f64 + var_nch as f64) + ((((5_f64 - var_nch as f64))) as i64 % (6_f64) as i64) as f64)) * var_nrb as f64) / 6_f64));
-                                        var_num_zeros = (((((5_f64 - var_nch as f64))) as i64 % (6_f64) as i64) as f64);
                                         // LIST record
                                         {
                                             let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
@@ -9184,9 +9154,8 @@ pub fn parse_mf32_wildcard(
                                             result.insert("NCH", EndfValue::Int(var_nch as i64));
                                             var_nrb = cont.l2 as f64;
                                             result.insert("NRB", EndfValue::Int(var_nrb as i64));
-                                            // TODO: complex field expression for n1 (not yet compiled)
-                                            var_nx = cont.n2 as f64;
-                                            result.insert("NX", EndfValue::Int(var_nx as i64));
+                                            // field n1 complex expression (validation skipped in compiled mode)
+                                            // field n2 = abbreviation NX (validation skipped in compiled mode)
 
                                             let mut vi: usize = 0;
                                             for var_p_loop_ in (1_f64 as i64)..=(var_nrb as f64 as i64) {
@@ -9206,7 +9175,7 @@ pub fn parse_mf32_wildcard(
                                                     // TODO: multi-index list store for GAM
                                                     vi += 1;
                                                 }
-                                                for var_r_loop_ in (1_f64 as i64)..=(var_num_zeros as f64 as i64) {
+                                                for var_r_loop_ in (1_f64 as i64)..=((((((5_f64 - var_nch as f64))) as i64 % (6_f64) as i64) as f64) as i64) {
                                                     var_r = var_r_loop_ as f64;
                                                     // list body constant 0 (validation skipped)
                                                     vi += 1;
@@ -9220,7 +9189,6 @@ pub fn parse_mf32_wildcard(
                                         result.get_mut("j_group").unwrap().insert(EndfKey::Int(var_m as f64 as i64), section_j_group);
                                     }
                                 }
-                                var_n = ((((var_nparb as f64 * ((var_nparb as f64 + 1_f64)))) / 2_f64));
                                 // LIST record
                                 {
                                     let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
@@ -9231,8 +9199,7 @@ pub fn parse_mf32_wildcard(
                                     // field c2 expected 0 (validation skipped in compiled mode)
                                     // field l1 expected 0 (validation skipped in compiled mode)
                                     // field l2 expected 0 (validation skipped in compiled mode)
-                                    var_n = cont.n1 as f64;
-                                    result.insert("N", EndfValue::Int(var_n as i64));
+                                    // field n1 = abbreviation N (validation skipped in compiled mode)
                                     var_nparb = cont.n2 as f64;
                                     result.insert("NPARB", EndfValue::Int(var_nparb as i64));
 
@@ -9300,7 +9267,7 @@ pub fn parse_mf32_wildcard(
                             // field l1 expected 0 (validation skipped in compiled mode)
                             var_lrx = cont.l2 as f64;
                             result.insert("LRX", EndfValue::Int(var_lrx as i64));
-                            // TODO: complex field expression for n1 (not yet compiled)
+                            // field n1 complex expression (validation skipped in compiled mode)
                             var_nrsa = cont.n2 as f64;
                             result.insert("NRSA", EndfValue::Int(var_nrsa as i64));
 
@@ -9447,7 +9414,7 @@ pub fn parse_mf32_wildcard(
                             result.insert("APL", f64_to_endf_value(var_apl));
                             // field l1 expected 0 (validation skipped in compiled mode)
                             // field l2 expected 0 (validation skipped in compiled mode)
-                            // TODO: complex field expression for n1 (not yet compiled)
+                            // field n1 complex expression (validation skipped in compiled mode)
                             var_nrsa = cont.n2 as f64;
                             result.insert("NRSA", EndfValue::Int(var_nrsa as i64));
 
@@ -9571,7 +9538,7 @@ pub fn parse_mf32_wildcard(
                                 // field l2 expected 0 (validation skipped in compiled mode)
                                 var_njch = cont.n1 as f64;
                                 result.insert("NJCH", EndfValue::Int(var_njch as i64));
-                                // TODO: complex field expression for n2 (not yet compiled)
+                                // field n2 complex expression (validation skipped in compiled mode)
 
                                 let mut vi: usize = 0;
                                 for var_m_loop_ in (1_f64 as i64)..=(var_njs as f64 as i64) {
@@ -9600,8 +9567,8 @@ pub fn parse_mf32_wildcard(
                             result.insert("NPP", EndfValue::Int(var_npp as i64));
                             var_njsx = cont.l2 as f64;
                             result.insert("NJSX", EndfValue::Int(var_njsx as i64));
-                            // TODO: complex field expression for n1 (not yet compiled)
-                            // TODO: complex field expression for n2 (not yet compiled)
+                            // field n1 complex expression (validation skipped in compiled mode)
+                            // field n2 complex expression (validation skipped in compiled mode)
 
                             let mut vi: usize = 0;
                             for var_k_loop_ in (1_f64 as i64)..=(var_npp as f64 as i64) {
@@ -9698,7 +9665,7 @@ pub fn parse_mf32_wildcard(
                                     result.insert("PJ", f64_to_endf_value(var_pj));
                                     // field l1 expected 0 (validation skipped in compiled mode)
                                     // field l2 expected 0 (validation skipped in compiled mode)
-                                    // TODO: complex field expression for n1 (not yet compiled)
+                                    // field n1 complex expression (validation skipped in compiled mode)
                                     var_nch = cont.n2 as f64;
                                     result.insert("NCH", EndfValue::Int(var_nch as i64));
 
@@ -9743,8 +9710,6 @@ pub fn parse_mf32_wildcard(
                                         vi += 1;
                                     }
                                 }
-                                var_nx = ((((((2_f64 * ((var_nch as f64 + 1_f64))) + (2_f64 * (((((5_f64 - var_nch as f64))) as i64 % (6_f64) as i64) as f64)))) * var_nrsa as f64) / 12_f64));
-                                var_num_zeros = (((((5_f64 - var_nch as f64))) as i64 % (6_f64) as i64) as f64);
                                 // LIST record
                                 {
                                     let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
@@ -9756,9 +9721,8 @@ pub fn parse_mf32_wildcard(
                                     // field l1 expected 0 (validation skipped in compiled mode)
                                     var_nrsa = cont.l2 as f64;
                                     result.insert("NRSA", EndfValue::Int(var_nrsa as i64));
-                                    // TODO: complex field expression for n1 (not yet compiled)
-                                    var_nx = cont.n2 as f64;
-                                    result.insert("NX", EndfValue::Int(var_nx as i64));
+                                    // field n1 complex expression (validation skipped in compiled mode)
+                                    // field n2 = abbreviation NX (validation skipped in compiled mode)
 
                                     let mut vi: usize = 0;
                                     for var_k_loop_ in (1_f64 as i64)..=(var_nrsa as f64 as i64) {
@@ -9778,7 +9742,7 @@ pub fn parse_mf32_wildcard(
                                             // TODO: multi-index list store for GAM
                                             vi += 1;
                                         }
-                                        for var_r_loop_ in (1_f64 as i64)..=(var_num_zeros as f64 as i64) {
+                                        for var_r_loop_ in (1_f64 as i64)..=((((((5_f64 - var_nch as f64))) as i64 % (6_f64) as i64) as f64) as i64) {
                                             var_r = var_r_loop_ as f64;
                                             // list body constant 0 (validation skipped)
                                             vi += 1;
@@ -9798,7 +9762,7 @@ pub fn parse_mf32_wildcard(
                                             // TODO: multi-index list store for DGAM
                                             vi += 1;
                                         }
-                                        for var_r_loop_ in (1_f64 as i64)..=(var_num_zeros as f64 as i64) {
+                                        for var_r_loop_ in (1_f64 as i64)..=((((((5_f64 - var_nch as f64))) as i64 % (6_f64) as i64) as f64) as i64) {
                                             var_r = var_r_loop_ as f64;
                                             // list body constant 0 (validation skipped)
                                             vi += 1;
@@ -9863,7 +9827,7 @@ pub fn parse_mf32_wildcard(
                                     var_l = cont.l1 as f64;
                                     result.insert("L", EndfValue::Int(var_l as i64));
                                     // field l2 expected 0 (validation skipped in compiled mode)
-                                    // TODO: complex field expression for n1 (not yet compiled)
+                                    // field n1 complex expression (validation skipped in compiled mode)
                                     var_njs = cont.n2 as f64;
                                     result.insert("NJS", EndfValue::Int(var_njs as i64));
 
@@ -9926,7 +9890,7 @@ pub fn parse_mf32_wildcard(
                             var_mpar = cont.l1 as f64;
                             result.insert("MPAR", EndfValue::Int(var_mpar as i64));
                             // field l2 expected 0 (validation skipped in compiled mode)
-                            // TODO: complex field expression for n1 (not yet compiled)
+                            // field n1 complex expression (validation skipped in compiled mode)
                             var_npar = cont.n2 as f64;
                             result.insert("NPAR", EndfValue::Int(var_npar as i64));
 
@@ -10094,7 +10058,7 @@ pub fn parse_mf33_wildcard(
                                 result.insert("E2", f64_to_endf_value(var_e2));
                                 // field l1 expected 0 (validation skipped in compiled mode)
                                 // field l2 expected 0 (validation skipped in compiled mode)
-                                // TODO: complex field expression for n1 (not yet compiled)
+                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_nci = cont.n2 as f64;
                                 result.insert("NCI", EndfValue::Int(var_nci as i64));
 
@@ -10130,7 +10094,7 @@ pub fn parse_mf33_wildcard(
                                 result.insert("MATS", EndfValue::Int(var_mats as i64));
                                 var_mts = cont.l2 as f64;
                                 result.insert("MTS", EndfValue::Int(var_mts as i64));
-                                // TODO: complex field expression for n1 (not yet compiled)
+                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_nei = cont.n2 as f64;
                                 result.insert("NEI", EndfValue::Int(var_nei as i64));
 
@@ -10231,7 +10195,7 @@ pub fn parse_mf33_wildcard(
                                 result.insert("LT", EndfValue::Int(var_lt as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // TODO: complex field expression for n1 (not yet compiled)
+                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_np = cont.n2 as f64;
                                 result.insert("NP", EndfValue::Int(var_np as i64));
 
@@ -10268,7 +10232,6 @@ pub fn parse_mf33_wildcard(
                                 }
                             }
                         } else if lookahead_ok_1 {
-                            var_nt = (((var_ne as f64 * ((var_ne as f64 - 1_f64))) + 1_f64));
                             // LIST record
                             {
                                 let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
@@ -10281,8 +10244,7 @@ pub fn parse_mf33_wildcard(
                                 result.insert("LS", EndfValue::Int(var_ls as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                var_nt = cont.n1 as f64;
-                                result.insert("NT", EndfValue::Int(var_nt as i64));
+                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ne = cont.n2 as f64;
                                 result.insert("NE", EndfValue::Int(var_ne as i64));
 
@@ -10310,7 +10272,6 @@ pub fn parse_mf33_wildcard(
                                 }
                             }
                         } else if lookahead_ok_2 {
-                            var_nt = (((var_ne as f64 * ((var_ne as f64 + 1_f64))) / 2_f64));
                             // LIST record
                             {
                                 let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
@@ -10323,8 +10284,7 @@ pub fn parse_mf33_wildcard(
                                 result.insert("LS", EndfValue::Int(var_ls as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                var_nt = cont.n1 as f64;
-                                result.insert("NT", EndfValue::Int(var_nt as i64));
+                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ne = cont.n2 as f64;
                                 result.insert("NE", EndfValue::Int(var_ne as i64));
 
@@ -10352,7 +10312,6 @@ pub fn parse_mf33_wildcard(
                                 }
                             }
                         } else if lookahead_ok_3 {
-                            var_nt = ((1_f64 + (var_ner as f64 * var_nec as f64)));
                             // LIST record
                             {
                                 let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();
@@ -10364,8 +10323,7 @@ pub fn parse_mf33_wildcard(
                                 // field l1 expected 0 (validation skipped in compiled mode)
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                var_nt = cont.n1 as f64;
-                                result.insert("NT", EndfValue::Int(var_nt as i64));
+                                // field n1 = abbreviation NT (validation skipped in compiled mode)
                                 var_ner = cont.n2 as f64;
                                 result.insert("NER", EndfValue::Int(var_ner as i64));
 
@@ -10414,7 +10372,7 @@ pub fn parse_mf33_wildcard(
                                 result.insert("LT", EndfValue::Int(var_lt as i64));
                                 var_lb = cont.l2 as f64;
                                 result.insert("LB", EndfValue::Int(var_lb as i64));
-                                // TODO: complex field expression for n1 (not yet compiled)
+                                // field n1 complex expression (validation skipped in compiled mode)
                                 var_np = cont.n2 as f64;
                                 result.insert("NP", EndfValue::Int(var_np as i64));
 
@@ -11026,7 +10984,7 @@ pub fn parse_mf40_wildcard(
                                     result.insert("E2", f64_to_endf_value(var_e2));
                                     // field l1 expected 0 (validation skipped in compiled mode)
                                     // field l2 expected 0 (validation skipped in compiled mode)
-                                    // TODO: complex field expression for n1 (not yet compiled)
+                                    // field n1 complex expression (validation skipped in compiled mode)
                                     var_nci = cont.n2 as f64;
                                     result.insert("NCI", EndfValue::Int(var_nci as i64));
 
@@ -11074,7 +11032,7 @@ pub fn parse_mf40_wildcard(
                                     result.insert("MATS", EndfValue::Int(var_mats as i64));
                                     var_mts = cont.l2 as f64;
                                     result.insert("MTS", EndfValue::Int(var_mts as i64));
-                                    // TODO: complex field expression for n1 (not yet compiled)
+                                    // field n1 complex expression (validation skipped in compiled mode)
                                     var_nei = cont.n2 as f64;
                                     result.insert("NEI", EndfValue::Int(var_nei as i64));
 
@@ -11175,7 +11133,7 @@ pub fn parse_mf40_wildcard(
                                     result.insert("LT", EndfValue::Int(var_lt as i64));
                                     var_lb = cont.l2 as f64;
                                     result.insert("LB", EndfValue::Int(var_lb as i64));
-                                    // TODO: complex field expression for n1 (not yet compiled)
+                                    // field n1 complex expression (validation skipped in compiled mode)
                                     var_np = cont.n2 as f64;
                                     result.insert("NP", EndfValue::Int(var_np as i64));
 
@@ -11355,7 +11313,7 @@ pub fn parse_mf40_wildcard(
                                     result.insert("LT", EndfValue::Int(var_lt as i64));
                                     var_lb = cont.l2 as f64;
                                     result.insert("LB", EndfValue::Int(var_lb as i64));
-                                    // TODO: complex field expression for n1 (not yet compiled)
+                                    // field n1 complex expression (validation skipped in compiled mode)
                                     var_np = cont.n2 as f64;
                                     result.insert("NP", EndfValue::Int(var_np as i64));
 

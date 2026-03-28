@@ -5,7 +5,7 @@
 //! calls the same `records.rs` primitives (read_cont, read_tab1, etc.) but
 //! with statically known field assignments.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Write as FmtWrite;
 
 use super::ast::*;
@@ -239,8 +239,10 @@ fn collect_vars_node(node: &RecipeNode, vars: &mut HashSet<String>) {
                 collect_vars_node(n, vars);
             }
         }
-        RecipeNode::Abbreviation { name, expr } => {
-            vars.insert(name.to_lowercase());
+        RecipeNode::Abbreviation { name: _, expr } => {
+            // Don't insert the abbreviation name itself — it's a compile-time
+            // substitution, not a runtime variable. We still collect variables
+            // from the RHS expression in case they appear nowhere else.
             collect_vars_expr(expr, vars);
         }
         RecipeNode::Send | RecipeNode::Stop { .. } | RecipeNode::Comment(_) => {}
@@ -308,6 +310,12 @@ struct CodeGen {
     mt: i32,
     /// All variables pre-collected from the recipe AST, to be declared at function scope.
     all_vars: HashSet<String>,
+    /// Stack of active loop variable names.
+    loop_vars: Vec<String>,
+    /// Compile-time abbreviation table: name -> defining Expr.
+    /// Scoped stack matching section nesting. When `expr_to_rust` encounters
+    /// a scalar variable in this table, it substitutes the full expression inline.
+    abbreviations: Vec<HashMap<String, Expr>>,
 }
 
 impl CodeGen {
@@ -318,6 +326,8 @@ impl CodeGen {
             mf,
             mt,
             all_vars,
+            loop_vars: Vec::new(),
+            abbreviations: vec![HashMap::new()],
         }
     }
 
@@ -402,6 +412,64 @@ impl CodeGen {
     fn declare_or_assign_i64(&mut self, endf_name: &str, rhs: &str) {
         let vn = Self::var_name(endf_name);
         self.line(&format!("{} = {} as f64;", vn, rhs));
+    }
+
+    // -- Abbreviation helpers -----------------------------------------------
+
+    /// Check if a variable name is an abbreviation in the current scope chain.
+    fn is_abbreviation(&self, name: &str) -> bool {
+        let lower = name.to_lowercase();
+        self.abbreviations.iter().rev().any(|scope| scope.contains_key(&lower))
+    }
+
+    /// Recursively expand abbreviation references in an expression.
+    /// Scalar variables that are in the abbreviation table get replaced
+    /// with their defining expression. Indexed variables are left as-is.
+    fn expand_abbreviations(&self, expr: &Expr) -> Expr {
+        match expr {
+            Expr::Variable(v) if v.indices.is_empty() => {
+                let lower = v.name.to_lowercase();
+                for scope in self.abbreviations.iter().rev() {
+                    if let Some(abbrev_expr) = scope.get(&lower) {
+                        return self.expand_abbreviations(abbrev_expr);
+                    }
+                }
+                expr.clone()
+            }
+            Expr::InconsistentVar(v) if v.indices.is_empty() => {
+                let lower = v.name.to_lowercase();
+                for scope in self.abbreviations.iter().rev() {
+                    if let Some(abbrev_expr) = scope.get(&lower) {
+                        return self.expand_abbreviations(abbrev_expr);
+                    }
+                }
+                expr.clone()
+            }
+            Expr::Variable(_) | Expr::InconsistentVar(_) => expr.clone(),
+            Expr::Number(_) | Expr::DesiredNumber(_) => expr.clone(),
+            Expr::Neg(a) => Expr::Neg(Box::new(self.expand_abbreviations(a))),
+            Expr::Bracket(a) => Expr::Bracket(Box::new(self.expand_abbreviations(a))),
+            Expr::Add(a, b) => Expr::Add(
+                Box::new(self.expand_abbreviations(a)),
+                Box::new(self.expand_abbreviations(b)),
+            ),
+            Expr::Sub(a, b) => Expr::Sub(
+                Box::new(self.expand_abbreviations(a)),
+                Box::new(self.expand_abbreviations(b)),
+            ),
+            Expr::Mul(a, b) => Expr::Mul(
+                Box::new(self.expand_abbreviations(a)),
+                Box::new(self.expand_abbreviations(b)),
+            ),
+            Expr::Div(a, b) => Expr::Div(
+                Box::new(self.expand_abbreviations(a)),
+                Box::new(self.expand_abbreviations(b)),
+            ),
+            Expr::Mod(a, b) => Expr::Mod(
+                Box::new(self.expand_abbreviations(a)),
+                Box::new(self.expand_abbreviations(b)),
+            ),
+        }
     }
 
     // -- Node dispatch ------------------------------------------------------
@@ -531,38 +599,53 @@ impl CodeGen {
                 ));
             }
             Expr::Variable(v) if v.indices.is_empty() => {
-                if is_int {
-                    self.declare_or_assign_i64(&v.name, &format!("cont.{}", cont_field));
+                if self.is_abbreviation(&v.name) {
+                    // Abbreviation in field position: expanded expression is a
+                    // known quantity — this is validation, not a variable read.
                     self.line(&format!(
-                        "result.insert(\"{}\", EndfValue::Int({} as i64));",
-                        v.name,
-                        Self::var_name(&v.name)
+                        "// field {} = abbreviation {} (validation skipped in compiled mode)",
+                        cont_field, v.name
                     ));
                 } else {
-                    self.declare_or_assign_f64(&v.name, &format!("cont.{}", cont_field));
-                    self.line(&format!(
-                        "result.insert(\"{}\", f64_to_endf_value({}));",
-                        v.name,
-                        Self::var_name(&v.name)
-                    ));
+                    if is_int {
+                        self.declare_or_assign_i64(&v.name, &format!("cont.{}", cont_field));
+                        self.line(&format!(
+                            "result.insert(\"{}\", EndfValue::Int({} as i64));",
+                            v.name,
+                            Self::var_name(&v.name)
+                        ));
+                    } else {
+                        self.declare_or_assign_f64(&v.name, &format!("cont.{}", cont_field));
+                        self.line(&format!(
+                            "result.insert(\"{}\", f64_to_endf_value({}));",
+                            v.name,
+                            Self::var_name(&v.name)
+                        ));
+                    }
                 }
             }
             Expr::InconsistentVar(v) if v.indices.is_empty() => {
-                // Same as Variable but tolerates mismatch
-                if is_int {
-                    self.declare_or_assign_i64(&v.name, &format!("cont.{}", cont_field));
+                if self.is_abbreviation(&v.name) {
                     self.line(&format!(
-                        "result.insert(\"{}\", EndfValue::Int({} as i64));",
-                        v.name,
-                        Self::var_name(&v.name)
+                        "// field {} = abbreviation {} (validation skipped in compiled mode)",
+                        cont_field, v.name
                     ));
                 } else {
-                    self.declare_or_assign_f64(&v.name, &format!("cont.{}", cont_field));
-                    self.line(&format!(
-                        "result.insert(\"{}\", f64_to_endf_value({}));",
-                        v.name,
-                        Self::var_name(&v.name)
-                    ));
+                    if is_int {
+                        self.declare_or_assign_i64(&v.name, &format!("cont.{}", cont_field));
+                        self.line(&format!(
+                            "result.insert(\"{}\", EndfValue::Int({} as i64));",
+                            v.name,
+                            Self::var_name(&v.name)
+                        ));
+                    } else {
+                        self.declare_or_assign_f64(&v.name, &format!("cont.{}", cont_field));
+                        self.line(&format!(
+                            "result.insert(\"{}\", f64_to_endf_value({}));",
+                            v.name,
+                            Self::var_name(&v.name)
+                        ));
+                    }
                 }
             }
             Expr::Variable(v) => {
@@ -574,8 +657,11 @@ impl CodeGen {
             }
             _ => {
                 // Complex expression: emit a TODO comment
+                // Complex expression (e.g. 6*NX where NX is an abbreviation).
+                // After abbreviation expansion, this is computable from known
+                // variables — treat as validation.
                 self.line(&format!(
-                    "// TODO: complex field expression for {} (not yet compiled)",
+                    "// field {} complex expression (validation skipped in compiled mode)",
                     cont_field
                 ));
             }
@@ -830,17 +916,23 @@ impl CodeGen {
         let vals_get = "*vals.get(vi).ok_or(EndfError::UnexpectedEndOfInputMsg { message: format!(\"LIST body index {} out of bounds (len={})\", vi, vals.len()) })?";
         match expr {
             Expr::Variable(v) if v.indices.is_empty() => {
-                self.line(&format!(
-                    "let _val = {};",
-                    vals_get
-                ));
-                self.line(&format!(
-                    "{}.insert(\"{}\", f64_to_endf_value(_val));",
-                    target, v.name
-                ));
-                // Also set as local var for later use
-                self.declare_or_assign_f64(&v.name, "_val");
-                self.line("vi += 1;");
+                if self.is_abbreviation(&v.name) {
+                    // Abbreviation in list body: validation only, skip.
+                    self.line("// list body abbreviation (validation skipped)");
+                    self.line("vi += 1;");
+                } else {
+                    self.line(&format!(
+                        "let _val = {};",
+                        vals_get
+                    ));
+                    self.line(&format!(
+                        "{}.insert(\"{}\", f64_to_endf_value(_val));",
+                        target, v.name
+                    ));
+                    // Also set as local var for later use
+                    self.declare_or_assign_f64(&v.name, "_val");
+                    self.line("vi += 1;");
+                }
             }
             Expr::Variable(v) => {
                 // Indexed: e.g., ER[j]
@@ -883,16 +975,21 @@ impl CodeGen {
                 self.line("vi += 1;");
             }
             Expr::InconsistentVar(v) if v.indices.is_empty() => {
-                self.line(&format!(
-                    "let _val = {};",
-                    vals_get
-                ));
-                self.line(&format!(
-                    "{}.insert(\"{}\", f64_to_endf_value(_val));",
-                    target, v.name
-                ));
-                self.declare_or_assign_f64(&v.name, "_val");
-                self.line("vi += 1;");
+                if self.is_abbreviation(&v.name) {
+                    self.line("// list body abbreviation (validation skipped)");
+                    self.line("vi += 1;");
+                } else {
+                    self.line(&format!(
+                        "let _val = {};",
+                        vals_get
+                    ));
+                    self.line(&format!(
+                        "{}.insert(\"{}\", f64_to_endf_value(_val));",
+                        target, v.name
+                    ));
+                    self.declare_or_assign_f64(&v.name, "_val");
+                    self.line("vi += 1;");
+                }
             }
             _ => {
                 // Complex expression
@@ -1001,6 +1098,8 @@ impl CodeGen {
         self.line(&format!("// Section: {}", name.name));
         self.line("{");
         self.indent += 1;
+        // Push a new abbreviation scope for this section.
+        self.abbreviations.push(HashMap::new());
 
         if name.indices.is_empty() {
             // Simple named section
@@ -1086,6 +1185,8 @@ impl CodeGen {
             }
         }
 
+        // Pop the abbreviation scope for this section.
+        self.abbreviations.pop();
         self.indent -= 1;
         self.line("}");
     }
@@ -1093,8 +1194,9 @@ impl CodeGen {
     // -- Abbreviation -------------------------------------------------------
 
     fn emit_abbreviation(&mut self, name: &str, expr: &Expr) {
-        let rhs = self.expr_to_rust(expr);
-        self.declare_or_assign_f64(name, &format!("({})", rhs));
+        // No code generated — abbreviations are expanded at compile time.
+        self.abbreviations.last_mut().unwrap()
+            .insert(name.to_lowercase(), expr.clone());
     }
 
     // -- TEXT ---------------------------------------------------------------
@@ -1191,12 +1293,17 @@ impl CodeGen {
                 }
             }
             Expr::Variable(v) if v.indices.is_empty() => {
+                // Check if this is an abbreviation — expand inline
+                let lower = v.name.to_lowercase();
+                for scope in self.abbreviations.iter().rev() {
+                    if let Some(abbrev_expr) = scope.get(&lower) {
+                        return format!("({})", self.expr_to_rust(abbrev_expr));
+                    }
+                }
                 format!("{} as f64", Self::var_name(&v.name))
             }
             Expr::Variable(v) => {
                 // Indexed variable access: look up in result dict.
-                // This is a simplified version; for full support, we'd need
-                // scope tracking.
                 if v.indices.len() == 1 {
                     let idx = self.expr_to_rust(&v.indices[0]);
                     format!(
@@ -1208,6 +1315,12 @@ impl CodeGen {
                 }
             }
             Expr::InconsistentVar(v) if v.indices.is_empty() => {
+                let lower = v.name.to_lowercase();
+                for scope in self.abbreviations.iter().rev() {
+                    if let Some(abbrev_expr) = scope.get(&lower) {
+                        return format!("({})", self.expr_to_rust(abbrev_expr));
+                    }
+                }
                 format!("{} as f64", Self::var_name(&v.name))
             }
             Expr::InconsistentVar(v) => {
@@ -1365,8 +1478,10 @@ endif
         let recipe_text = "NW := 6*NRS + 1\n";
         let recipe = parse_recipe(recipe_text).unwrap();
         let code = compile_recipe(3, -1, &recipe);
-        assert!(code.contains("var_nw"));
-        assert!(code.contains("var_nrs"));
+        // Abbreviation should NOT generate a var_nw declaration or assignment.
+        assert!(!code.contains("var_nw"), "abbreviation should not create a runtime variable");
+        // The RHS variables should still be declared (they appear in collect_vars_expr).
+        assert!(code.contains("var_nrs"), "RHS vars should still be declared");
     }
 
     #[test]
