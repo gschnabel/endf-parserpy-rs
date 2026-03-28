@@ -16,16 +16,29 @@ use super::ast::*;
 
 /// Compile a set of (mf, mt, recipe) triples into a self-contained Rust source file.
 ///
-/// The output contains one `parse_mfX_mtY` function per recipe plus a
-/// `parse_section` dispatch function.
+/// The output contains one `parse_mfX_mtY` and one `write_mfX_mtY` function
+/// per recipe, plus `parse_section` and `write_section` dispatch functions.
 pub fn compile_catalogue(recipes: &[(i32, i32, &[RecipeNode])]) -> String {
     let mut code = generate_header();
     for &(mf, mt, recipe) in recipes {
         code.push_str(&compile_recipe(mf, mt, recipe));
         code.push('\n');
+        code.push_str(&compile_write_recipe(mf, mt, recipe));
+        code.push('\n');
     }
     code.push_str(&generate_dispatch_fn(recipes));
+    code.push('\n');
+    code.push_str(&generate_write_dispatch_fn(recipes));
     code
+}
+
+/// Compile a single recipe into a standalone write function.
+pub fn compile_write_recipe(mf: i32, mt: i32, recipe: &[RecipeNode]) -> String {
+    let mut gen = WriteCodeGen::new(mf, mt);
+    for node in recipe {
+        gen.emit_node(node);
+    }
+    gen.finish()
 }
 
 /// Compile a single recipe into a standalone parse function.
@@ -50,9 +63,10 @@ fn generate_header() -> String {
 #![allow(unused_variables, unused_mut, unused_assignments)]
 
 use endf_parser::records::{self, read_cont, read_tab1, read_tab1_body, read_tab2, read_tab2_body, read_list, read_intg, read_endf_numbers};
-use endf_parser::fortran::{fortstr_to_f64, read_fort_int};
+use endf_parser::records::{write_cont, write_tab1_body, write_tab2_body, write_send, ContRecord, Tab1Body, Tab2Body, CtrlRecord};
+use endf_parser::fortran::{fortstr_to_f64, read_fort_int, f64_to_fortstr};
 use endf_parser::value::{EndfKey, EndfValue, EndfTable};
-use endf_parser::options::{ReadOpts, ParseOpts};
+use endf_parser::options::{ReadOpts, ParseOpts, WriteOpts};
 use endf_parser::error::{EndfError, EndfResult};
 
 /// Convert an f64 to EndfValue, using Int when the value is an exact integer.
@@ -76,6 +90,50 @@ fn list_from_i64(vals: &[i64]) -> EndfValue {
 #[inline]
 fn list_from_f64(vals: &[f64]) -> EndfValue {
     EndfValue::List(vals.iter().map(|v| Some(EndfValue::Float(*v))).collect())
+}
+
+/// Read a float scalar from an EndfValue dict.
+#[inline]
+fn get_float(data: &EndfValue, key: &str) -> f64 {
+    data.get(key).and_then(|v| v.as_float()).unwrap_or(0.0)
+}
+
+/// Read an integer scalar from an EndfValue dict.
+#[inline]
+fn get_int(data: &EndfValue, key: &str) -> i64 {
+    data.get(key).and_then(|v| v.as_int()).unwrap_or(0)
+}
+
+/// Read a Vec<i64> from an EndfValue list.
+#[inline]
+fn get_int_vec(data: &EndfValue, key: &str) -> Vec<i64> {
+    match data.get(key) {
+        Some(EndfValue::List(l)) => l.iter()
+            .map(|v| v.as_ref().and_then(|e| e.as_int()).unwrap_or(0))
+            .collect(),
+        _ => Vec::new(),
+    }
+}
+
+/// Read a Vec<f64> from an EndfValue list.
+#[inline]
+fn get_float_vec(data: &EndfValue, key: &str) -> Vec<f64> {
+    match data.get(key) {
+        Some(EndfValue::List(l)) => l.iter()
+            .map(|v| v.as_ref().and_then(|e| e.as_float()).unwrap_or(0.0))
+            .collect(),
+        _ => Vec::new(),
+    }
+}
+
+/// Build a CtrlRecord from MAT/MF/MT in the data dict.
+#[inline]
+fn get_ctrl(data: &EndfValue) -> CtrlRecord {
+    CtrlRecord {
+        mat: get_int(data, "MAT") as i32,
+        mf: get_int(data, "MF") as i32,
+        mt: get_int(data, "MT") as i32,
+    }
 }
 
 "#
@@ -125,6 +183,54 @@ fn generate_dispatch_fn(recipes: &[(i32, i32, &[RecipeNode])]) -> String {
     code.push_str(
         "        _ => Err(EndfError::RecipeParse {\n            \
              message: format!(\"no compiled parser for MF{}/MT{}\", mf, mt),\n        \
+         }),\n    \
+         }\n\
+         }\n",
+    );
+    code
+}
+
+fn generate_write_dispatch_fn(recipes: &[(i32, i32, &[RecipeNode])]) -> String {
+    let mut code = String::new();
+    code.push_str(
+        "/// Dispatch to the compiled write function for the given MF/MT.\n\
+         pub fn write_section(\n    \
+             mf: i32,\n    \
+             mt: i32,\n    \
+             data: &EndfValue,\n    \
+             write_opts: &WriteOpts,\n\
+         ) -> EndfResult<Vec<String>> {\n    \
+             match (mf, mt) {\n",
+    );
+
+    let mut exact: Vec<(i32, i32)> = Vec::new();
+    let mut wildcards: Vec<i32> = Vec::new();
+    for &(mf, mt, _) in recipes {
+        if mt == -1 {
+            wildcards.push(mf);
+        } else {
+            exact.push((mf, mt));
+        }
+    }
+
+    for (mf, mt) in &exact {
+        let _ = writeln!(
+            code,
+            "        ({}, {}) => write_mf{}_mt{}(data, write_opts),",
+            mf, mt, mf, mt
+        );
+    }
+    for mf in &wildcards {
+        let _ = writeln!(
+            code,
+            "        ({}, _) => write_mf{}_wildcard(data, write_opts),",
+            mf, mf
+        );
+    }
+
+    code.push_str(
+        "        _ => Err(EndfError::RecipeParse {\n            \
+             message: format!(\"no compiled writer for MF{}/MT{}\", mf, mt),\n        \
          }),\n    \
          }\n\
          }\n",
@@ -1943,6 +2049,449 @@ impl CodeGen {
                 )
             }
         }
+    }
+}
+
+// ===========================================================================
+// Write code generator
+// ===========================================================================
+
+struct WriteCodeGen {
+    code: String,
+    indent: usize,
+    mf: i32,
+    mt: i32,
+    /// Track abbreviation scopes (same as read CodeGen).
+    abbreviations: Vec<HashMap<String, Expr>>,
+}
+
+impl WriteCodeGen {
+    fn new(mf: i32, mt: i32) -> Self {
+        Self {
+            code: String::with_capacity(2048),
+            indent: 1,
+            mf,
+            mt,
+            abbreviations: vec![HashMap::new()],
+        }
+    }
+
+    fn finish(self) -> String {
+        let fn_name = if self.mt == -1 {
+            format!("write_mf{}_wildcard", self.mf)
+        } else {
+            format!("write_mf{}_mt{}", self.mf, self.mt)
+        };
+
+        let mut out = String::with_capacity(self.code.len() + 256);
+        let _ = writeln!(out, "pub fn {}(", fn_name);
+        out.push_str("    data: &EndfValue,\n");
+        out.push_str("    write_opts: &WriteOpts,\n");
+        out.push_str(") -> EndfResult<Vec<String>> {\n");
+        out.push_str("    let mut lines: Vec<String> = Vec::new();\n");
+        out.push_str("    let ctrl = get_ctrl(data);\n");
+        out.push_str(&self.code);
+        out.push_str("    Ok(lines)\n");
+        out.push_str("}\n");
+        out
+    }
+
+    fn indent_str(&self) -> String {
+        "    ".repeat(self.indent)
+    }
+
+    fn line(&mut self, s: &str) {
+        let _ = writeln!(self.code, "{}{}", self.indent_str(), s);
+    }
+
+    fn blank(&mut self) {
+        self.code.push('\n');
+    }
+
+    fn is_abbreviation(&self, name: &str) -> bool {
+        let lower = name.to_lowercase();
+        self.abbreviations.iter().rev().any(|scope| scope.contains_key(&lower))
+    }
+
+    /// Generate a Rust expression that reads a variable from the data dict.
+    /// For scalar variables, generates `get_float(data, "NAME")` or
+    /// `get_int(data, "NAME")`. For indexed variables, generates chained
+    /// `.get()` lookups. For abbreviations, expands inline.
+    fn expr_to_rust(&self, expr: &Expr, scope: &str) -> String {
+        match expr {
+            Expr::Number(n) | Expr::DesiredNumber(n) => {
+                if *n == (*n as i64) as f64 {
+                    format!("{}_f64", *n as i64)
+                } else {
+                    format!("{}_f64", n)
+                }
+            }
+            Expr::Variable(v) if v.indices.is_empty() => {
+                // Check abbreviation
+                let lower = v.name.to_lowercase();
+                for s in self.abbreviations.iter().rev() {
+                    if let Some(abbrev_expr) = s.get(&lower) {
+                        return format!("({})", self.expr_to_rust(abbrev_expr, scope));
+                    }
+                }
+                format!("get_float({}, \"{}\")", scope, v.name)
+            }
+            Expr::Variable(v) => {
+                let mut e = format!("{}.get(\"{}\")", scope, v.name);
+                for idx in &v.indices {
+                    let idx_rust = self.expr_to_rust(idx, scope);
+                    e = format!("{}.and_then(|d| d.get(EndfKey::Int({} as i64)))", e, idx_rust);
+                }
+                format!("{}.and_then(|v| v.as_float()).unwrap_or(0.0)", e)
+            }
+            Expr::InconsistentVar(v) if v.indices.is_empty() => {
+                let lower = v.name.to_lowercase();
+                for s in self.abbreviations.iter().rev() {
+                    if let Some(abbrev_expr) = s.get(&lower) {
+                        return format!("({})", self.expr_to_rust(abbrev_expr, scope));
+                    }
+                }
+                format!("get_float({}, \"{}\")", scope, v.name)
+            }
+            Expr::InconsistentVar(v) => {
+                let mut e = format!("{}.get(\"{}\")", scope, v.name);
+                for idx in &v.indices {
+                    let idx_rust = self.expr_to_rust(idx, scope);
+                    e = format!("{}.and_then(|d| d.get(EndfKey::Int({} as i64)))", e, idx_rust);
+                }
+                format!("{}.and_then(|v| v.as_float()).unwrap_or(0.0)", e)
+            }
+            Expr::Neg(a) => format!("-({})", self.expr_to_rust(a, scope)),
+            Expr::Add(a, b) => format!("({} + {})", self.expr_to_rust(a, scope), self.expr_to_rust(b, scope)),
+            Expr::Sub(a, b) => format!("({} - {})", self.expr_to_rust(a, scope), self.expr_to_rust(b, scope)),
+            Expr::Mul(a, b) => format!("({} * {})", self.expr_to_rust(a, scope), self.expr_to_rust(b, scope)),
+            Expr::Div(a, b) => format!("({} / {})", self.expr_to_rust(a, scope), self.expr_to_rust(b, scope)),
+            Expr::Mod(a, b) => format!("(({}) as i64 % ({}) as i64) as f64", self.expr_to_rust(a, scope), self.expr_to_rust(b, scope)),
+            Expr::Bracket(a) => format!("({})", self.expr_to_rust(a, scope)),
+        }
+    }
+
+    fn bool_expr_to_rust(&self, expr: &BoolExpr, scope: &str) -> String {
+        match expr {
+            BoolExpr::Comparison { left, op, right } => {
+                let l = self.expr_to_rust(left, scope);
+                let r = self.expr_to_rust(right, scope);
+                let op_str = match op {
+                    CmpOp::Eq => "==", CmpOp::Ne => "!=",
+                    CmpOp::Lt => "<", CmpOp::Gt => ">",
+                    CmpOp::Le => "<=", CmpOp::Ge => ">=",
+                };
+                let uses_int = matches!(right.as_ref(), Expr::Number(n) if *n == (*n as i64) as f64);
+                if uses_int {
+                    format!("({} as i64) {} ({} as i64)", l, op_str, r)
+                } else {
+                    format!("({}) {} ({})", l, op_str, r)
+                }
+            }
+            BoolExpr::And(a, b) => format!("({}) && ({})", self.bool_expr_to_rust(a, scope), self.bool_expr_to_rust(b, scope)),
+            BoolExpr::Or(a, b) => format!("({}) || ({})", self.bool_expr_to_rust(a, scope), self.bool_expr_to_rust(b, scope)),
+        }
+    }
+
+    fn emit_node(&mut self, node: &RecipeNode) {
+        match node {
+            RecipeNode::HeadOrCont { fields, .. } => self.emit_write_cont(fields, "data"),
+            RecipeNode::Tab1 { fields, x_var, y_var, table_name, .. } => {
+                self.emit_write_tab1(fields, x_var, y_var, table_name, "data");
+            }
+            RecipeNode::Tab2 { fields, table_name, .. } => {
+                self.emit_write_tab2(fields, table_name, "data");
+            }
+            RecipeNode::List { fields, body, list_name, .. } => {
+                self.emit_write_list(fields, body, list_name, "data");
+            }
+            RecipeNode::Send => {
+                self.line("// SEND");
+            }
+            RecipeNode::Text { placeholders, .. } => {
+                self.emit_write_text(placeholders, "data");
+            }
+            RecipeNode::Dir { fields, .. } => {
+                self.emit_write_dir(fields, "data");
+            }
+            RecipeNode::Intg { fields, ndigit, .. } => {
+                self.emit_write_intg(fields, ndigit, "data");
+            }
+            RecipeNode::ForLoop { var, start, stop, body } => {
+                self.emit_write_for_loop(var, start, stop, body, "data");
+            }
+            RecipeNode::IfClause { branches, else_body } => {
+                self.emit_write_if_clause(branches, else_body, "data");
+            }
+            RecipeNode::Section { name, body } => {
+                self.emit_write_section(name, body);
+            }
+            RecipeNode::Abbreviation { name, expr } => {
+                self.abbreviations.last_mut().unwrap()
+                    .insert(name.to_lowercase(), expr.as_ref().clone());
+            }
+            RecipeNode::Stop { .. } | RecipeNode::Comment(_) => {}
+            RecipeNode::RepeatLoop { .. } => {
+                self.line("// TODO: RepeatLoop write not yet implemented");
+            }
+        }
+    }
+
+    fn emit_write_cont(&mut self, fields: &[Expr; 6], scope: &str) {
+        self.line("// Write HEAD/CONT");
+        let c1 = self.expr_to_rust(&fields[0], scope);
+        let c2 = self.expr_to_rust(&fields[1], scope);
+        let l1 = self.expr_to_rust(&fields[2], scope);
+        let l2 = self.expr_to_rust(&fields[3], scope);
+        let n1 = self.expr_to_rust(&fields[4], scope);
+        let n2 = self.expr_to_rust(&fields[5], scope);
+        self.line(&format!(
+            "lines.push(write_cont(&ContRecord {{ c1: {}, c2: {}, l1: {} as i64, l2: {} as i64, n1: {} as i64, n2: {} as i64 }}, &ctrl, write_opts));",
+            c1, c2, l1, l2, n1, n2
+        ));
+    }
+
+    fn emit_write_tab1(&mut self, fields: &[Expr; 6], x_var: &ExtVarName, y_var: &ExtVarName, table_name: &Option<ExtVarName>, scope: &str) {
+        self.line("// Write TAB1");
+        // Determine the data source for table body
+        let body_scope = if let Some(ref tn) = table_name {
+            if tn.indices.is_empty() {
+                format!("{}.get(\"{}\").unwrap()", scope, tn.name)
+            } else {
+                let mut e = format!("{}.get(\"{}\")", scope, tn.name);
+                for idx in &tn.indices {
+                    let idx_rust = self.expr_to_rust(idx, scope);
+                    e = format!("{}.and_then(|d| d.get(EndfKey::Int({} as i64)))", e, idx_rust);
+                }
+                format!("{}.unwrap()", e)
+            }
+        } else {
+            scope.to_string()
+        };
+
+        self.line(&format!("let _tab_scope = &{};", body_scope));
+        self.line(&format!("let _nbt = get_int_vec(_tab_scope, \"NBT\");"));
+        self.line(&format!("let _int = get_int_vec(_tab_scope, \"INT\");"));
+        self.line(&format!("let _x = get_float_vec(_tab_scope, \"{}\");", x_var.name));
+        self.line(&format!("let _y = get_float_vec(_tab_scope, \"{}\");", y_var.name));
+        self.line("let _nr = _nbt.len() as i64;");
+        self.line("let _np = _x.len() as i64;");
+
+        // Header: C1, C2, L1, L2 from fields, N1=NR, N2=NP
+        let c1 = self.expr_to_rust(&fields[0], scope);
+        let c2 = self.expr_to_rust(&fields[1], scope);
+        let l1 = self.expr_to_rust(&fields[2], scope);
+        let l2 = self.expr_to_rust(&fields[3], scope);
+        self.line(&format!(
+            "lines.push(write_cont(&ContRecord {{ c1: {}, c2: {}, l1: {} as i64, l2: {} as i64, n1: _nr, n2: _np }}, &ctrl, write_opts));",
+            c1, c2, l1, l2
+        ));
+        self.line("let _body = Tab1Body { nbt: _nbt, int: _int, x: _x, y: _y };");
+        self.line("lines.extend(write_tab1_body(&_body, &ctrl, write_opts));");
+    }
+
+    fn emit_write_tab2(&mut self, fields: &[Expr; 6], table_name: &Option<ExtVarName>, scope: &str) {
+        self.line("// Write TAB2");
+        let body_scope = if let Some(ref tn) = table_name {
+            if tn.indices.is_empty() {
+                format!("{}.get(\"{}\").unwrap()", scope, tn.name)
+            } else {
+                let mut e = format!("{}.get(\"{}\")", scope, tn.name);
+                for idx in &tn.indices {
+                    let idx_rust = self.expr_to_rust(idx, scope);
+                    e = format!("{}.and_then(|d| d.get(EndfKey::Int({} as i64)))", e, idx_rust);
+                }
+                format!("{}.unwrap()", e)
+            }
+        } else {
+            scope.to_string()
+        };
+
+        self.line(&format!("let _tab_scope = &{};", body_scope));
+        self.line("let _nbt = get_int_vec(_tab_scope, \"NBT\");");
+        self.line("let _int = get_int_vec(_tab_scope, \"INT\");");
+        self.line("let _nr = _nbt.len() as i64;");
+
+        let c1 = self.expr_to_rust(&fields[0], scope);
+        let c2 = self.expr_to_rust(&fields[1], scope);
+        let l1 = self.expr_to_rust(&fields[2], scope);
+        let l2 = self.expr_to_rust(&fields[3], scope);
+        let n2 = self.expr_to_rust(&fields[5], scope);
+        self.line(&format!(
+            "lines.push(write_cont(&ContRecord {{ c1: {}, c2: {}, l1: {} as i64, l2: {} as i64, n1: _nr, n2: {} as i64 }}, &ctrl, write_opts));",
+            c1, c2, l1, l2, n2
+        ));
+        self.line("let _body = Tab2Body { nbt: _nbt, int: _int };");
+        self.line("lines.extend(write_tab2_body(&_body, &ctrl, write_opts));");
+    }
+
+    fn emit_write_list(&mut self, fields: &[Expr; 6], body: &[ListItem], list_name: &Option<ExtVarName>, scope: &str) {
+        self.line("// Write LIST");
+        let body_scope = if let Some(ref ln) = list_name {
+            if ln.indices.is_empty() {
+                format!("{}.get(\"{}\").unwrap()", scope, ln.name)
+            } else {
+                let mut e = format!("{}.get(\"{}\")", scope, ln.name);
+                for idx in &ln.indices {
+                    let idx_rust = self.expr_to_rust(idx, scope);
+                    e = format!("{}.and_then(|d| d.get(EndfKey::Int({} as i64)))", e, idx_rust);
+                }
+                format!("{}.unwrap()", e)
+            }
+        } else {
+            scope.to_string()
+        };
+
+        // Collect list body values
+        self.line("let mut _vals: Vec<f64> = Vec::new();");
+        self.line(&format!("let _list_scope = &{};", body_scope));
+        self.emit_write_list_body(body, "_list_scope", scope);
+
+        let npl = "_vals.len() as i64";
+        let c1 = self.expr_to_rust(&fields[0], scope);
+        let c2 = self.expr_to_rust(&fields[1], scope);
+        let l1 = self.expr_to_rust(&fields[2], scope);
+        let l2 = self.expr_to_rust(&fields[3], scope);
+        let n2 = self.expr_to_rust(&fields[5], scope);
+        self.line(&format!(
+            "lines.push(write_cont(&ContRecord {{ c1: {}, c2: {}, l1: {} as i64, l2: {} as i64, n1: {}, n2: {} as i64 }}, &ctrl, write_opts));",
+            c1, c2, l1, l2, npl, n2
+        ));
+        self.line("lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));");
+    }
+
+    fn emit_write_list_body(&mut self, body: &[ListItem], list_scope: &str, data_scope: &str) {
+        for item in body {
+            match item {
+                ListItem::Value(expr) => {
+                    match expr {
+                        Expr::Variable(v) | Expr::InconsistentVar(v) => {
+                            if v.indices.is_empty() {
+                                self.line(&format!(
+                                    "_vals.push(get_float({}, \"{}\"));",
+                                    list_scope, v.name
+                                ));
+                            } else {
+                                let val_expr = self.expr_to_rust(expr, list_scope);
+                                self.line(&format!("_vals.push({});", val_expr));
+                            }
+                        }
+                        Expr::Number(n) => {
+                            self.line(&format!("_vals.push({}_f64);", n));
+                        }
+                        _ => {
+                            let val = self.expr_to_rust(expr, data_scope);
+                            self.line(&format!("_vals.push({});", val));
+                        }
+                    }
+                }
+                ListItem::Loop { body: loop_body, var, start, stop } => {
+                    let start_s = self.expr_to_rust(start, data_scope);
+                    let stop_s = self.expr_to_rust(stop, data_scope);
+                    self.line(&format!(
+                        "for _i_{} in ({} as i64)..=({} as i64) {{",
+                        var, start_s, stop_s
+                    ));
+                    self.indent += 1;
+                    // Inside the loop, indexed variables use the loop var
+                    self.emit_write_list_body(loop_body, list_scope, data_scope);
+                    self.indent -= 1;
+                    self.line("}");
+                }
+                ListItem::Padding => {
+                    self.line("while _vals.len() % 6 != 0 { _vals.push(0.0); }");
+                }
+            }
+        }
+    }
+
+    fn emit_write_text(&mut self, _placeholders: &[TextPlaceholder], _scope: &str) {
+        self.line("// TODO: TEXT write not yet implemented");
+        self.line("lines.push(String::new());");
+    }
+
+    fn emit_write_dir(&mut self, _fields: &[Expr; 4], _scope: &str) {
+        self.line("// TODO: DIR write not yet implemented");
+        self.line("lines.push(String::new());");
+    }
+
+    fn emit_write_intg(&mut self, _fields: &[Expr; 3], _ndigit: &Expr, _scope: &str) {
+        self.line("// TODO: INTG write not yet implemented");
+        self.line("lines.push(String::new());");
+    }
+
+    fn emit_write_for_loop(&mut self, var: &str, start: &Expr, stop: &Expr, body: &[RecipeNode], scope: &str) {
+        let start_s = self.expr_to_rust(start, scope);
+        let stop_s = self.expr_to_rust(stop, scope);
+        self.line(&format!(
+            "for _i_{} in ({} as i64)..=({} as i64) {{",
+            var, start_s, stop_s
+        ));
+        self.indent += 1;
+        for node in body {
+            self.emit_node(node);
+        }
+        self.indent -= 1;
+        self.line("}");
+    }
+
+    fn emit_write_if_clause(&mut self, branches: &[IfBranch], else_body: &Option<Vec<RecipeNode>>, scope: &str) {
+        // In write mode, all variables are known — no lookahead needed.
+        // Just evaluate conditions directly.
+        for (i, branch) in branches.iter().enumerate() {
+            let cond = self.bool_expr_to_rust(&branch.condition, scope);
+            if i == 0 {
+                self.line(&format!("if {} {{", cond));
+            } else {
+                self.line(&format!("}} else if {} {{", cond));
+            }
+            self.indent += 1;
+            let saved = self.abbreviations.clone();
+            for node in &branch.body {
+                self.emit_node(node);
+            }
+            self.abbreviations = saved;
+            self.indent -= 1;
+        }
+        if let Some(else_nodes) = else_body {
+            self.line("} else {");
+            self.indent += 1;
+            for node in else_nodes {
+                self.emit_node(node);
+            }
+            self.indent -= 1;
+        }
+        self.line("}");
+    }
+
+    fn emit_write_section(&mut self, name: &ExtVarName, body: &[RecipeNode]) {
+        // Navigate into the section in the data dict.
+        self.line(&format!("// Write section: {}", name.name));
+        let section_expr = if name.indices.is_empty() {
+            format!("data.get(\"{}\").unwrap()", name.name)
+        } else {
+            let mut e = format!("data.get(\"{}\")", name.name);
+            for idx in &name.indices {
+                let idx_rust = self.expr_to_rust(idx, "data");
+                e = format!("{}.and_then(|d| d.get(EndfKey::Int({} as i64)))", e, idx_rust);
+            }
+            format!("{}.unwrap()", e)
+        };
+
+        self.line("{");
+        self.indent += 1;
+        self.line(&format!("let _saved_data = data;"));
+        self.line(&format!("let data = {};", section_expr));
+        self.abbreviations.push(HashMap::new());
+
+        for node in body {
+            self.emit_node(node);
+        }
+
+        self.abbreviations.pop();
+        self.line("let data = _saved_data;");
+        self.indent -= 1;
+        self.line("}");
     }
 }
 
