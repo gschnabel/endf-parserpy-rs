@@ -323,6 +323,10 @@ struct CodeGen {
     mt: i32,
     /// All variables pre-collected from the recipe AST, to be declared at function scope.
     all_vars: HashSet<String>,
+    /// Variables known to have been assigned by prior records.
+    /// Used to distinguish unknowns from already-set variables when
+    /// solving complex field expressions.
+    known_vars: HashSet<String>,
     /// Stack of active loop variable names.
     loop_vars: Vec<String>,
     /// Compile-time abbreviation table: name -> defining Expr.
@@ -341,6 +345,7 @@ impl CodeGen {
             all_vars,
             loop_vars: Vec::new(),
             abbreviations: vec![HashMap::new()],
+            known_vars: HashSet::new(),
         }
     }
 
@@ -583,12 +588,106 @@ impl CodeGen {
         let cont_fields = ["c1", "c2", "l1", "l2", "n1", "n2"];
         let is_int = [false, false, true, true, true, true];
 
-        for (i, expr) in fields.iter().enumerate() {
-            self.emit_cont_field_assignment(expr, cont_fields[i], is_int[i]);
-        }
+        self.emit_record_fields(fields, &cont_fields, &is_int);
 
         self.indent -= 1;
         self.line("}");
+    }
+
+    /// Two-pass field emission for record headers.
+    /// Pass 1: emit all simple fields (variables, constants, indexed vars).
+    /// Pass 2: emit solves for complex expressions — by now, variables from
+    /// other fields in the same record are known, turning quadratic
+    /// abbreviation expressions into linear ones.
+    fn emit_record_fields(&mut self, fields: &[Expr], cont_fields: &[&str], is_int: &[bool]) {
+        let n = fields.len().min(cont_fields.len());
+        let mut deferred: Vec<usize> = Vec::new();
+
+        // Pass 1: simple fields.
+        for i in 0..n {
+            if self.is_simple_field(&fields[i]) {
+                self.emit_cont_field_assignment(&fields[i], cont_fields[i], is_int[i]);
+                // Track which variables were assigned (both for this record
+                // and for subsequent records).
+                if let Some(name) = get_simple_scalar_var(&fields[i]) {
+                    self.known_vars.insert(name.to_lowercase());
+                }
+            } else {
+                deferred.push(i);
+            }
+        }
+
+        // Pass 2: complex expression fields. Variables from Pass 1 AND
+        // from prior records (in known_vars) are now considered known,
+        // turning e.g. NE*(NE-1)+1 into a linear expression if NE was
+        // assigned from another field, or (LG+1)*NT into linear if LG
+        // was set by the HEAD record.
+        for i in deferred {
+            self.emit_complex_field_solve(&fields[i], cont_fields[i], is_int[i]);
+        }
+    }
+
+    /// Check if a field expression is "simple" — can be processed without
+    /// depending on other fields in the same record.
+    fn is_simple_field(&self, expr: &Expr) -> bool {
+        match expr {
+            Expr::Number(_) | Expr::DesiredNumber(_) => true,
+            Expr::Variable(v) | Expr::InconsistentVar(v) if v.indices.is_empty() => {
+                // Abbreviation in field position is NOT simple — it may
+                // depend on variables from other fields.
+                !self.is_abbreviation(&v.name)
+            }
+            Expr::Variable(_) | Expr::InconsistentVar(_) => true, // indexed
+            _ => false, // complex expression
+        }
+    }
+
+    /// Emit code for a complex expression field, attempting to solve for
+    /// an unknown variable. `assigned` contains variables already stored
+    /// from other (simple) fields in the same record.
+    fn emit_complex_field_solve(
+        &mut self,
+        expr: &Expr,
+        cont_field: &str,
+        is_int: bool,
+    ) {
+        let expanded = self.expand_abbreviations(expr);
+        if let Some((var_name, coeff_expr, offset_expr)) = self.try_linear_solve(&expanded) {
+            // Emit: var = (field_value - offset) / coeff
+            let field_val = if is_int {
+                format!("cont.{} as f64", cont_field)
+            } else {
+                format!("cont.{}", cont_field)
+            };
+            let rhs = if offset_expr == "0_f64" || offset_expr == "0.0" {
+                if coeff_expr == "1_f64" || coeff_expr == "1.0" {
+                    field_val
+                } else {
+                    format!("({} / ({}))", field_val, coeff_expr)
+                }
+            } else {
+                format!("(({} - ({})) / ({}))", field_val, offset_expr, coeff_expr)
+            };
+            self.declare_or_assign_f64(&var_name, &rhs);
+            if is_int {
+                self.line(&format!(
+                    "result.insert(\"{}\", EndfValue::Int({} as i64));",
+                    var_name, Self::var_name(&var_name)
+                ));
+            } else {
+                self.line(&format!(
+                    "result.insert(\"{}\", f64_to_endf_value({}));",
+                    var_name, Self::var_name(&var_name)
+                ));
+            }
+            self.known_vars.insert(var_name.to_lowercase());
+        } else {
+            // Fully known or non-linear — validation only.
+            self.line(&format!(
+                "// field {} complex expression (validation skipped in compiled mode)",
+                cont_field
+            ));
+        }
     }
 
     fn emit_cont_field_assignment(&mut self, expr: &Expr, cont_field: &str, is_int: bool) {
@@ -671,10 +770,10 @@ impl CodeGen {
                 self.emit_indexed_var_store(v, cont_field, is_int, "result");
             }
             _ => {
-                // Complex expression: emit a TODO comment
-                // Complex expression (e.g. 6*NX where NX is an abbreviation).
-                // After abbreviation expansion, this is computable from known
-                // variables — treat as validation.
+                // Complex expression — should only be reached from Pass 1
+                // (before other fields are known). In the two-pass approach,
+                // these are deferred to Pass 2 via emit_complex_field_solve.
+                // If called directly, just emit validation.
                 self.line(&format!(
                     "// field {} complex expression (validation skipped in compiled mode)",
                     cont_field
@@ -873,10 +972,9 @@ impl CodeGen {
         let cont_fields = ["c1", "c2", "l1", "l2", "n2"];
         let is_int = [false, false, true, true, true];
         let field_indices = [0, 1, 2, 3, 5];
+        let selected_fields: Vec<Expr> = field_indices.iter().map(|&fi| fields[fi].clone()).collect();
 
-        for (j, &fi) in field_indices.iter().enumerate() {
-            self.emit_cont_field_assignment(&fields[fi], cont_fields[j], is_int[j]);
-        }
+        self.emit_record_fields(&selected_fields, &cont_fields, &is_int);
 
         self.blank();
 
@@ -924,9 +1022,7 @@ impl CodeGen {
         let cont_fields = ["c1", "c2", "l1", "l2", "n1", "n2"];
         let is_int = [false, false, true, true, true, true];
 
-        for (i, expr) in fields.iter().enumerate() {
-            self.emit_cont_field_assignment(expr, cont_fields[i], is_int[i]);
-        }
+        self.emit_record_fields(fields, &cont_fields, &is_int);
 
         self.blank();
 
@@ -1094,6 +1190,108 @@ impl CodeGen {
         }
         self.indent -= 1;
         self.line("}");
+    }
+
+    /// Try to solve a (possibly expanded) expression for a single unknown
+    /// variable at compile time. Returns `(var_name, coeff_rust, offset_rust)`
+    /// where the expression equals `coeff * var + offset`, and coeff/offset
+    /// are Rust source expressions referencing only known variables.
+    ///
+    /// A variable is "unknown" if it is a scalar (no indices), not a loop var,
+    /// not an abbreviation, and not already known from context.
+    /// Try to solve a (possibly expanded) expression for a single unknown.
+    /// Uses `self.known_vars` (variables assigned from this and prior records),
+    /// loop vars, and abbreviations to determine which variables are known.
+    fn try_linear_solve(&self, expr: &Expr) -> Option<(String, String, String)> {
+        // Collect all scalar variable names (original case) in the expression.
+        let mut vars = HashSet::new();
+        Self::collect_shallow_vars(expr, &mut vars);
+
+        // Remove known variables (case-insensitive comparison).
+        let abbrev_names: HashSet<String> = self.abbreviations.iter()
+            .flat_map(|scope| scope.keys().cloned())
+            .collect();
+        vars.retain(|v| !abbrev_names.contains(&v.to_lowercase()));
+        vars.retain(|v| !self.loop_vars.contains(&v.to_lowercase()));
+        vars.retain(|v| !self.known_vars.contains(&v.to_lowercase()));
+
+        // If no unknowns, expression is fully determined → validation.
+        if vars.is_empty() {
+            return None;
+        }
+        // If more than one unknown, we can't solve.
+        if vars.len() != 1 {
+            return None;
+        }
+
+        let unknown = vars.into_iter().next().unwrap();
+
+        // Generate the offset (substitute unknown = 0) and
+        // coeff + offset (substitute unknown = 1) as Rust expressions.
+        let offset_expr = self.expr_to_rust_substituted(expr, &unknown, "0_f64");
+        let at_one_expr = self.expr_to_rust_substituted(expr, &unknown, "1_f64");
+
+        // coeff = f(1) - f(0) = at_one - offset
+        let coeff_expr = format!("(({}) - ({}))", at_one_expr, offset_expr);
+
+        Some((unknown, coeff_expr, offset_expr))
+    }
+
+    /// Render an expression to Rust source, but substitute a specific
+    /// variable name with a literal string.
+    fn expr_to_rust_substituted(&self, expr: &Expr, var_name: &str, replacement: &str) -> String {
+        match expr {
+            Expr::Variable(v) if v.indices.is_empty() && v.name.to_lowercase() == var_name.to_lowercase() => {
+                replacement.to_string()
+            }
+            Expr::InconsistentVar(v) if v.indices.is_empty() && v.name.to_lowercase() == var_name.to_lowercase() => {
+                replacement.to_string()
+            }
+            // For all other cases, delegate to the normal expr_to_rust but
+            // recurse with the substitution for sub-expressions.
+            Expr::Number(_) | Expr::DesiredNumber(_) => self.expr_to_rust(expr),
+            Expr::Variable(_) | Expr::InconsistentVar(_) => self.expr_to_rust(expr),
+            Expr::Neg(a) => format!("-({})", self.expr_to_rust_substituted(a, var_name, replacement)),
+            Expr::Bracket(a) => format!("({})", self.expr_to_rust_substituted(a, var_name, replacement)),
+            Expr::Add(a, b) => format!("({} + {})",
+                self.expr_to_rust_substituted(a, var_name, replacement),
+                self.expr_to_rust_substituted(b, var_name, replacement)),
+            Expr::Sub(a, b) => format!("({} - {})",
+                self.expr_to_rust_substituted(a, var_name, replacement),
+                self.expr_to_rust_substituted(b, var_name, replacement)),
+            Expr::Mul(a, b) => format!("({} * {})",
+                self.expr_to_rust_substituted(a, var_name, replacement),
+                self.expr_to_rust_substituted(b, var_name, replacement)),
+            Expr::Div(a, b) => format!("({} / {})",
+                self.expr_to_rust_substituted(a, var_name, replacement),
+                self.expr_to_rust_substituted(b, var_name, replacement)),
+            Expr::Mod(a, b) => format!("(({}) as i64 % ({}) as i64) as f64",
+                self.expr_to_rust_substituted(a, var_name, replacement),
+                self.expr_to_rust_substituted(b, var_name, replacement)),
+        }
+    }
+
+    /// Collect simple (non-indexed) variable names from an expression
+    /// WITHOUT expanding abbreviations. Index expressions of indexed
+    /// variables are NOT collected — they reference loop vars or
+    /// already-known variables, not field unknowns.
+    fn collect_shallow_vars(expr: &Expr, vars: &mut HashSet<String>) {
+        match expr {
+            Expr::Variable(v) | Expr::InconsistentVar(v) if v.indices.is_empty() => {
+                vars.insert(v.name.clone());
+            }
+            Expr::Variable(_) | Expr::InconsistentVar(_) => {
+                // Indexed variables are "known" (read from result dict).
+                // Don't recurse into index expressions.
+            }
+            Expr::Neg(a) | Expr::Bracket(a) => Self::collect_shallow_vars(a, vars),
+            Expr::Add(a, b) | Expr::Sub(a, b) | Expr::Mul(a, b)
+            | Expr::Div(a, b) | Expr::Mod(a, b) => {
+                Self::collect_shallow_vars(a, vars);
+                Self::collect_shallow_vars(b, vars);
+            }
+            Expr::Number(_) | Expr::DesiredNumber(_) => {}
+        }
     }
 
     /// Extract the field expressions from the first record node in a body.
