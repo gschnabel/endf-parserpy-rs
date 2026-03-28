@@ -1069,8 +1069,11 @@ pub fn map_list(
         };
 
         // Process list body items.
+        // Try fast bulk processing if all items are simple variables.
         let mut val_idx: usize = 0;
-        process_list_items_read(body, &vals, &mut val_idx, state, parse_opts)?;
+        if !try_fast_list_body(&vals, body, &mut val_idx, state, parse_opts)? {
+            process_list_items_read(body, &vals, &mut val_idx, state, parse_opts)?;
+        }
 
         // Verify all values were consumed.
         if val_idx < vals.len() {
@@ -1133,6 +1136,215 @@ pub fn map_list(
                 state.push_line(line);
             }
         }
+    }
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// Fast LIST body processing
+// ---------------------------------------------------------------------------
+
+/// Describes one item in a flattened LIST body plan.
+enum ListBodyOp<'a> {
+    /// Store value as scalar: name = Float(val)
+    Scalar(&'a str),
+    /// Store value at indices: name[idx_sources...] = Float(val)
+    Indexed(&'a str, &'a [Expr]),
+    /// Skip value (constant or abbreviation)
+    Skip,
+    /// Start a loop: push loop var, iterate start..=stop
+    LoopStart(&'a str, &'a Expr, &'a Expr),
+    /// End of loop body: pop loop var
+    LoopEnd(&'a str),
+    /// Advance vi to next 6-element boundary
+    Padding,
+}
+
+/// Check if all items in a LIST body are simple enough for fast processing.
+fn is_simple_list_body(items: &[ListItem], abbreviations: &HashMap<String, Expr>) -> bool {
+    for item in items {
+        match item {
+            ListItem::Value(expr) => match expr {
+                Expr::Variable(_) | Expr::InconsistentVar(_) => {}
+                Expr::Number(_) | Expr::DesiredNumber(_) => {}
+                _ => return false,
+            },
+            ListItem::Loop { body, .. } => {
+                if !is_simple_list_body(body, abbreviations) {
+                    return false;
+                }
+            }
+            ListItem::Padding => {}
+        }
+    }
+    true
+}
+
+/// Build a flat operation plan from a simple LIST body.
+fn build_list_plan<'a>(items: &'a [ListItem], ops: &mut Vec<ListBodyOp<'a>>, abbreviations: &HashMap<String, Expr>) {
+    for item in items {
+        match item {
+            ListItem::Value(expr) => match expr {
+                Expr::Variable(v) | Expr::InconsistentVar(v) => {
+                    if v.indices.is_empty() {
+                        if abbreviations.contains_key(&v.name) {
+                            ops.push(ListBodyOp::Skip);
+                        } else {
+                            ops.push(ListBodyOp::Scalar(&v.name));
+                        }
+                    } else {
+                        ops.push(ListBodyOp::Indexed(&v.name, &v.indices));
+                    }
+                }
+                Expr::Number(_) | Expr::DesiredNumber(_) => {
+                    ops.push(ListBodyOp::Skip);
+                }
+                _ => unreachable!("is_simple_list_body should have rejected this"),
+            },
+            ListItem::Loop { body, var, start, stop } => {
+                ops.push(ListBodyOp::LoopStart(var, start, stop));
+                build_list_plan(body, ops, abbreviations);
+                ops.push(ListBodyOp::LoopEnd(var));
+            }
+            ListItem::Padding => {
+                ops.push(ListBodyOp::Padding);
+            }
+        }
+    }
+}
+
+/// Try to process a LIST body using the fast bulk path.
+/// Returns Ok(true) if handled, Ok(false) to fall back to slow path.
+fn try_fast_list_body(
+    vals: &[f64],
+    body: &[ListItem],
+    val_idx: &mut usize,
+    state: &mut InterpreterState,
+    parse_opts: &ParseOpts,
+) -> EndfResult<bool> {
+    if !is_simple_list_body(body, &state.abbreviations) {
+        return Ok(false);
+    }
+
+    let mut ops = Vec::new();
+    build_list_plan(body, &mut ops, &state.abbreviations);
+
+    // Pre-create containers for all indexed variables.
+    {
+        let mut created = HashSet::new();
+        for op in &ops {
+            if let ListBodyOp::Indexed(name, _) = op {
+                if created.insert(*name) {
+                    let scope = state.current_scope_mut();
+                    if !scope.contains_key(*name) {
+                        scope.insert(*name, EndfValue::new_dict());
+                    }
+                }
+            }
+        }
+    }
+
+    // Execute the plan.
+    execute_list_plan(&ops, vals, val_idx, state, parse_opts)?;
+    Ok(true)
+}
+
+/// Execute a flat LIST body plan.
+fn execute_list_plan(
+    ops: &[ListBodyOp],
+    vals: &[f64],
+    val_idx: &mut usize,
+    state: &mut InterpreterState,
+    parse_opts: &ParseOpts,
+) -> EndfResult<()> {
+    let mut i = 0;
+    while i < ops.len() {
+        match &ops[i] {
+            ListBodyOp::Scalar(name) => {
+                let val = vals[*val_idx];
+                let scope = state.current_scope_mut();
+                scope.insert(*name, EndfValue::Float(val));
+                // Also set local variable for use in loop bounds etc.
+                // (scope_chain lookup will find it)
+                *val_idx += 1;
+            }
+            ListBodyOp::Indexed(name, index_exprs) => {
+                let val = vals[*val_idx];
+                // Evaluate indices using current scope.
+                let mut indices = Vec::with_capacity(index_exprs.len());
+                {
+                    let scope_chain = state.scope_chain();
+                    for idx_expr in *index_exprs {
+                        let idx = eval_index(idx_expr, &scope_chain, &state.loop_vars, &state.abbreviations, parse_opts)?;
+                        indices.push(idx);
+                    }
+                }
+                // Insert using pre-created container.
+                let scope = state.current_scope_mut();
+                let mut current = scope.get_mut(*name).unwrap();
+                for (depth, &idx) in indices[..indices.len()-1].iter().enumerate() {
+                    let key = EndfKey::Int(idx);
+                    match current {
+                        EndfValue::Dict(ref mut d) => {
+                            if !d.contains_key(&key) {
+                                d.insert(key.clone(), EndfValue::new_dict());
+                            }
+                            current = d.get_mut(&key).unwrap();
+                        }
+                        _ => {}
+                    }
+                }
+                let last_key = EndfKey::Int(*indices.last().unwrap());
+                match current {
+                    EndfValue::Dict(ref mut d) => {
+                        d.insert(last_key, EndfValue::Float(val));
+                    }
+                    _ => {}
+                }
+                *val_idx += 1;
+            }
+            ListBodyOp::Skip => {
+                *val_idx += 1;
+            }
+            ListBodyOp::LoopStart(var, start, stop) => {
+                // Evaluate loop bounds once.
+                let (sv, ev) = {
+                    let scope_chain = state.scope_chain();
+                    let s = eval_expr_known(start, &scope_chain, &state.loop_vars, &state.abbreviations, parse_opts)? as i64;
+                    let e = eval_expr_known(stop, &scope_chain, &state.loop_vars, &state.abbreviations, parse_opts)? as i64;
+                    (s, e)
+                };
+                // Find matching LoopEnd to know the body range.
+                let body_start = i + 1;
+                let mut depth = 1;
+                let mut j = body_start;
+                while j < ops.len() && depth > 0 {
+                    match &ops[j] {
+                        ListBodyOp::LoopStart(_, _, _) => depth += 1,
+                        ListBodyOp::LoopEnd(_) => depth -= 1,
+                        _ => {}
+                    }
+                    if depth > 0 { j += 1; }
+                }
+                let body_end = j; // points to LoopEnd
+
+                for iter_val in sv..=ev {
+                    state.loop_vars.insert((*var).to_string(), iter_val);
+                    execute_list_plan(&ops[body_start..body_end], vals, val_idx, state, parse_opts)?;
+                }
+                state.loop_vars.remove(*var);
+                i = body_end; // skip past LoopEnd
+            }
+            ListBodyOp::LoopEnd(_) => {
+                // Handled by LoopStart
+                return Ok(());
+            }
+            ListBodyOp::Padding => {
+                let skip = (6 - *val_idx % 6) % 6;
+                *val_idx += skip;
+            }
+        }
+        i += 1;
     }
     Ok(())
 }
