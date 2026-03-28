@@ -72,21 +72,25 @@ pub fn py_to_endf_value(obj: &Bound<'_, PyAny>) -> PyResult<EndfValue> {
     } else if let Ok(v) = obj.extract::<String>() {
         Ok(EndfValue::Str(v))
     } else if let Ok(dict) = obj.downcast::<PyDict>() {
-        // Check if this looks like an EndfTable (has NBT and INT keys)
+        // Check if this looks like an EndfTable (has NBT and INT keys).
+        // Only convert to Table if the dict contains EXACTLY the expected
+        // keys — otherwise it's a regular section dict that happens to
+        // contain NBT/INT alongside other variables.
+        let dict_len = dict.len();
         let has_nbt = dict.get_item("NBT")?.is_some();
         let has_int = dict.get_item("INT")?.is_some();
         let has_x = dict.get_item("X")?.is_some();
         let has_y = dict.get_item("Y")?.is_some();
 
-        if has_nbt && has_int && has_x && has_y {
-            // TAB1 table
+        if has_nbt && has_int && has_x && has_y && dict_len == 4 {
+            // TAB1 table (exactly NBT, INT, X, Y)
             let nbt: Vec<i64> = dict.get_item("NBT")?.unwrap().extract()?;
             let int: Vec<i64> = dict.get_item("INT")?.unwrap().extract()?;
             let x: Vec<f64> = dict.get_item("X")?.unwrap().extract()?;
             let y: Vec<f64> = dict.get_item("Y")?.unwrap().extract()?;
             Ok(EndfValue::Table(EndfTable::new_tab1(nbt, int, x, y)))
-        } else if has_nbt && has_int {
-            // TAB2 table
+        } else if has_nbt && has_int && dict_len == 2 {
+            // TAB2 table (exactly NBT, INT)
             let nbt: Vec<i64> = dict.get_item("NBT")?.unwrap().extract()?;
             let int: Vec<i64> = dict.get_item("INT")?.unwrap().extract()?;
             Ok(EndfValue::Table(EndfTable::new_tab2(nbt, int)))
