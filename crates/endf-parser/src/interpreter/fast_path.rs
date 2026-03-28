@@ -431,18 +431,19 @@ fn read_list_from_strings(
     Ok((cont, vals, ofs + 1 + body_end))
 }
 
-/// Resolve a FastSectionName to an EndfKey using loop_vars.
-fn resolve_section_key(
+/// Resolve a FastSectionName to a sequence of EndfKeys using loop_vars.
+/// Simple names produce `[Str(name)]`; indexed names like `foo[i]`
+/// produce `[Str("foo"), Int(i)]`.
+fn resolve_section_keys(
     fsn: &FastSectionName,
     loop_vars: &std::collections::HashMap<String, i64>,
-) -> EndfResult<EndfKey> {
-    if fsn.indices.is_empty() {
-        Ok(EndfKey::Str(fsn.name.clone()))
-    } else {
-        // For indexed sections, resolve the first index
-        let idx = resolve_index(&fsn.indices[0], loop_vars)?;
-        Ok(EndfKey::Int(idx))
+) -> EndfResult<Vec<EndfKey>> {
+    let mut keys = vec![EndfKey::Str(fsn.name.clone())];
+    for idx_src in &fsn.indices {
+        let idx = resolve_index(idx_src, loop_vars)?;
+        keys.push(EndfKey::Int(idx));
     }
+    Ok(keys)
 }
 
 /// Store table data (NBT, INT, x, y) into the current scope.
@@ -501,18 +502,23 @@ pub fn execute_fast_tab1_loop(
 
         // Handle table section
         if let Some(ref tn) = table_name {
-            let key = resolve_section_key(tn, &state.loop_vars)?;
+            let keys = resolve_section_keys(tn, &state.loop_vars)?;
+            let depth = keys.len();
             {
-                let scope = state.current_scope_mut();
-                if !scope.contains_key(key.clone()) {
-                    scope.insert(key.clone(), EndfValue::new_dict());
+                let mut current = state.current_scope_mut();
+                for key in &keys {
+                    if !current.contains_key(key.clone()) {
+                        current.insert(key.clone(), EndfValue::new_dict());
+                    }
+                    current = current.get_mut(key.clone()).unwrap();
                 }
             }
-            state.scope_path.push(key);
+            state.scope_path.extend(keys);
 
             store_tab1_table_data(state.current_scope_mut(), &body, x_var, y_var);
 
-            state.scope_path.pop();
+            let new_len = state.scope_path.len() - depth;
+            state.scope_path.truncate(new_len);
         } else {
             store_tab1_table_data(state.current_scope_mut(), &body, x_var, y_var);
         }
@@ -556,16 +562,23 @@ pub fn execute_fast_list_loop(
         apply_assignments(assignments, state.current_scope_mut(), parse_opts)?;
 
         // Enter list section if named
-        if let Some(ref ln) = list_name {
-            let key = resolve_section_key(ln, &state.loop_vars)?;
+        let list_section_depth = if let Some(ref ln) = list_name {
+            let keys = resolve_section_keys(ln, &state.loop_vars)?;
+            let depth = keys.len();
             {
-                let scope = state.current_scope_mut();
-                if !scope.contains_key(key.clone()) {
-                    scope.insert(key.clone(), EndfValue::new_dict());
+                let mut current = state.current_scope_mut();
+                for key in &keys {
+                    if !current.contains_key(key.clone()) {
+                        current.insert(key.clone(), EndfValue::new_dict());
+                    }
+                    current = current.get_mut(key.clone()).unwrap();
                 }
             }
-            state.scope_path.push(key);
-        }
+            state.scope_path.extend(keys);
+            depth
+        } else {
+            0
+        };
 
         // Store list body values
         if !body_vars.is_empty() {
@@ -631,8 +644,9 @@ pub fn execute_fast_list_loop(
         }
 
         // Exit list section if entered
-        if list_name.is_some() {
-            state.scope_path.pop();
+        if list_section_depth > 0 {
+            let new_len = state.scope_path.len() - list_section_depth;
+            state.scope_path.truncate(new_len);
         }
     }
     state.loop_vars.remove(loop_var);

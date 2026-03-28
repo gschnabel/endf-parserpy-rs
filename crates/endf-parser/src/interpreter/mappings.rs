@@ -796,11 +796,10 @@ pub fn map_tab1(
         map_fields_to_datadic(header_fields, &header_values, &field_names, state, parse_opts)?;
 
         // Enter table section if named.
-        let popped_key = if let Some(ref tn) = table_name {
-            enter_section(tn, state, parse_opts)?;
-            Some(tn.clone())
+        let section_depth = if let Some(ref tn) = table_name {
+            enter_section(tn, state, parse_opts)?
         } else {
-            None
+            0
         };
 
         // Store table data: NBT, INT arrays.
@@ -812,18 +811,17 @@ pub fn map_tab1(
         store_float_array(&y_var.name, &body.y, state, parse_opts)?;
 
         // Exit table section if entered.
-        if popped_key.is_some() {
-            exit_section(state);
+        if section_depth > 0 {
+            exit_section(state, section_depth);
         }
     } else {
         // Write mode.
 
         // Enter table section if named.
-        let popped_key = if let Some(ref tn) = table_name {
-            enter_section_write(tn, state, parse_opts)?;
-            Some(tn.clone())
+        let section_depth = if let Some(ref tn) = table_name {
+            enter_section_write(tn, state, parse_opts)?
         } else {
-            None
+            0
         };
 
         // Read table data from datadic.
@@ -833,8 +831,8 @@ pub fn map_tab1(
         let y = read_float_array(&y_var.name, state, parse_opts)?;
 
         // Exit table section.
-        if popped_key.is_some() {
-            exit_section(state);
+        if section_depth > 0 {
+            exit_section(state, section_depth);
         }
 
         let nr = nbt.len() as i64;
@@ -915,34 +913,32 @@ pub fn map_tab2(
         map_fields_to_datadic(&header_field_refs, &header_values, &field_names, state, parse_opts)?;
 
         // Enter table section if named.
-        let popped_key = if let Some(ref tn) = table_name {
-            enter_section(tn, state, parse_opts)?;
-            Some(tn.clone())
+        let section_depth = if let Some(ref tn) = table_name {
+            enter_section(tn, state, parse_opts)?
         } else {
-            None
+            0
         };
 
         // Store NBT, INT.
         store_int_array("NBT", &body.nbt, state, parse_opts)?;
         store_int_array("INT", &body.int, state, parse_opts)?;
 
-        if popped_key.is_some() {
-            exit_section(state);
+        if section_depth > 0 {
+            exit_section(state, section_depth);
         }
     } else {
         // Write mode.
-        let popped_key = if let Some(ref tn) = table_name {
-            enter_section_write(tn, state, parse_opts)?;
-            Some(tn.clone())
+        let section_depth = if let Some(ref tn) = table_name {
+            enter_section_write(tn, state, parse_opts)?
         } else {
-            None
+            0
         };
 
         let nbt = read_int_array("NBT", state, parse_opts)?;
         let int = read_int_array("INT", state, parse_opts)?;
 
-        if popped_key.is_some() {
-            exit_section(state);
+        if section_depth > 0 {
+            exit_section(state, section_depth);
         }
 
         let nr = nbt.len() as i64;
@@ -1014,11 +1010,10 @@ pub fn map_list(
         map_fields_to_datadic(fields, &header_values, &field_names, state, parse_opts)?;
 
         // Enter list section if named.
-        let popped_key = if let Some(ref ln) = list_name {
-            enter_section(ln, state, parse_opts)?;
-            Some(ln.clone())
+        let section_depth = if let Some(ref ln) = list_name {
+            enter_section(ln, state, parse_opts)?
         } else {
-            None
+            0
         };
 
         // Process list body items.
@@ -1035,26 +1030,25 @@ pub fn map_list(
             });
         }
 
-        if popped_key.is_some() {
-            exit_section(state);
+        if section_depth > 0 {
+            exit_section(state, section_depth);
         }
     } else {
         // Write mode: evaluate header, then build body values.
 
         // Enter list section if named (for reading body values from datadic).
-        let popped_key = if let Some(ref ln) = list_name {
-            enter_section_write(ln, state, parse_opts)?;
-            Some(ln.clone())
+        let section_depth = if let Some(ref ln) = list_name {
+            enter_section_write(ln, state, parse_opts)?
         } else {
-            None
+            0
         };
 
         // Build list body values first (we may need the count for N1).
         let mut vals: Vec<f64> = Vec::new();
         process_list_items_write(body, &mut vals, state, parse_opts)?;
 
-        if popped_key.is_some() {
-            exit_section(state);
+        if section_depth > 0 {
+            exit_section(state, section_depth);
         }
 
         // Ensure NPL is available for header evaluation.
@@ -1378,66 +1372,81 @@ pub fn map_intg(
 // ---------------------------------------------------------------------------
 
 /// Enter a named section in read mode (create it if missing).
+/// Returns the number of scope keys pushed (1 for simple names, 2 for indexed).
 fn enter_section(
     name: &ExtVarName,
     state: &mut InterpreterState,
     parse_opts: &ParseOpts,
-) -> EndfResult<()> {
-    // Evaluate indices for the section name.
+) -> EndfResult<usize> {
     let scope_chain = state.scope_chain();
-    let key = section_key(name, &scope_chain, &state.loop_vars, &state.abbreviations, parse_opts)?;
+    let keys = section_keys(name, &scope_chain, &state.loop_vars, &state.abbreviations, parse_opts)?;
+    let num_keys = keys.len();
 
-    // Ensure the section dictionary exists.
+    // Ensure each level of the path exists, creating dicts as needed.
     {
-        let scope = state.current_scope_mut();
-        if !scope.contains_key(key.clone()) {
-            scope.insert(key.clone(), EndfValue::new_dict());
+        let mut current = state.current_scope_mut();
+        for key in &keys {
+            if !current.contains_key(key.clone()) {
+                current.insert(key.clone(), EndfValue::new_dict());
+            }
+            current = current.get_mut(key.clone()).unwrap();
         }
     }
 
-    state.scope_path.push(key);
-    Ok(())
+    state.scope_path.extend(keys);
+    Ok(num_keys)
 }
 
 /// Enter a named section in write mode (it must already exist).
+/// Returns the number of scope keys pushed.
 fn enter_section_write(
     name: &ExtVarName,
     state: &mut InterpreterState,
     parse_opts: &ParseOpts,
-) -> EndfResult<()> {
+) -> EndfResult<usize> {
     let scope_chain = state.scope_chain();
-    let key = section_key(name, &scope_chain, &state.loop_vars, &state.abbreviations, parse_opts)?;
+    let keys = section_keys(name, &scope_chain, &state.loop_vars, &state.abbreviations, parse_opts)?;
+    let num_keys = keys.len();
 
-    if !state.current_scope().contains_key(key.clone()) {
-        return Err(EndfError::MissingSection {
-            name: format!("{}", key),
-        });
+    // Verify that the full path exists.
+    {
+        let mut current: &EndfValue = state.current_scope();
+        for key in &keys {
+            if !current.contains_key(key.clone()) {
+                return Err(EndfError::MissingSection {
+                    name: format!("{}", key),
+                });
+            }
+            current = current.get(key.clone()).unwrap();
+        }
     }
 
-    state.scope_path.push(key);
-    Ok(())
+    state.scope_path.extend(keys);
+    Ok(num_keys)
 }
 
-/// Exit the current section (pop the scope path).
-fn exit_section(state: &mut InterpreterState) {
-    state.scope_path.pop();
+/// Exit a section by popping `depth` keys from the scope path.
+fn exit_section(state: &mut InterpreterState, depth: usize) {
+    let new_len = state.scope_path.len() - depth;
+    state.scope_path.truncate(new_len);
 }
 
-/// Compute the EndfKey for a section name (handling indices).
-fn section_key(
+/// Compute the sequence of EndfKeys for a section name.
+/// Simple names produce `[Str(name)]`; indexed names like `foo[i]`
+/// produce `[Str("foo"), Int(i)]`.
+fn section_keys(
     name: &ExtVarName,
     scope_chain: &[&EndfValue],
     loop_vars: &HashMap<String, i64>,
     abbreviations: &HashMap<String, Expr>,
     opts: &ParseOpts,
-) -> EndfResult<EndfKey> {
-    if name.indices.is_empty() {
-        Ok(EndfKey::Str(name.name.clone()))
-    } else {
-        // For indexed section names, evaluate the first index.
-        let idx = eval_index(&name.indices[0], scope_chain, loop_vars, abbreviations, opts)?;
-        Ok(EndfKey::Int(idx))
+) -> EndfResult<Vec<EndfKey>> {
+    let mut keys = vec![EndfKey::Str(name.name.clone())];
+    for idx_expr in &name.indices {
+        let idx = eval_index(idx_expr, scope_chain, loop_vars, abbreviations, opts)?;
+        keys.push(EndfKey::Int(idx));
     }
+    Ok(keys)
 }
 
 // ---------------------------------------------------------------------------
