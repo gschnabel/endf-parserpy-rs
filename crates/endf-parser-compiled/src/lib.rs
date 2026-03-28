@@ -173,19 +173,19 @@ pub fn parse_mf1_mt451(
     {
         let (text_rec, _ctrl) = records::read_text(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
-        result.insert("ZSYMAM", EndfValue::Str(text_rec.text[0..11].to_string()));
-        result.insert("ALAB", EndfValue::Str(text_rec.text[11..22].to_string()));
-        result.insert("EDATE", EndfValue::Str(text_rec.text[22..32].to_string()));
-        result.insert("AUTH", EndfValue::Str(text_rec.text[33..66].to_string()));
+        result.insert("ZSYMAM", EndfValue::Str(text_rec.text[0..11.min(text_rec.text.len())].to_string()));
+        result.insert("ALAB", EndfValue::Str(text_rec.text[11..22.min(text_rec.text.len())].to_string()));
+        result.insert("EDATE", EndfValue::Str(text_rec.text[22..32.min(text_rec.text.len())].to_string()));
+        result.insert("AUTH", EndfValue::Str(text_rec.text[33..66.min(text_rec.text.len())].to_string()));
     }
     // TEXT record
     {
         let (text_rec, _ctrl) = records::read_text(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
         ofs += 1;
-        result.insert("REF", EndfValue::Str(text_rec.text[1..22].to_string()));
-        result.insert("DDATE", EndfValue::Str(text_rec.text[22..32].to_string()));
-        result.insert("RDATE", EndfValue::Str(text_rec.text[33..43].to_string()));
-        result.insert("ENDATE", EndfValue::Str(text_rec.text[55..63].to_string()));
+        result.insert("REF", EndfValue::Str(text_rec.text[1..22.min(text_rec.text.len())].to_string()));
+        result.insert("DDATE", EndfValue::Str(text_rec.text[22..32.min(text_rec.text.len())].to_string()));
+        result.insert("RDATE", EndfValue::Str(text_rec.text[33..43.min(text_rec.text.len())].to_string()));
+        result.insert("ENDATE", EndfValue::Str(text_rec.text[55..63.min(text_rec.text.len())].to_string()));
     }
     for var_i_loop_ in (1_f64 as i64)..=(3_f64 as i64) {
         var_i = var_i_loop_ as f64;
@@ -193,7 +193,10 @@ pub fn parse_mf1_mt451(
         {
             let (text_rec, _ctrl) = records::read_text(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
             ofs += 1;
-            result.insert("HSUB", EndfValue::Str(text_rec.text.clone()));
+            if !result.contains_key("HSUB") {
+                result.insert("HSUB", EndfValue::new_dict());
+            }
+            result.get_mut("HSUB").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Str(text_rec.text.clone()));
         }
     }
     for var_i_loop_ in (1_f64 as i64)..=((var_nwd as f64 - 5_f64) as i64) {
@@ -202,7 +205,10 @@ pub fn parse_mf1_mt451(
         {
             let (text_rec, _ctrl) = records::read_text(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;
             ofs += 1;
-            result.insert("DESCRIPTION", EndfValue::Str(text_rec.text.clone()));
+            if !result.contains_key("DESCRIPTION") {
+                result.insert("DESCRIPTION", EndfValue::new_dict());
+            }
+            result.get_mut("DESCRIPTION").unwrap().insert(EndfKey::Int(var_i as f64 as i64), EndfValue::Str(text_rec.text.clone()));
         }
     }
     for var_i_loop_ in (1_f64 as i64)..=(var_nxc as f64 as i64) {
@@ -422,6 +428,8 @@ pub fn parse_mf1_mt455(
             // field c2 expected 0 (validation skipped in compiled mode)
             // field l1 expected 0 (validation skipped in compiled mode)
             // field l2 expected 0 (validation skipped in compiled mode)
+            var_ne = cont.n2 as f64;
+            result.insert("NE", EndfValue::Int(var_ne as i64));
 
             result.insert("NBT", list_from_i64(&body.nbt));
             result.insert("INT", list_from_i64(&body.int));
@@ -542,6 +550,8 @@ pub fn parse_mf1_mt455(
             // field c2 expected 0 (validation skipped in compiled mode)
             // field l1 expected 0 (validation skipped in compiled mode)
             // field l2 expected 0 (validation skipped in compiled mode)
+            var_ne = cont.n2 as f64;
+            result.insert("NE", EndfValue::Int(var_ne as i64));
 
             result.insert("NBT", list_from_i64(&body.nbt));
             result.insert("INT", list_from_i64(&body.int));
@@ -1158,7 +1168,10 @@ pub fn parse_mf1_mt458(
                 tab_section.insert("INT", list_from_i64(&body.int));
                 tab_section.insert("Eint", list_from_f64(&body.x));
                 tab_section.insert("EIFC", list_from_f64(&body.y));
-                result.insert("fiscomp", tab_section);
+                if !result.contains_key("fiscomp") {
+                    result.insert("fiscomp", EndfValue::new_dict());
+                }
+                result.get_mut("fiscomp").unwrap().insert(EndfKey::Int(var_k as f64 as i64), tab_section);
             }
         }
     }
@@ -1249,7 +1262,10 @@ pub fn parse_mf1_mt460(
                 tab_section.insert("INT", list_from_i64(&body.int));
                 tab_section.insert("tint", list_from_f64(&body.x));
                 tab_section.insert("T", list_from_f64(&body.y));
-                result.insert("table", tab_section);
+                if !result.contains_key("table") {
+                    result.insert("table", EndfValue::new_dict());
+                }
+                result.get_mut("table").unwrap().insert(EndfKey::Int(var_i as f64 as i64), tab_section);
             }
         }
     } else if lookahead_ok_1 {
@@ -2437,7 +2453,10 @@ pub fn parse_mf2_mt151(
                                                     tab_section.insert("INT", list_from_i64(&body.int));
                                                     tab_section.insert("E", list_from_f64(&body.x));
                                                     tab_section.insert("RBR", list_from_f64(&body.y));
-                                                    result.insert("real_part", tab_section);
+                                                    if !result.contains_key("real_part") {
+                                                        result.insert("real_part", EndfValue::new_dict());
+                                                    }
+                                                    result.get_mut("real_part").unwrap().insert(EndfKey::Int(var_n as f64 as i64), tab_section);
                                                 }
                                                 // TAB1 record
                                                 {
@@ -2455,7 +2474,10 @@ pub fn parse_mf2_mt151(
                                                     tab_section.insert("INT", list_from_i64(&body.int));
                                                     tab_section.insert("E", list_from_f64(&body.x));
                                                     tab_section.insert("RBI", list_from_f64(&body.y));
-                                                    result.insert("imag_part", tab_section);
+                                                    if !result.contains_key("imag_part") {
+                                                        result.insert("imag_part", EndfValue::new_dict());
+                                                    }
+                                                    result.get_mut("imag_part").unwrap().insert(EndfKey::Int(var_n as f64 as i64), tab_section);
                                                 }
                                             } else if (var_lbk as f64 as i64) == (2_f64 as i64) {
                                                 // LIST record
@@ -2576,7 +2598,10 @@ pub fn parse_mf2_mt151(
                                                     tab_section.insert("INT", list_from_i64(&body.int));
                                                     tab_section.insert("E", list_from_f64(&body.x));
                                                     tab_section.insert("PSR", list_from_f64(&body.y));
-                                                    result.insert("real_part", tab_section);
+                                                    if !result.contains_key("real_part") {
+                                                        result.insert("real_part", EndfValue::new_dict());
+                                                    }
+                                                    result.get_mut("real_part").unwrap().insert(EndfKey::Int(var_n as f64 as i64), tab_section);
                                                 }
                                                 // TAB1 record
                                                 {
@@ -2594,7 +2619,10 @@ pub fn parse_mf2_mt151(
                                                     tab_section.insert("INT", list_from_i64(&body.int));
                                                     tab_section.insert("E", list_from_f64(&body.x));
                                                     tab_section.insert("PSI", list_from_f64(&body.y));
-                                                    result.insert("imag_part", tab_section);
+                                                    if !result.contains_key("imag_part") {
+                                                        result.insert("imag_part", EndfValue::new_dict());
+                                                    }
+                                                    result.get_mut("imag_part").unwrap().insert(EndfKey::Int(var_n as f64 as i64), tab_section);
                                                 }
                                             }
                                         }
@@ -3255,6 +3283,8 @@ pub fn parse_mf4_wildcard(
             // field c2 expected 0 (validation skipped in compiled mode)
             // field l1 expected 0 (validation skipped in compiled mode)
             // field l2 expected 0 (validation skipped in compiled mode)
+            var_ne = cont.n2 as f64;
+            result.insert("NE", EndfValue::Int(var_ne as i64));
 
             result.insert("NBT", list_from_i64(&body.nbt));
             result.insert("INT", list_from_i64(&body.int));
@@ -3309,6 +3339,8 @@ pub fn parse_mf4_wildcard(
             // field c2 expected 0 (validation skipped in compiled mode)
             // field l1 expected 0 (validation skipped in compiled mode)
             // field l2 expected 0 (validation skipped in compiled mode)
+            var_ne = cont.n2 as f64;
+            result.insert("NE", EndfValue::Int(var_ne as i64));
 
             let mut tab_section = EndfValue::new_dict();
             tab_section.insert("NBT", list_from_i64(&body.nbt));
@@ -3338,7 +3370,10 @@ pub fn parse_mf4_wildcard(
                 tab_section.insert("INT", list_from_i64(&body.int));
                 tab_section.insert("mu", list_from_f64(&body.x));
                 tab_section.insert("f", list_from_f64(&body.y));
-                result.insert("angtable", tab_section);
+                if !result.contains_key("angtable") {
+                    result.insert("angtable", EndfValue::new_dict());
+                }
+                result.get_mut("angtable").unwrap().insert(EndfKey::Int(var_i as f64 as i64), tab_section);
             }
         }
     } else if ((var_ltt as f64 as i64) == (3_f64 as i64)) && ((var_li as f64 as i64) == (0_f64 as i64)) {
@@ -3352,6 +3387,8 @@ pub fn parse_mf4_wildcard(
             // field c2 expected 0 (validation skipped in compiled mode)
             // field l1 expected 0 (validation skipped in compiled mode)
             // field l2 expected 0 (validation skipped in compiled mode)
+            var_ne1 = cont.n2 as f64;
+            result.insert("NE1", EndfValue::Int(var_ne1 as i64));
 
             let mut tab_section = EndfValue::new_dict();
             tab_section.insert("NBT", list_from_i64(&body.nbt));
@@ -3407,6 +3444,8 @@ pub fn parse_mf4_wildcard(
             // field c2 expected 0 (validation skipped in compiled mode)
             // field l1 expected 0 (validation skipped in compiled mode)
             // field l2 expected 0 (validation skipped in compiled mode)
+            var_ne2 = cont.n2 as f64;
+            result.insert("NE2", EndfValue::Int(var_ne2 as i64));
 
             let mut tab_section = EndfValue::new_dict();
             tab_section.insert("NBT", list_from_i64(&body.nbt));
@@ -3436,7 +3475,10 @@ pub fn parse_mf4_wildcard(
                 tab_section.insert("INT", list_from_i64(&body.int));
                 tab_section.insert("mu", list_from_f64(&body.x));
                 tab_section.insert("f", list_from_f64(&body.y));
-                result.insert("angtable", tab_section);
+                if !result.contains_key("angtable") {
+                    result.insert("angtable", EndfValue::new_dict());
+                }
+                result.get_mut("angtable").unwrap().insert(EndfKey::Int(var_i as f64 as i64), tab_section);
             }
         }
     }
@@ -3589,6 +3631,8 @@ pub fn parse_mf5_wildcard(
                     // field c2 expected 0 (validation skipped in compiled mode)
                     // field l1 expected 0 (validation skipped in compiled mode)
                     // field l2 expected 0 (validation skipped in compiled mode)
+                    var_ne = cont.n2 as f64;
+                    result.insert("NE", EndfValue::Int(var_ne as i64));
 
                     let mut tab_section = EndfValue::new_dict();
                     tab_section.insert("NBT", list_from_i64(&body.nbt));
@@ -3616,7 +3660,10 @@ pub fn parse_mf5_wildcard(
                         tab_section.insert("INT", list_from_i64(&body.int));
                         tab_section.insert("Eout", list_from_f64(&body.x));
                         tab_section.insert("g", list_from_f64(&body.y));
-                        result.insert("spectrum", tab_section);
+                        if !result.contains_key("spectrum") {
+                            result.insert("spectrum", EndfValue::new_dict());
+                        }
+                        result.get_mut("spectrum").unwrap().insert(EndfKey::Int(var_l as f64 as i64), tab_section);
                     }
                 }
             } else if lookahead_ok_1 {
@@ -3943,6 +3990,8 @@ pub fn parse_mf6_wildcard(
                     result.insert("LANG", EndfValue::Int(var_lang as i64));
                     var_lep = cont.l2 as f64;
                     result.insert("LEP", EndfValue::Int(var_lep as i64));
+                    var_ne = cont.n2 as f64;
+                    result.insert("NE", EndfValue::Int(var_ne as i64));
 
                     result.insert("NBT", list_from_i64(&body.nbt));
                     result.insert("INT", list_from_i64(&body.int));
@@ -4018,6 +4067,8 @@ pub fn parse_mf6_wildcard(
                     // field c2 expected 0 (validation skipped in compiled mode)
                     // field l1 expected 0 (validation skipped in compiled mode)
                     // field l2 expected 0 (validation skipped in compiled mode)
+                    var_ne = cont.n2 as f64;
+                    result.insert("NE", EndfValue::Int(var_ne as i64));
 
                     result.insert("NBT", list_from_i64(&body.nbt));
                     result.insert("INT", list_from_i64(&body.int));
@@ -4076,6 +4127,8 @@ pub fn parse_mf6_wildcard(
                     var_lidp = cont.l1 as f64;
                     result.insert("LIDP", EndfValue::Int(var_lidp as i64));
                     // field l2 expected 0 (validation skipped in compiled mode)
+                    var_ne = cont.n2 as f64;
+                    result.insert("NE", EndfValue::Int(var_ne as i64));
 
                     result.insert("NBT", list_from_i64(&body.nbt));
                     result.insert("INT", list_from_i64(&body.int));
@@ -4148,6 +4201,8 @@ pub fn parse_mf6_wildcard(
                     // field c2 expected 0 (validation skipped in compiled mode)
                     // field l1 expected 0 (validation skipped in compiled mode)
                     // field l2 expected 0 (validation skipped in compiled mode)
+                    var_ne = cont.n2 as f64;
+                    result.insert("NE", EndfValue::Int(var_ne as i64));
 
                     let mut tab_section = EndfValue::new_dict();
                     tab_section.insert("NBT", list_from_i64(&body.nbt));
@@ -4169,11 +4224,18 @@ pub fn parse_mf6_wildcard(
                         result.get_mut("E").unwrap().insert(EndfKey::Int(var_j as f64 as i64), f64_to_endf_value(cont.c2));
                         // field l1 expected 0 (validation skipped in compiled mode)
                         // field l2 expected 0 (validation skipped in compiled mode)
+                        if !result.contains_key("NMU") {
+                            result.insert("NMU", EndfValue::new_dict());
+                        }
+                        result.get_mut("NMU").unwrap().insert(EndfKey::Int(var_j as f64 as i64), EndfValue::Int(cont.n2 as i64));
 
                         let mut tab_section = EndfValue::new_dict();
                         tab_section.insert("NBT", list_from_i64(&body.nbt));
                         tab_section.insert("INT", list_from_i64(&body.int));
-                        result.insert("mu_interpol", tab_section);
+                        if !result.contains_key("mu_interpol") {
+                            result.insert("mu_interpol", EndfValue::new_dict());
+                        }
+                        result.get_mut("mu_interpol").unwrap().insert(EndfKey::Int(var_j as f64 as i64), tab_section);
                     }
                     for var_k_loop_ in (1_f64 as i64)..=(result.get("NMU").and_then(|d| d.get(EndfKey::Int(var_j as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
                         var_k = var_k_loop_ as f64;
@@ -4200,7 +4262,14 @@ pub fn parse_mf6_wildcard(
                             tab_section.insert("INT", list_from_i64(&body.int));
                             tab_section.insert("Ep", list_from_f64(&body.x));
                             tab_section.insert("f", list_from_f64(&body.y));
-                            result.insert("table", tab_section);
+                            if !result.contains_key("table") {
+                                result.insert("table", EndfValue::new_dict());
+                            }
+                            if !result.get_mut("table").unwrap().contains_key(EndfKey::Int(var_j as f64 as i64).clone()) {
+                                result.get_mut("table").unwrap().insert(EndfKey::Int(var_j as f64 as i64).clone(), EndfValue::new_dict());
+                            }
+                            let _nav_0 = result.get_mut("table").unwrap().get_mut(EndfKey::Int(var_j as f64 as i64)).unwrap();
+                            _nav_0.insert(EndfKey::Int(var_k as f64 as i64), tab_section);
                         }
                     }
                 }
@@ -4516,6 +4585,8 @@ pub fn parse_mf7_mt4(
         // field c2 expected 0 (validation skipped in compiled mode)
         // field l1 expected 0 (validation skipped in compiled mode)
         // field l2 expected 0 (validation skipped in compiled mode)
+        var_nb = cont.n2 as f64;
+        result.insert("NB", EndfValue::Int(var_nb as i64));
 
         let mut tab_section = EndfValue::new_dict();
         tab_section.insert("NBT", list_from_i64(&body.nbt));
@@ -4547,7 +4618,10 @@ pub fn parse_mf7_mt4(
             tab_section.insert("INT", list_from_i64(&body.int));
             tab_section.insert("alpha", list_from_f64(&body.x));
             tab_section.insert("S", list_from_f64(&body.y));
-            result.insert("S_table", tab_section);
+            if !result.contains_key("S_table") {
+                result.insert("S_table", EndfValue::new_dict());
+            }
+            result.get_mut("S_table").unwrap().insert(EndfKey::Int(var_i as f64 as i64), tab_section);
         }
         for var_j_loop_ in (1_f64 as i64)..=(result.get("LT").and_then(|d| d.get(EndfKey::Int(var_i as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
             var_j = var_j_loop_ as f64;
@@ -6284,7 +6358,10 @@ pub fn parse_mf12_wildcard(
                 tab_section.insert("INT", list_from_i64(&body.int));
                 tab_section.insert("Eint", list_from_f64(&body.x));
                 tab_section.insert("y", list_from_f64(&body.y));
-                result.insert("table", tab_section);
+                if !result.contains_key("table") {
+                    result.insert("table", EndfValue::new_dict());
+                }
+                result.get_mut("table").unwrap().insert(EndfKey::Int(var_k as f64 as i64), tab_section);
             }
         }
     } else if lookahead_ok_1 {
@@ -6611,11 +6688,18 @@ pub fn parse_mf14_wildcard(
                 result.get_mut("ES").unwrap().insert(EndfKey::Int(var_k as f64 as i64), f64_to_endf_value(cont.c2));
                 // field l1 expected 0 (validation skipped in compiled mode)
                 // field l2 expected 0 (validation skipped in compiled mode)
+                if !result.contains_key("NE") {
+                    result.insert("NE", EndfValue::new_dict());
+                }
+                result.get_mut("NE").unwrap().insert(EndfKey::Int(var_k as f64 as i64), EndfValue::Int(cont.n2 as i64));
 
                 let mut tab_section = EndfValue::new_dict();
                 tab_section.insert("NBT", list_from_i64(&body.nbt));
                 tab_section.insert("INT", list_from_i64(&body.int));
-                result.insert("E_interpol", tab_section);
+                if !result.contains_key("E_interpol") {
+                    result.insert("E_interpol", EndfValue::new_dict());
+                }
+                result.get_mut("E_interpol").unwrap().insert(EndfKey::Int(var_k as f64 as i64), tab_section);
             }
             for var_l_loop_ in (1_f64 as i64)..=(result.get("NE").and_then(|d| d.get(EndfKey::Int(var_k as f64 as i64))).and_then(|v| v.as_float()).unwrap_or(0.0) as i64) {
                 var_l = var_l_loop_ as f64;
@@ -6781,6 +6865,8 @@ pub fn parse_mf15_wildcard(
                     // field c2 expected 0 (validation skipped in compiled mode)
                     // field l1 expected 0 (validation skipped in compiled mode)
                     // field l2 expected 0 (validation skipped in compiled mode)
+                    var_ne = cont.n2 as f64;
+                    result.insert("NE", EndfValue::Int(var_ne as i64));
 
                     result.insert("NBT", list_from_i64(&body.nbt));
                     result.insert("INT", list_from_i64(&body.int));
@@ -6806,7 +6892,10 @@ pub fn parse_mf15_wildcard(
                         tab_section.insert("INT", list_from_i64(&body.int));
                         tab_section.insert("Egamma", list_from_f64(&body.x));
                         tab_section.insert("g", list_from_f64(&body.y));
-                        result.insert("rtfm1_tab", tab_section);
+                        if !result.contains_key("rtfm1_tab") {
+                            result.insert("rtfm1_tab", EndfValue::new_dict());
+                        }
+                        result.get_mut("rtfm1_tab").unwrap().insert(EndfKey::Int(var_k as f64 as i64), tab_section);
                     }
                 }
             }

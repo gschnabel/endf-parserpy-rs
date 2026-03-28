@@ -799,9 +799,7 @@ impl CodeGen {
 
         // Store table data
         if let Some(ref tn) = table_name {
-            self.line(&format!(
-                "let mut tab_section = EndfValue::new_dict();",
-            ));
+            self.line("let mut tab_section = EndfValue::new_dict();");
             self.line("tab_section.insert(\"NBT\", list_from_i64(&body.nbt));");
             self.line("tab_section.insert(\"INT\", list_from_i64(&body.int));");
             self.line(&format!(
@@ -812,10 +810,14 @@ impl CodeGen {
                 "tab_section.insert(\"{}\", list_from_f64(&body.y));",
                 y_var.name
             ));
-            self.line(&format!(
-                "result.insert(\"{}\", tab_section);",
-                tn.name
-            ));
+            if tn.indices.is_empty() {
+                self.line(&format!(
+                    "result.insert(\"{}\", tab_section);",
+                    tn.name
+                ));
+            } else {
+                self.emit_nested_insert("result", &tn.name, &tn.indices, "tab_section");
+            }
         } else {
             self.line("result.insert(\"NBT\", list_from_i64(&body.nbt));");
             self.line("result.insert(\"INT\", list_from_i64(&body.int));");
@@ -852,11 +854,15 @@ impl CodeGen {
         self.line("ofs += consumed;");
         self.blank();
 
-        let cont_fields = ["c1", "c2", "l1", "l2"];
-        let is_int = [false, false, true, true];
+        // Map header fields C1, C2, L1, L2 (fields 0-3) and N2 (field 5).
+        // N1 (NR) is NOT mapped — it's inferred from NBT array length.
+        // This matches interpreter behavior in map_tab2.
+        let cont_fields = ["c1", "c2", "l1", "l2", "n2"];
+        let is_int = [false, false, true, true, true];
+        let field_indices = [0, 1, 2, 3, 5];
 
-        for (i, expr) in fields[..4].iter().enumerate() {
-            self.emit_cont_field_assignment(expr, cont_fields[i], is_int[i]);
+        for (j, &fi) in field_indices.iter().enumerate() {
+            self.emit_cont_field_assignment(&fields[fi], cont_fields[j], is_int[j]);
         }
 
         self.blank();
@@ -865,10 +871,14 @@ impl CodeGen {
             self.line("let mut tab_section = EndfValue::new_dict();");
             self.line("tab_section.insert(\"NBT\", list_from_i64(&body.nbt));");
             self.line("tab_section.insert(\"INT\", list_from_i64(&body.int));");
-            self.line(&format!(
-                "result.insert(\"{}\", tab_section);",
-                tn.name
-            ));
+            if tn.indices.is_empty() {
+                self.line(&format!(
+                    "result.insert(\"{}\", tab_section);",
+                    tn.name
+                ));
+            } else {
+                self.emit_nested_insert("result", &tn.name, &tn.indices, "tab_section");
+            }
         } else {
             self.line("result.insert(\"NBT\", list_from_i64(&body.nbt));");
             self.line("result.insert(\"INT\", list_from_i64(&body.int));");
@@ -922,10 +932,14 @@ impl CodeGen {
         self.emit_list_body_distribution(body, target);
 
         if let Some(ref ln) = list_name {
-            self.line(&format!(
-                "result.insert(\"{}\", list_section);",
-                ln.name
-            ));
+            if ln.indices.is_empty() {
+                self.line(&format!(
+                    "result.insert(\"{}\", list_section);",
+                    ln.name
+                ));
+            } else {
+                self.emit_nested_insert("result", &ln.name, &ln.indices, "list_section");
+            }
         }
 
         self.indent -= 1;
@@ -1199,31 +1213,8 @@ impl CodeGen {
                 section_var
             ));
 
-            // Insert with index key
-            self.line(&format!(
-                "if !result.contains_key(\"{}\") {{",
-                name.name
-            ));
-            self.indent += 1;
-            self.line(&format!(
-                "result.insert(\"{}\", EndfValue::new_dict());",
-                name.name
-            ));
-            self.indent -= 1;
-            self.line("}");
-
-            if name.indices.len() == 1 {
-                let idx = self.expr_to_rust(&name.indices[0]);
-                self.line(&format!(
-                    "result.get_mut(\"{}\").unwrap().insert(EndfKey::Int({} as i64), {});",
-                    name.name, idx, section_var
-                ));
-            } else {
-                self.line(&format!(
-                    "// TODO: multi-index section insert for {}",
-                    name.name
-                ));
-            }
+            // Insert with index key(s)
+            self.emit_nested_insert("result", &name.name, &name.indices, &section_var);
         }
 
         // Pop the abbreviation scope for this section.
@@ -1251,10 +1242,17 @@ impl CodeGen {
 
         if placeholders.len() == 1 {
             if let Some(ref v) = placeholders[0].var {
-                self.line(&format!(
-                    "result.insert(\"{}\", EndfValue::Str(text_rec.text.clone()));",
-                    v.name
-                ));
+                if v.indices.is_empty() {
+                    self.line(&format!(
+                        "result.insert(\"{}\", EndfValue::Str(text_rec.text.clone()));",
+                        v.name
+                    ));
+                } else {
+                    self.emit_nested_insert(
+                        "result", &v.name, &v.indices,
+                        "EndfValue::Str(text_rec.text.clone())",
+                    );
+                }
             }
         } else {
             // Multiple text fields: split by width
@@ -1262,10 +1260,18 @@ impl CodeGen {
             for ph in placeholders {
                 let width = ph.width.unwrap_or(66);
                 if let Some(ref v) = ph.var {
-                    self.line(&format!(
-                        "result.insert(\"{}\", EndfValue::Str(text_rec.text[{}..{}].to_string()));",
-                        v.name, pos, pos + width
-                    ));
+                    let text_expr = format!(
+                        "EndfValue::Str(text_rec.text[{}..{}.min(text_rec.text.len())].to_string())",
+                        pos, pos + width
+                    );
+                    if v.indices.is_empty() {
+                        self.line(&format!(
+                            "result.insert(\"{}\", {});",
+                            v.name, text_expr
+                        ));
+                    } else {
+                        self.emit_nested_insert("result", &v.name, &v.indices, &text_expr);
+                    }
                 }
                 pos += width;
             }
