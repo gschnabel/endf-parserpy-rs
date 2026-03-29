@@ -91,14 +91,22 @@ impl EndfParser {
     }
 
     fn parse(&self, py: Python<'_>, input: &str) -> PyResult<PyObject> {
-        let data = self.inner.parse(input).map_err(|e| {
+        // Release GIL during Rust parsing.
+        let input_owned = input.to_string();
+        let data = py.allow_threads(|| {
+            self.inner.parse(&input_owned)
+        }).map_err(|e| {
             PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string())
         })?;
         endf_value_to_py(py, &data)
     }
 
     fn parsefile(&self, py: Python<'_>, filename: &str) -> PyResult<PyObject> {
-        let data = self.inner.parse_file(Path::new(filename)).map_err(|e| {
+        // Release GIL during Rust parsing.
+        let path = Path::new(filename).to_owned();
+        let data = py.allow_threads(|| {
+            self.inner.parse_file(&path)
+        }).map_err(|e| {
             PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string())
         })?;
         endf_value_to_py(py, &data)
