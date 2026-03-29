@@ -209,16 +209,48 @@ data.set_path("3/1/QM", value)     // creates intermediate dicts
 
 #### Serialization
 
-`EndfValue` implements `serde::Serialize` and `serde::Deserialize`, enabling
-JSON roundtrip:
+Two JSON formats are available:
+
+**Human-friendly (recommended):** Clean JSON without type wrappers.
+
+```rust
+use endf_parser::json;
+
+let json_str = json::to_json_string(&data, true)?;   // pretty-printed
+let restored = json::from_json_string(&json_str)?;
+```
+
+Produces:
+```json
+{
+  "3": {
+    "1": {
+      "ZA": 1001,
+      "AWR": 0.9991673,
+      "xstable": {
+        "NBT": [2],
+        "INT": [2],
+        "E": [1e-5, 20000000.0],
+        "xs": [20.436, 0.548]
+      }
+    }
+  }
+}
+```
+
+Integer dict keys become string keys (JSON requirement). On deserialization,
+numeric-looking keys are restored as `EndfKey::Int`.
+
+**Lossless (serde-derived):** Preserves exact type information.
 
 ```rust
 let json = serde_json::to_string_pretty(&data)?;
 let restored: EndfValue = serde_json::from_str(&json)?;
 ```
 
-Note: `EndfKey` serializes integers as `"i:42"` and strings as `"s:name"`
-to preserve type information in JSON object keys.
+Uses type tags (`"Int"`, `"Float"`, `"Dict"`, etc.) and prefixed keys
+(`"i:42"`, `"s:name"`) for lossless roundtrip. More verbose but
+distinguishes `Int(0)` from `Float(0.0)`.
 
 ---
 
@@ -337,6 +369,95 @@ Supported built-in formats:
 
 ---
 
+## JSON Module
+
+**Module:** `endf_parser::json`
+
+Human-friendly JSON serialization for `EndfValue`. Unlike the serde-derived
+format, this produces clean JSON that is easy to read and edit by hand.
+
+| Function | Description |
+|----------|-------------|
+| `to_json_string(&EndfValue, bool) -> Result<String>` | Serialize to JSON string. Bool controls pretty-printing. |
+| `from_json_string(&str) -> Result<EndfValue>` | Deserialize from JSON string. |
+| `endf_to_json(&EndfValue) -> serde_json::Value` | Convert to serde_json value (for custom processing). |
+| `json_to_endf(&serde_json::Value) -> EndfValue` | Convert from serde_json value. |
+
+**Key mapping rules:**
+- `EndfKey::Int(n)` → JSON key `"n"` (string). On read-back, numeric strings become `Int` keys.
+- `EndfKey::Str(s)` → JSON key `"s"`. On read-back, non-numeric strings become `Str` keys.
+- `EndfValue::Int(n)` → JSON integer. On read-back, exact integers restore as `Int`.
+- `EndfValue::Float(f)` → JSON number. On read-back, non-integer numbers restore as `Float`.
+- `EndfValue::List` with `None` entries → JSON array with `null`.
+
+---
+
+## Command-Line Interface
+
+The `endf-tool` binary provides ENDF↔JSON conversion from the command line.
+
+### Build
+
+```bash
+cargo build --release --bin endf_tool -p endf-parser
+```
+
+### ENDF → JSON
+
+```bash
+# Human-friendly format (default), pretty-printed
+endf-tool endf2json input.endf output.json --pretty
+
+# Compact (no indentation)
+endf-tool endf2json input.endf output.json
+
+# Lossless tagged format (preserves Int vs Float distinction)
+endf-tool endf2json input.endf output.json --pretty --lossless
+
+# Output to stdout
+endf-tool endf2json input.endf - --pretty
+```
+
+### JSON → ENDF
+
+```bash
+# Accepts both human-friendly and lossless JSON formats
+endf-tool json2endf input.json output.endf
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--format <fmt>` | Recipe format: `endf6` (default), `endf6-ext`, `jendl`, `pendf`, `errorr` |
+| `--recipes-dir <dir>` | Load custom recipes from directory (overrides `--format`) |
+| `--pretty` | Pretty-print JSON output |
+| `--lossless` | Use tagged JSON format for exact type preservation |
+| `--ignore-mismatches` | Tolerate number/zero/varspec mismatches |
+| `--ignore-send` | Ignore SEND/FEND/MEND/TEND record validation |
+| `--ignore-blank` | Ignore blank lines in input |
+| `--ignore-tpid` | Ignore missing TPID (tape header) record |
+
+### Examples
+
+```bash
+# Convert ENDF/B-VIII.1 file to readable JSON
+endf-tool endf2json n-026_Fe_056.endf Fe56.json \
+    --pretty --ignore-mismatches --ignore-send --ignore-tpid
+
+# Edit Fe56.json in a text editor, then convert back
+endf-tool json2endf Fe56.json Fe56_modified.endf \
+    --ignore-mismatches --ignore-send --ignore-tpid
+
+# Use extended ENDF-6 recipes (more tolerant parsing)
+endf-tool endf2json input.endf output.json --format endf6-ext --pretty
+
+# Use custom recipes
+endf-tool endf2json input.endf output.json --recipes-dir ./my_recipes/ --pretty
+```
+
+---
+
 ## Low-Level Modules
 
 These modules are public and can be used directly for fine-grained control.
@@ -433,15 +554,17 @@ parser.write_file(Path::new("output.endf"), &data)?;
 ### Roundtrip with JSON intermediate
 
 ```rust
+use endf_parser::json;
+
 let parser = EndfParser::new()?;
 let data = parser.parse_file(Path::new("input.endf"))?;
 
-// Save as JSON
-let json = serde_json::to_string_pretty(&data)?;
-std::fs::write("data.json", &json)?;
+// Save as human-friendly JSON
+let json_str = json::to_json_string(&data, true)?;  // true = pretty-print
+std::fs::write("data.json", &json_str)?;
 
 // Load from JSON and write back to ENDF
-let restored: EndfValue = serde_json::from_str(&json)?;
+let restored = json::from_json_string(&std::fs::read_to_string("data.json")?)?;
 parser.write_file(Path::new("output.endf"), &restored)?;
 ```
 
