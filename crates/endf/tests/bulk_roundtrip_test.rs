@@ -3,8 +3,8 @@
 //!
 //!   cargo test --test bulk_roundtrip_test --release -- --nocapture --ignored
 
-use endf_parser::parser::EndfParser;
-use endf_parser::value::{EndfKey, EndfValue};
+use endf::parser::EndfParser;
+use endf::value::{EndfKey, EndfValue};
 use std::fs;
 use std::path::Path;
 
@@ -212,11 +212,11 @@ fn debug_diff_details() {
 #[test]
 #[ignore]
 fn debug_mt151_reparse() {
-    use endf_parser::interpreter::engine::Engine;
-    use endf_parser::recipe::catalogue::RecipeCatalogue;
-    use endf_parser::options::{ParseOpts, ReadOpts, WriteOpts};
-    use endf_parser::interpreter::state::InterpreterState;
-    use endf_parser::records;
+    use endf::interpreter::engine::Engine;
+    use endf::recipe::catalogue::RecipeCatalogue;
+    use endf::options::{ParseOpts, ReadOpts, WriteOpts};
+    use endf::interpreter::state::InterpreterState;
+    use endf::records;
 
     let parser_nofail = EndfParser::builder()
         .ignore_number_mismatch(true)

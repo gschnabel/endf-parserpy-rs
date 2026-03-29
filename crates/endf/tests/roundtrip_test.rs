@@ -3,8 +3,8 @@
 //! Verifies that the ENDF parser can roundtrip data through write and re-parse
 //! without losing information beyond expected floating-point formatting tolerance.
 
-use endf_parser::parser::EndfParser;
-use endf_parser::value::{EndfKey, EndfValue};
+use endf::parser::EndfParser;
+use endf::value::{EndfKey, EndfValue};
 use std::path::Path;
 
 const ATOL: f64 = 1e-10;

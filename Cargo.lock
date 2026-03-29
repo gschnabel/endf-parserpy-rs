@@ -90,7 +90,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
 
 [[package]]
-name = "endf-parser"
+name = "endf"
 version = "0.1.0"
 dependencies = [
  "indexmap",
@@ -108,14 +108,14 @@ dependencies = [
 name = "endf-parser-compiled"
 version = "0.1.0"
 dependencies = [
- "endf-parser",
+ "endf",
 ]
 
 [[package]]
 name = "endf-parserpy-rs"
 version = "0.1.0"
 dependencies = [
- "endf-parser",
+ "endf",
  "endf-parser-compiled",
  "indexmap",
  "pyo3",
@@ -126,7 +126,7 @@ dependencies = [
 name = "endf-wasm"
 version = "0.1.0"
 dependencies = [
- "endf-parser",
+ "endf",
  "js-sys",
  "serde",
  "serde-wasm-bindgen",

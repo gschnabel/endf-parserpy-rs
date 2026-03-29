@@ -1,7 +1,7 @@
 //! Tests for serde support, nofail mode, and CRLF handling.
 
-use endf_parser::parser::EndfParser;
-use endf_parser::value::{EndfKey, EndfValue, EndfTable};
+use endf::parser::EndfParser;
+use endf::value::{EndfKey, EndfValue, EndfTable};
 
 // ---------------------------------------------------------------------------
 // Feature 1: serde JSON roundtrip
@@ -81,8 +81,8 @@ fn test_serde_json_roundtrip_list() {
 
 #[test]
 fn test_serde_json_roundtrip_parsed_endf() {
-    use endf_parser::records::{self, ContRecord, CtrlRecord, Tab1Body};
-    use endf_parser::options::WriteOpts;
+    use endf::records::{self, ContRecord, CtrlRecord, Tab1Body};
+    use endf::options::WriteOpts;
 
     let write_opts = WriteOpts::default();
     let ctrl = CtrlRecord { mat: 125, mf: 3, mt: 1 };
@@ -138,8 +138,8 @@ fn test_serde_json_roundtrip_parsed_endf() {
 
 #[test]
 fn test_nofail_false_propagates_error() {
-    use endf_parser::records::{self, ContRecord, CtrlRecord};
-    use endf_parser::options::WriteOpts;
+    use endf::records::{self, ContRecord, CtrlRecord};
+    use endf::options::WriteOpts;
 
     let write_opts = WriteOpts::default();
     let ctrl = CtrlRecord { mat: 125, mf: 3, mt: 1 };
@@ -173,8 +173,8 @@ fn test_nofail_false_propagates_error() {
 
 #[test]
 fn test_nofail_true_stores_raw_on_failure() {
-    use endf_parser::records::{self, ContRecord, CtrlRecord};
-    use endf_parser::options::WriteOpts;
+    use endf::records::{self, ContRecord, CtrlRecord};
+    use endf::options::WriteOpts;
 
     let write_opts = WriteOpts::default();
     let ctrl = CtrlRecord { mat: 125, mf: 3, mt: 1 };
@@ -212,8 +212,8 @@ fn test_nofail_true_stores_raw_on_failure() {
 
 #[test]
 fn test_crlf_line_endings() {
-    use endf_parser::records::{self, ContRecord, CtrlRecord, Tab1Body};
-    use endf_parser::options::WriteOpts;
+    use endf::records::{self, ContRecord, CtrlRecord, Tab1Body};
+    use endf::options::WriteOpts;
 
     let write_opts = WriteOpts::default();
     let ctrl = CtrlRecord { mat: 125, mf: 3, mt: 1 };

@@ -1,8 +1,8 @@
 //! Targeted roundtrip test for previously-failing files only.
 //! Run with: cargo test --test targeted_roundtrip_test --release -- --nocapture
 
-use endf_parser::parser::EndfParser;
-use endf_parser::value::{EndfValue, EndfKey};
+use endf::parser::EndfParser;
+use endf::value::{EndfValue, EndfKey};
 use std::path::Path;
 
 const ENDF_DIR: &str = "/path/to/endf/library";

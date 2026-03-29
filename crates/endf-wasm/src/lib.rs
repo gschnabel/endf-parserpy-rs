@@ -1,7 +1,7 @@
 use wasm_bindgen::prelude::*;
 
-use endf_parser::parser::EndfParser;
-use endf_parser::value::{EndfKey, EndfValue};
+use endf::parser::EndfParser;
+use endf::value::{EndfKey, EndfValue};
 
 /// Convert an EndfValue tree to a JsValue.
 fn endf_value_to_js(val: &EndfValue) -> JsValue {

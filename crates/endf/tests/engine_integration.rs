@@ -1,10 +1,10 @@
 //! Integration tests for the interpreter engine and public parser API.
 
-use endf_parser::interpreter::engine::Engine;
-use endf_parser::options::{ParseOpts, ReadOpts, WriteOpts};
-use endf_parser::recipe::catalogue::RecipeCatalogue;
-use endf_parser::records::{self, ContRecord, CtrlRecord, Tab1Body};
-use endf_parser::value::EndfValue;
+use endf::interpreter::engine::Engine;
+use endf::options::{ParseOpts, ReadOpts, WriteOpts};
+use endf::recipe::catalogue::RecipeCatalogue;
+use endf::records::{self, ContRecord, CtrlRecord, Tab1Body};
+use endf::value::EndfValue;
 
 fn default_engine() -> Engine {
     Engine::new(
@@ -172,7 +172,7 @@ fn test_write_mf3_section() {
 
 #[test]
 fn test_parser_builder() {
-    use endf_parser::parser::EndfParser;
+    use endf::parser::EndfParser;
     // Verify that the builder can create a parser
     let parser = EndfParser::builder()
         .ignore_zero_mismatch(true)

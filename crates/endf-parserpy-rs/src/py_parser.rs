@@ -2,8 +2,8 @@ use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use std::path::Path;
 
-use endf_parser::parser::EndfParser as RustParser;
-use endf_parser::options::ArrayType;
+use endf::parser::EndfParser as RustParser;
+use endf::options::ArrayType;
 use super::py_value::{endf_value_to_py, py_to_endf_value};
 
 #[pyclass(name = "EndfParser")]

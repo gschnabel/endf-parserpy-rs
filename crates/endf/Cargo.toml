@@ -1,5 +1,5 @@
 [package]
-name = "endf-parser"
+name = "endf"
 version = "0.1.0"
 edition = "2021"
 description = "ENDF-6 nuclear data file toolkit"

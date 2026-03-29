@@ -1,6 +1,6 @@
-use endf_parser::parser::EndfParser;
-use endf_parser::options::{WriteOpts};
-use endf_parser::value::{EndfKey, EndfValue};
+use endf::parser::EndfParser;
+use endf::options::{WriteOpts};
+use endf::value::{EndfKey, EndfValue};
 use std::path::Path;
 use std::collections::BTreeMap;
 use std::fs;
@@ -29,8 +29,8 @@ fn compare(a: &EndfValue, b: &EndfValue, path: &str, diffs: &mut Vec<String>, ma
 fn main() {
     let dir = std::env::args().nth(1).expect("usage: test_write <directory>");
     let write_opts = WriteOpts::default();
-    let ro = endf_parser::options::ReadOpts { ignore_send_records: true, ignore_missing_tpid: true, ignore_blank_lines: true, ..Default::default() };
-    let po = endf_parser::options::ParseOpts { ignore_number_mismatch: true, ignore_zero_mismatch: true, ignore_varspec_mismatch: true, ..Default::default() };
+    let ro = endf::options::ReadOpts { ignore_send_records: true, ignore_missing_tpid: true, ignore_blank_lines: true, ..Default::default() };
+    let po = endf::options::ParseOpts { ignore_number_mismatch: true, ignore_zero_mismatch: true, ignore_varspec_mismatch: true, ..Default::default() };
     let parser = EndfParser::builder().ignore_number_mismatch(true).ignore_zero_mismatch(true).ignore_varspec_mismatch(true).ignore_send_records(true).ignore_missing_tpid(true).ignore_blank_lines(true).build().unwrap();
 
     let mut files: Vec<_> = fs::read_dir(&dir).unwrap().filter_map(|e| e.ok()).filter(|e| e.path().extension().and_then(|s| s.to_str()) == Some("endf")).map(|e| e.path()).collect();

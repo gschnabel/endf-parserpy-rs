@@ -1,9 +1,9 @@
 /// Compare compiled parser output vs interpreter output for every section
 /// in every ENDF file in a directory.
-use endf_parser::parser::EndfParser;
-use endf_parser::sections::split_sections;
-use endf_parser::value::{EndfKey, EndfValue};
-use endf_parser::options::{ReadOpts, ParseOpts};
+use endf::parser::EndfParser;
+use endf::sections::split_sections;
+use endf::value::{EndfKey, EndfValue};
+use endf::options::{ReadOpts, ParseOpts};
 use std::fs;
 use std::path::Path;
 

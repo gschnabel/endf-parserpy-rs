@@ -1,10 +1,10 @@
 /// Test: compiled_read → compiled_write → interpreter_read
 /// Compare compiled_read result with interpreter_read result.
-use endf_parser::parser::EndfParser;
-use endf_parser::sections::split_sections;
-use endf_parser::options::{ReadOpts, ParseOpts, WriteOpts};
-use endf_parser::value::{EndfKey, EndfValue};
-use endf_parser::records;
+use endf::parser::EndfParser;
+use endf::sections::split_sections;
+use endf::options::{ReadOpts, ParseOpts, WriteOpts};
+use endf::value::{EndfKey, EndfValue};
+use endf::records;
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;

@@ -62,12 +62,12 @@ fn generate_header() -> String {
 
 #![allow(unused_variables, unused_mut, unused_assignments)]
 
-use endf_parser::records::{self, read_cont, read_tab1, read_tab1_body, read_tab2, read_tab2_body, read_list, read_intg, read_endf_numbers};
-use endf_parser::records::{write_cont, write_text, write_dir, write_intg, write_tab1_body, write_tab2_body, write_send, ContRecord, TextRecord, DirRecord, IntgRecord, Tab1Body, Tab2Body, CtrlRecord};
-use endf_parser::fortran::{fortstr_to_f64, read_fort_int, f64_to_fortstr};
-use endf_parser::value::{EndfKey, EndfValue, EndfTable};
-use endf_parser::options::{ReadOpts, ParseOpts, WriteOpts};
-use endf_parser::error::{EndfError, EndfResult};
+use endf::records::{self, read_cont, read_tab1, read_tab1_body, read_tab2, read_tab2_body, read_list, read_intg, read_endf_numbers};
+use endf::records::{write_cont, write_text, write_dir, write_intg, write_tab1_body, write_tab2_body, write_send, ContRecord, TextRecord, DirRecord, IntgRecord, Tab1Body, Tab2Body, CtrlRecord};
+use endf::fortran::{fortstr_to_f64, read_fort_int, f64_to_fortstr};
+use endf::value::{EndfKey, EndfValue, EndfTable};
+use endf::options::{ReadOpts, ParseOpts, WriteOpts};
+use endf::error::{EndfError, EndfResult};
 
 /// Convert an f64 to EndfValue, using Int when the value is an exact integer.
 #[inline]

@@ -1,5 +1,5 @@
 
-use endf_parser::parser::EndfParser;
+use endf::parser::EndfParser;
 use std::path::Path;
 use std::time::Instant;
 

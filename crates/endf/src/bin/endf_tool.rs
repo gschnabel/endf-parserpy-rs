@@ -14,9 +14,9 @@
 //!   --ignore-blank       Ignore blank lines
 //!   --ignore-tpid        Ignore missing TPID record
 
-use endf_parser::parser::EndfParser;
-use endf_parser::json;
-use endf_parser::value::EndfValue;
+use endf::parser::EndfParser;
+use endf::json;
+use endf::value::EndfValue;
 use std::path::Path;
 use std::process;
 

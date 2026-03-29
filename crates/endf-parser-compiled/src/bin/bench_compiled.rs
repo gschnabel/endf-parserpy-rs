@@ -1,7 +1,7 @@
-use endf_parser::options::{ReadOpts, ParseOpts};
-use endf_parser::sections::split_sections;
-use endf_parser::value::{EndfKey, EndfValue};
-use endf_parser::error::EndfResult;
+use endf::options::{ReadOpts, ParseOpts};
+use endf::sections::split_sections;
+use endf::value::{EndfKey, EndfValue};
+use endf::error::EndfResult;
 use std::fs;
 use std::path::Path;
 use std::time::Instant;

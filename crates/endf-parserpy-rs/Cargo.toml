@@ -9,7 +9,7 @@ name = "endf_parserpy_rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-endf-parser = { path = "../endf-parser" }
+endf = { path = "../endf" }
 endf-parser-compiled = { path = "../endf-parser-compiled" }
 indexmap = "2"
 rustc-hash = "1"

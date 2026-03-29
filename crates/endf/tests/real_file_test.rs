@@ -1,7 +1,7 @@
 //! Integration test: parse a real ENDF file (Cu-63, MAT=2925).
 
-use endf_parser::parser::EndfParser;
-use endf_parser::value::EndfValue;
+use endf::parser::EndfParser;
+use endf::value::EndfValue;
 use std::path::Path;
 
 #[test]

@@ -2,10 +2,10 @@ use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use std::path::Path;
 
-use endf_parser::options::{ReadOpts, ParseOpts, WriteOpts};
-use endf_parser::sections::split_sections;
-use endf_parser::value::{EndfKey, EndfValue};
-use endf_parser::records;
+use endf::options::{ReadOpts, ParseOpts, WriteOpts};
+use endf::sections::split_sections;
+use endf::value::{EndfKey, EndfValue};
+use endf::records;
 use super::py_value::{endf_value_to_py, py_to_endf_value};
 
 #[pyclass(name = "CompiledParser")]
@@ -161,7 +161,7 @@ impl CompiledParser {
                 } else {
                     match endf_parser_compiled::write_section(mf, mt, section_data, &self.write_opts) {
                         Ok(mut section_lines) => {
-                            endf_parser::sections::add_linenumbers(&mut section_lines, mf, &self.write_opts);
+                            endf::sections::add_linenumbers(&mut section_lines, mf, &self.write_opts);
                             all_lines.extend(section_lines);
                         }
                         Err(e) => {
