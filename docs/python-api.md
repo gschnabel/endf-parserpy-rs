@@ -5,7 +5,15 @@ reading, writing, and modification of ENDF-6 nuclear data files via PyO3.
 
 ## Installation
 
+Requires Rust >= 1.83 and [maturin](https://www.maturin.rs/).
+If using `rustup` alongside a virtual environment, source the cargo
+environment after activating the venv so that the rustup toolchain
+takes precedence:
+
 ```bash
+source venv/bin/activate      # if using a virtual environment
+. "$HOME/.cargo/env"          # ensure rustup toolchain is on PATH
+
 # Build with maturin (development)
 cd crates/endf-parserpy-rs
 maturin develop --release
