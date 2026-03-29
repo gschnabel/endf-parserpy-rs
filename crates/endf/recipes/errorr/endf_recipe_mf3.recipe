@@ -1,0 +1,4 @@
+
+[MAT, 3, MT/ ZA, 0.0?, 0, 0, NG, 0 /
+  {SIG[i]}{i=1 to NG}] LIST
+SEND

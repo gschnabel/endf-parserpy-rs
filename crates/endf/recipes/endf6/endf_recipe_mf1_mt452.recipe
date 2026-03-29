@@ -1,0 +1,7 @@
+[MAT, 1, 452/ ZA, AWR, 0, LNU, 0, 0]HEAD
+if LNU == 1:
+    [MAT, 1, 452/ 0.0, 0.0, 0, 0, NC, 0/ {C[k]}{k=1 to NC} ] LIST
+elif LNU == 2:
+    [MAT, 1, 452/ 0.0, 0.0, 0, 0, NR, NP/ Eint / nu ]TAB1
+endif
+SEND

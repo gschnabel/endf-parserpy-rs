@@ -16,7 +16,7 @@ pub struct RecipeCatalogue {
 /// parse it, and insert it into the recipes map under the given (mf, mt) key.
 macro_rules! load_recipe {
     ($recipes:expr, $mf:expr, $mt:expr, $file:expr) => {{
-        let text = include_str!(concat!("../../../../recipes/endf6/", $file));
+        let text = include_str!(concat!("../../recipes/endf6/", $file));
         let parsed = parse_recipe(text).map_err(|e| EndfError::RecipeParse {
             message: format!("failed to parse {}: {}", $file, e),
         })?;
@@ -28,7 +28,7 @@ macro_rules! load_recipe {
 /// The recipe text is parsed once and cloned for each additional key.
 macro_rules! load_recipe_multi {
     ($recipes:expr, [$(($mf:expr, $mt:expr)),+ $(,)?], $file:expr) => {{
-        let text = include_str!(concat!("../../../../recipes/endf6/", $file));
+        let text = include_str!(concat!("../../recipes/endf6/", $file));
         let parsed = parse_recipe(text).map_err(|e| EndfError::RecipeParse {
             message: format!("failed to parse {}: {}", $file, e),
         })?;
@@ -49,7 +49,7 @@ macro_rules! load_recipe_multi {
 /// an entry in an existing recipes map.
 macro_rules! load_recipe_from {
     ($recipes:expr, $mf:expr, $mt:expr, $dir:expr, $file:expr) => {{
-        let text = include_str!(concat!("../../../../recipes/", $dir, "/", $file));
+        let text = include_str!(concat!("../../recipes/", $dir, "/", $file));
         let parsed = parse_recipe(text).map_err(|e| EndfError::RecipeParse {
             message: format!("failed to parse {}/{}: {}", $dir, $file, e),
         })?;

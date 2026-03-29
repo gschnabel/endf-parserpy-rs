@@ -1,0 +1,4 @@
+
+[MAT, 1, MT/ ZA, AWR, IVER, IRELCO, -11, 0 ] CONT
+[MAT, 1, MT/ TEMPIN, 0.0, NG, 0, NG+1, 0 / {EG[i]}{i=1 to NG+1}] LIST
+SEND

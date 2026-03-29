@@ -1,0 +1,210 @@
+[
+  {
+    "mf": 0,
+    "recipe_file": "endf_recipe_mf0_mt0_tapehead.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF0_MT0_TAPEHEAD",
+    "mt": 0
+  },
+  {
+    "mf": 1,
+    "recipe_file": "endf_recipe_mf1_mt451.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF1_MT451",
+    "mt": 451
+  },
+  {
+    "mf": 1,
+    "recipe_file": "endf_recipe_mf1_mt452.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF1_MT452",
+    "mt": 452
+  },
+  {
+    "mf": 1,
+    "recipe_file": "endf_recipe_mf1_mt455.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF1_MT455",
+    "mt": 455
+  },
+  {
+    "mf": 1,
+    "recipe_file": "endf_recipe_mf1_mt456.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF1_MT456",
+    "mt": 456
+  },
+  {
+    "mf": 1,
+    "recipe_file": "endf_recipe_mf1_mt458.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF1_MT458",
+    "mt": 458
+  },
+  {
+    "mf": 1,
+    "recipe_file": "endf_recipe_mf1_mt460.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF1_MT460",
+    "mt": 460
+  },
+  {
+    "mf": 2,
+    "recipe_file": "endf_recipe_mf2_mt151.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF2_MT151",
+    "mt": 151
+  },
+  {
+    "mf": 3,
+    "recipe_file": "endf_recipe_mf3.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF3"
+  },
+  {
+    "mf": 4,
+    "recipe_file": "endf_recipe_mf4.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF4"
+  },
+  {
+    "mf": 5,
+    "recipe_file": "endf_recipe_mf5.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF5"
+  },
+  {
+    "mf": 6,
+    "recipe_file": "endf_recipe_mf6.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF6"
+  },
+  {
+    "mf": 7,
+    "recipe_file": "endf_recipe_mf7_mt2.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF7_MT2",
+    "mt": 2
+  },
+  {
+    "mf": 7,
+    "recipe_file": "endf_recipe_mf7_mt4.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF7_MT4",
+    "mt": 4
+  },
+  {
+    "mf": 7,
+    "recipe_file": "endf_recipe_mf7_mt451.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF7_MT451",
+    "mt": 451
+  },
+  {
+    "mf": 8,
+    "recipe_file": "endf_recipe_mf8.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF8",
+    "mt": -1
+  },
+  {
+    "mf": 8,
+    "recipe_file": "endf_recipe_mf8_mt454.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF8_MT454",
+    "mt": 454
+  },
+  {
+    "mf": 8,
+    "recipe_file": "endf_recipe_mf8_mt457.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF8_MT457",
+    "mt": 457
+  },
+  {
+    "mf": 8,
+    "recipe_file": "endf_recipe_mf8_mt459.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF8_MT459",
+    "mt": 459
+  },
+  {
+    "mf": 9,
+    "recipe_file": "endf_recipe_mf9.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF9"
+  },
+  {
+    "mf": 10,
+    "recipe_file": "endf_recipe_mf10.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF10"
+  },
+  {
+    "mf": 12,
+    "recipe_file": "endf_recipe_mf12.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF12"
+  },
+  {
+    "mf": 13,
+    "recipe_file": "endf_recipe_mf13.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF13"
+  },
+  {
+    "mf": 14,
+    "recipe_file": "endf_recipe_mf14.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF14"
+  },
+  {
+    "mf": 15,
+    "recipe_file": "endf_recipe_mf15.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF15"
+  },
+  {
+    "mf": 23,
+    "recipe_file": "endf_recipe_mf23.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF23"
+  },
+  {
+    "mf": 26,
+    "recipe_file": "endf_recipe_mf26.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF26"
+  },
+  {
+    "mf": 27,
+    "recipe_file": "endf_recipe_mf27.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF27"
+  },
+  {
+    "mf": 28,
+    "recipe_file": "endf_recipe_mf28.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF28"
+  },
+  {
+    "mf": 31,
+    "recipe_file": "endf_recipe_mf31_mt452_455_456.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF31_MT452_455_456",
+    "mt": 452
+  },
+  {
+    "mf": 31,
+    "recipe_file": "endf_recipe_mf31_mt452_455_456.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF31_MT452_455_456",
+    "mt": 455
+  },
+  {
+    "mf": 31,
+    "recipe_file": "endf_recipe_mf31_mt452_455_456.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF31_MT452_455_456",
+    "mt": 456
+  },
+  {
+    "mf": 31,
+    "recipe_file": "endf_recipe_mf31_mt452_455_456.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF31_MT452_455_456"
+  },
+  {
+    "mf": 32,
+    "recipe_file": "endf_recipe_mf32.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF32"
+  },
+  {
+    "mf": 33,
+    "recipe_file": "endf_recipe_mf33.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF33"
+  },
+  {
+    "mf": 34,
+    "recipe_file": "endf_recipe_mf34.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF34"
+  },
+  {
+    "mf": 35,
+    "recipe_file": "endf_recipe_mf35.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF35"
+  },
+  {
+    "mf": 40,
+    "recipe_file": "endf_recipe_mf40.recipe",
+    "recipe_variable": "ENDF_RECIPE_MF40"
+  }
+]
