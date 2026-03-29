@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
+use rayon::prelude::*;
 use std::path::Path;
 
 use endf_parser::options::{ReadOpts, ParseOpts, WriteOpts};
@@ -67,6 +68,8 @@ impl CompiledParser {
     }
 
     /// Parse an ENDF file using the compiled parser.
+    /// Phase 1 (parallel, GIL released): parse all sections in Rust.
+    /// Phase 2 (sequential, GIL held): convert EndfValue to Python objects.
     fn parsefile(&self, py: Python<'_>, filename: &str) -> PyResult<PyObject> {
         let content = std::fs::read_to_string(filename).map_err(|e| {
             PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string())
@@ -74,32 +77,54 @@ impl CompiledParser {
         self.parse(py, &content)
     }
 
-    /// Parse ENDF text using the compiled parser.
+    /// Parse ENDF text using the compiled parser with parallel section parsing.
     fn parse(&self, py: Python<'_>, input: &str) -> PyResult<PyObject> {
         let content = input.replace('\r', "");
-        let lines: Vec<&str> = content.lines().collect();
-        let section_map = split_sections(&lines, &self.read_opts).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string())
+
+        // Phase 1: parse all sections in parallel, GIL released.
+        let read_opts = self.read_opts.clone();
+        let parse_opts = self.parse_opts.clone();
+        let result = py.allow_threads(|| -> Result<EndfValue, String> {
+            let lines: Vec<&str> = content.lines().collect();
+            let section_map = split_sections(&lines, &read_opts)
+                .map_err(|e| e.to_string())?;
+
+            // Flatten into (mf, mt, section_lines) for parallel processing.
+            let sections: Vec<(i32, i32, Vec<String>)> = section_map.iter()
+                .flat_map(|(mf, mt_map)| {
+                    mt_map.iter().map(move |(mt, sl)| (*mf, *mt, sl.clone()))
+                })
+                .collect();
+
+            // Parse sections in parallel.
+            let parsed: Vec<(i32, i32, EndfValue)> = sections.par_iter()
+                .map(|(mf, mt, sl)| {
+                    let ro = read_opts.clone();
+                    let po = parse_opts.clone();
+                    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                        endf_parser_compiled::parse_section(*mf, *mt, sl, &ro, &po)
+                    })) {
+                        Ok(Ok(data)) => (*mf, *mt, data),
+                        _ => (*mf, *mt, EndfValue::Str(sl.join("\n"))),
+                    }
+                })
+                .collect();
+
+            // Assemble into nested dict.
+            let mut result = EndfValue::new_dict();
+            for (mf, mt, data) in parsed {
+                if !result.contains_key(EndfKey::Int(mf as i64)) {
+                    result.insert(EndfKey::Int(mf as i64), EndfValue::new_dict());
+                }
+                let mf_dict = result.get_mut(EndfKey::Int(mf as i64)).unwrap();
+                mf_dict.insert(EndfKey::Int(mt as i64), data);
+            }
+            Ok(result)
+        }).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e)
         })?;
 
-        let mut result = EndfValue::new_dict();
-        for (mf, mt_map) in &section_map {
-            let mut mf_dict = EndfValue::new_dict();
-            for (mt, section_lines) in mt_map {
-                match endf_parser_compiled::parse_section(
-                    *mf, *mt, section_lines, &self.read_opts, &self.parse_opts
-                ) {
-                    Ok(data) => { mf_dict.insert(EndfKey::Int(*mt as i64), data); }
-                    Err(e) => {
-                        // Store raw on error
-                        let raw = EndfValue::Str(section_lines.join("\n"));
-                        mf_dict.insert(EndfKey::Int(*mt as i64), raw);
-                    }
-                }
-            }
-            result.insert(EndfKey::Int(*mf as i64), mf_dict);
-        }
-
+        // Phase 2: convert EndfValue to Python objects (requires GIL).
         endf_value_to_py(py, &result)
     }
 

@@ -13,4 +13,6 @@ endf-parser = { path = "../endf-parser" }
 endf-parser-compiled = { path = "../endf-parser-compiled" }
 indexmap = "2"
 rustc-hash = "1"
+rayon = "=1.8.0"
+rayon-core = "=1.12.0"
 pyo3 = { version = "0.22", features = ["extension-module"] }
