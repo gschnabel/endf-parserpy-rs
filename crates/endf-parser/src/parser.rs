@@ -90,6 +90,7 @@ impl EndfParser {
     ///
     /// If the global pool is not configured, rayon defaults to using all
     /// available CPUs.
+    #[cfg(feature = "parallel")]
     pub fn parse_parallel(&self, input: &str) -> EndfResult<EndfValue> {
         use rayon::prelude::*;
 
@@ -141,6 +142,7 @@ impl EndfParser {
     /// Parse an ENDF file from disk with parallel section parsing.
     ///
     /// Uses rayon's global thread pool. See [`parse_parallel`](Self::parse_parallel).
+    #[cfg(feature = "parallel")]
     pub fn parse_file_parallel(&self, path: &Path) -> EndfResult<EndfValue> {
         let content = std::fs::read_to_string(path)?;
         self.parse_parallel(&content)

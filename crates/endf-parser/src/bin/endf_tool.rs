@@ -154,6 +154,7 @@ fn cmd_endf2json(args: &[String]) {
     let parser = build_parser(&opts);
 
     // Configure rayon global pool if parallel parsing requested.
+    #[cfg(feature = "parallel")]
     if opts.threads != 1 {
         let _ = rayon::ThreadPoolBuilder::new()
             .num_threads(opts.threads)
@@ -162,11 +163,17 @@ fn cmd_endf2json(args: &[String]) {
 
     eprintln!("Parsing {}{}...", opts.input,
         if opts.threads != 1 { format!(" ({} threads)", opts.threads) } else { String::new() });
+    #[cfg(feature = "parallel")]
     let data = if opts.threads == 1 {
         parser.parse_file(Path::new(&opts.input))
     } else {
         parser.parse_file_parallel(Path::new(&opts.input))
     }.unwrap_or_else(|e| {
+        eprintln!("Parse error: {}", e);
+        process::exit(1);
+    });
+    #[cfg(not(feature = "parallel"))]
+    let data = parser.parse_file(Path::new(&opts.input)).unwrap_or_else(|e| {
         eprintln!("Parse error: {}", e);
         process::exit(1);
     });

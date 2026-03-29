@@ -1,3 +1,6 @@
+#[cfg(not(feature = "parallel"))]
+compile_error!("bench_parallel requires the 'parallel' feature");
+
 use endf_parser::parser::EndfParser;
 use std::fs;
 use std::path::Path;
