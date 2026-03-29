@@ -1,4 +1,4 @@
-# endf-parser — Rust API Documentation
+# endf — Rust API Documentation
 
 A recipe-driven toolkit for reading, writing, and modifying ENDF-6 nuclear
 data files. Parses ENDF files into structured data using a formal grammar of
@@ -7,8 +7,8 @@ ENDF recipes, and writes them back with lossless roundtrip fidelity.
 ## Quick Start
 
 ```rust
-use endf_parser::parser::EndfParser;
-use endf_parser::value::{EndfValue, EndfKey};
+use endf::parser::EndfParser;
+use endf::value::{EndfValue, EndfKey};
 use std::path::Path;
 
 // Parse an ENDF file
@@ -35,14 +35,14 @@ std::fs::write("modified.endf", output)?;
 
 ### `EndfParser`
 
-**Module:** `endf_parser::parser`
+**Module:** `endf::parser`
 
 The main entry point. Holds a recipe catalogue and formatting options.
 Create one via `EndfParser::new()` for defaults, or via the builder for
 custom configuration.
 
 ```rust
-use endf_parser::parser::EndfParser;
+use endf::parser::EndfParser;
 
 let parser = EndfParser::new()?;                       // defaults
 let parser = EndfParser::builder()                     // custom
@@ -66,7 +66,7 @@ let parser = EndfParser::builder()                     // custom
 
 ### `EndfParserBuilder`
 
-**Module:** `endf_parser::parser`
+**Module:** `endf::parser`
 
 Fluent builder for `EndfParser`. All methods return `Self` and can be chained.
 
@@ -127,7 +127,7 @@ let parser = EndfParser::builder()
 
 ### `EndfValue`
 
-**Module:** `endf_parser::value`
+**Module:** `endf::value`
 
 The dynamic value type representing all ENDF data. ENDF data is inherently
 heterogeneous — the same structure can contain integers, floats, strings,
@@ -214,7 +214,7 @@ Two JSON formats are available:
 **Human-friendly (recommended):** Clean JSON without type wrappers.
 
 ```rust
-use endf_parser::json;
+use endf::json;
 
 let json_str = json::to_json_string(&data, true)?;   // pretty-printed
 let restored = json::from_json_string(&json_str)?;
@@ -256,7 +256,7 @@ distinguishes `Int(0)` from `Float(0.0)`.
 
 ### `EndfKey`
 
-**Module:** `endf_parser::value`
+**Module:** `endf::value`
 
 Dictionary key type — either an integer or a string.
 
@@ -271,7 +271,7 @@ let k4: EndfKey = "AWR".into();      // From<&str>
 
 ### `EndfTable`
 
-**Module:** `endf_parser::value`
+**Module:** `endf::value`
 
 Interpolation table from TAB1 or TAB2 records.
 
@@ -296,7 +296,7 @@ assert!(table.is_tab1());
 
 ### `EndfFloat`
 
-**Module:** `endf_parser::endf_float`
+**Module:** `endf::endf_float`
 
 A float that optionally preserves its original ENDF field string for
 lossless roundtrip. Infrastructure for future `preserve_value_strings`
@@ -312,7 +312,7 @@ assert_eq!(ef.original_string(), Some("1.23456+7"));
 
 ### `EndfError`
 
-**Module:** `endf_parser::error`
+**Module:** `endf::error`
 
 All errors are variants of the `EndfError` enum. Key variants:
 
@@ -333,13 +333,13 @@ The type alias `EndfResult<T>` is `Result<T, EndfError>`.
 
 ### `RecipeCatalogue`
 
-**Module:** `endf_parser::recipe::catalogue`
+**Module:** `endf::recipe::catalogue`
 
 Manages the collection of ENDF recipes indexed by (MF, MT). Normally
 created internally by `EndfParser`, but available for advanced use.
 
 ```rust
-use endf_parser::recipe::catalogue::RecipeCatalogue;
+use endf::recipe::catalogue::RecipeCatalogue;
 
 // Built-in catalogues
 let cat = RecipeCatalogue::endf6()?;
@@ -371,7 +371,7 @@ Supported built-in formats:
 
 ## JSON Module
 
-**Module:** `endf_parser::json`
+**Module:** `endf::json`
 
 Human-friendly JSON serialization for `EndfValue`. Unlike the serde-derived
 format, this produces clean JSON that is easy to read and edit by hand.
@@ -399,7 +399,7 @@ The `endf-tool` binary provides ENDF↔JSON conversion from the command line.
 ### Build
 
 ```bash
-cargo build --release --bin endf_tool -p endf-parser
+cargo build --release --bin endf_tool -p endf
 ```
 
 ### ENDF → JSON
@@ -462,42 +462,42 @@ endf-tool endf2json input.endf output.json --recipes-dir ./my_recipes/ --pretty
 
 These modules are public and can be used directly for fine-grained control.
 
-### `endf_parser::fortran`
+### `endf::fortran`
 
 Fortran-style number parsing and formatting. ENDF uses a fixed-width format
 where the `E` in scientific notation is often omitted (`1.23456+7` means
 `1.23456e7`).
 
 ```rust
-use endf_parser::fortran::*;
-use endf_parser::options::{ReadOpts, WriteOpts};
+use endf::fortran::*;
+use endf::options::{ReadOpts, WriteOpts};
 
 let v = fortstr_to_f64("1.23456+7", &ReadOpts::default())?;  // 1.23456e7
 let s = f64_to_fortstr(1.23456e7, &WriteOpts::default());     // " 1.23456+7"
 let n = read_fort_int("  42")?;                                 // 42
 ```
 
-### `endf_parser::records`
+### `endf::records`
 
 Low-level ENDF record I/O. Each ENDF line is 80 characters: 6 data fields
 of 11 characters + 9 characters of control info (MAT/MF/MT) + optional 5-digit
 line number.
 
 ```rust
-use endf_parser::records::*;
-use endf_parser::options::ReadOpts;
+use endf::records::*;
+use endf::options::ReadOpts;
 
 let (cont, ctrl) = read_cont(line, &ReadOpts::default())?;
 println!("C1={}, L1={}, MAT={}", cont.c1, cont.l1, ctrl.mat);
 ```
 
-### `endf_parser::sections`
+### `endf::sections`
 
 Split an ENDF file into MF/MT sections and manage line numbers.
 
 ```rust
-use endf_parser::sections::split_sections;
-use endf_parser::options::ReadOpts;
+use endf::sections::split_sections;
+use endf::options::ReadOpts;
 
 let lines: Vec<&str> = content.lines().collect();
 let sections = split_sections(&lines, &ReadOpts::default())?;
@@ -554,7 +554,7 @@ parser.write_file(Path::new("output.endf"), &data)?;
 ### Roundtrip with JSON intermediate
 
 ```rust
-use endf_parser::json;
+use endf::json;
 
 let parser = EndfParser::new()?;
 let data = parser.parse_file(Path::new("input.endf"))?;
@@ -587,9 +587,9 @@ let parser = EndfParser::builder()
 
 ---
 
-## Compiled Parser (`endf-parser-compiled`)
+## Compiled Parser (`endf-compiled`)
 
-The `endf-parser-compiled` crate provides statically generated parse and write
+The `endf-compiled` crate provides statically generated parse and write
 functions for all ENDF-6 recipes. Instead of interpreting the recipe AST at
 runtime, the recipe-to-Rust compiler translates each recipe into a dedicated
 Rust function at build time, eliminating interpreter dispatch overhead.
@@ -606,9 +606,9 @@ Rust function at build time, eliminating interpreter dispatch overhead.
 ### Reading with the Compiled Parser
 
 ```rust
-use endf_parser::sections::split_sections;
-use endf_parser::options::{ReadOpts, ParseOpts};
-use endf_parser::value::{EndfKey, EndfValue};
+use endf::sections::split_sections;
+use endf::options::{ReadOpts, ParseOpts};
+use endf::value::{EndfKey, EndfValue};
 
 let content = std::fs::read_to_string("neutrons.endf")?;
 let lines: Vec<&str> = content.lines().collect();
@@ -641,8 +641,8 @@ for (mf, mt_map) in &section_map {
 ### Writing with the Compiled Parser
 
 ```rust
-use endf_parser::options::WriteOpts;
-use endf_parser::value::EndfValue;
+use endf::options::WriteOpts;
+use endf::value::EndfValue;
 
 let write_opts = WriteOpts::default();
 
@@ -667,10 +667,10 @@ assembling a complete file.
 ### Roundtrip Example
 
 ```rust
-use endf_parser::sections::split_sections;
-use endf_parser::records;
-use endf_parser::options::{ReadOpts, ParseOpts, WriteOpts};
-use endf_parser::value::{EndfKey, EndfValue};
+use endf::sections::split_sections;
+use endf::records;
+use endf::options::{ReadOpts, ParseOpts, WriteOpts};
+use endf::value::{EndfKey, EndfValue};
 
 let read_opts = ReadOpts {
     ignore_send_records: true,
@@ -727,8 +727,8 @@ The compiled parser source is generated from the recipe catalogue:
 
 ```bash
 cd rust-test
-cargo run --bin compile_recipes -p endf-parser > crates/endf-parser-compiled/src/lib.rs
-cargo build --release -p endf-parser-compiled
+cargo run --bin compile_recipes -p endf > crates/endf-compiled/src/lib.rs
+cargo build --release -p endf-compiled
 ```
 
 This generates both `parse_mfX_mtY` and `write_mfX_mtY` functions for every

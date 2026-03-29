@@ -24,9 +24,10 @@ in Rust for speed and safety.
 
 | Crate | Description |
 |-------|-------------|
-| `endf-parser` | Core library: recipe grammar, interpreter, records, Fortran number formatting, JSON conversion |
-| `endf-parser-compiled` | Compiled parser with generated Rust functions for each MF/MT |
+| [`endf`](https://crates.io/crates/endf) | Core library: recipe grammar, interpreter, records, Fortran number formatting, JSON conversion |
+| `endf-compiled` | Compiled parser with generated Rust functions for each MF/MT |
 | `endf-parserpy-rs` | Python bindings via PyO3 (exposes `EndfParser` and `CompiledParser`) |
+| `endf-wasm` | WebAssembly bindings for client-side browser parsing |
 
 ## Installation
 
@@ -47,7 +48,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-endf-parser = { path = "crates/endf-parser" }
+endf = "0.1"
 ```
 
 ### CLI tool
@@ -110,7 +111,7 @@ data = parser.parsefile("neutrons.endf")
 ### Rust
 
 ```rust
-use endf_parser::parser::EndfParser;
+use endf::parser::EndfParser;
 use std::path::Path;
 
 let parser = EndfParser::new()?;
