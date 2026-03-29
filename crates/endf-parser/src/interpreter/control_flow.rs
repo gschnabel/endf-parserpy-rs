@@ -170,10 +170,11 @@ pub fn evaluate_if_clause(
             state.restore(snapshot);
             result?
         } else {
-            // In write mode with lookahead-annotated conditions, use missing_as_false
-            // because variables like LCOMP may only exist in some scope paths
-            let maf = branch.lookahead.is_some() && state.rwmode == RwMode::Write;
-            eval_bool(&branch.condition, state, evaluator, maf)?
+            // Always use missing_as_false for if-conditions, matching the
+            // Python endf-parserpy behavior.  Variables may be undefined
+            // because the branch that would define them was not taken
+            // (e.g. LVT in the endf6-ext MF4 recipe).
+            eval_bool(&branch.condition, state, evaluator, true)?
         };
 
         if truthval {

@@ -70,6 +70,10 @@ impl EndfParser {
             if let Some(v) = kw.get_item("zero_as_blank")? {
                 builder = builder.zero_as_blank(v.extract()?);
             }
+            if let Some(v) = kw.get_item("endf_format")? {
+                let fmt: String = v.extract()?;
+                builder = builder.endf_format(&fmt);
+            }
             if let Some(v) = kw.get_item("recipes_dir")? {
                 let dir: String = v.extract()?;
                 builder = builder.recipes_dir(dir);
