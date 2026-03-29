@@ -8,12 +8,14 @@
 //!   --format <fmt>       Recipe format: endf6, endf6-ext, jendl, pendf, errorr (default: endf6)
 //!   --recipes-dir <dir>  Load recipes from a directory (overrides --format)
 //!   --pretty             Pretty-print JSON output (default: compact)
+//!   --lossless           Use tagged JSON format for lossless type roundtrip
 //!   --ignore-mismatches  Enable all ignore_*_mismatch options
 //!   --ignore-send        Ignore SEND/FEND/MEND/TEND validation
 //!   --ignore-blank       Ignore blank lines
 //!   --ignore-tpid        Ignore missing TPID record
 
 use endf_parser::parser::EndfParser;
+use endf_parser::json;
 use endf_parser::value::EndfValue;
 use std::path::Path;
 use std::process;
@@ -51,6 +53,7 @@ fn print_usage() {
     eprintln!("                       Choices: endf6, endf6-ext, jendl, pendf, errorr");
     eprintln!("  --recipes-dir <dir>  Load recipes from directory (overrides --format)");
     eprintln!("  --pretty             Pretty-print JSON (default: compact)");
+    eprintln!("  --lossless           Use tagged JSON for lossless type roundtrip");
     eprintln!("  --ignore-mismatches  Tolerate number/zero/varspec mismatches");
     eprintln!("  --ignore-send        Ignore SEND record validation");
     eprintln!("  --ignore-blank       Ignore blank lines");
@@ -63,6 +66,7 @@ struct Options {
     format: String,
     recipes_dir: Option<String>,
     pretty: bool,
+    lossless: bool,
     ignore_mismatches: bool,
     ignore_send: bool,
     ignore_blank: bool,
@@ -76,6 +80,7 @@ fn parse_options(args: &[String]) -> Options {
         format: "endf6".to_string(),
         recipes_dir: None,
         pretty: false,
+        lossless: false,
         ignore_mismatches: false,
         ignore_send: false,
         ignore_blank: false,
@@ -89,6 +94,7 @@ fn parse_options(args: &[String]) -> Options {
             "--format" => { i += 1; if i < args.len() { opts.format = args[i].clone(); } }
             "--recipes-dir" => { i += 1; if i < args.len() { opts.recipes_dir = Some(args[i].clone()); } }
             "--pretty" => { opts.pretty = true; }
+            "--lossless" => { opts.lossless = true; }
             "--ignore-mismatches" => { opts.ignore_mismatches = true; }
             "--ignore-send" => { opts.ignore_send = true; }
             "--ignore-blank" => { opts.ignore_blank = true; }
@@ -150,19 +156,25 @@ fn cmd_endf2json(args: &[String]) {
     });
 
     eprintln!("Writing {}...", opts.output);
-    let json = if opts.pretty {
-        serde_json::to_string_pretty(&data)
+    let json_str = if opts.lossless {
+        // Tagged format: preserves exact types (Int vs Float distinction)
+        if opts.pretty {
+            serde_json::to_string_pretty(&data)
+        } else {
+            serde_json::to_string(&data)
+        }
     } else {
-        serde_json::to_string(&data)
+        // Human-friendly format (default)
+        json::to_json_string(&data, opts.pretty)
     }.unwrap_or_else(|e| {
         eprintln!("JSON serialization error: {}", e);
         process::exit(1);
     });
 
     if opts.output == "-" {
-        println!("{}", json);
+        println!("{}", json_str);
     } else {
-        std::fs::write(&opts.output, json).unwrap_or_else(|e| {
+        std::fs::write(&opts.output, json_str).unwrap_or_else(|e| {
             eprintln!("Write error: {}", e);
             process::exit(1);
         });
@@ -185,7 +197,10 @@ fn cmd_json2endf(args: &[String]) {
         process::exit(1);
     });
 
-    let data: EndfValue = serde_json::from_str(&json_str).unwrap_or_else(|e| {
+    // Try human-friendly format first, fall back to lossless tagged format.
+    let data: EndfValue = json::from_json_string(&json_str).or_else(|_| {
+        serde_json::from_str::<EndfValue>(&json_str)
+    }).unwrap_or_else(|e| {
         eprintln!("JSON parse error: {}", e);
         process::exit(1);
     });

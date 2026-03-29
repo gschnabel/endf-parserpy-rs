@@ -2,6 +2,7 @@ pub mod endf_float;
 pub mod error;
 pub mod fortran;
 pub mod interpreter;
+pub mod json;
 pub mod options;
 pub mod parser;
 pub mod recipe;
