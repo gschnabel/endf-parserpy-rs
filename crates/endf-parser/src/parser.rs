@@ -78,6 +78,74 @@ impl EndfParser {
         self.parse(&content)
     }
 
+    /// Parse ENDF text with parallel section parsing.
+    ///
+    /// Splits the file into MF/MT sections, then parses each section
+    /// in parallel using rayon's global thread pool. Configure the pool
+    /// before calling:
+    ///
+    /// ```rust,ignore
+    /// rayon::ThreadPoolBuilder::new().num_threads(4).build_global().unwrap();
+    /// ```
+    ///
+    /// If the global pool is not configured, rayon defaults to using all
+    /// available CPUs.
+    pub fn parse_parallel(&self, input: &str) -> EndfResult<EndfValue> {
+        use rayon::prelude::*;
+
+        let input = if input.contains('\r') {
+            std::borrow::Cow::Owned(input.replace('\r', ""))
+        } else {
+            std::borrow::Cow::Borrowed(input)
+        };
+
+        let lines: Vec<&str> = input.lines().collect();
+        let section_map = sections::split_sections(&lines, &self.engine.read_opts)?;
+
+        // Flatten into (mf, mt, section_lines, has_recipe).
+        let tasks: Vec<(i32, i32, Vec<String>, bool)> = section_map.iter()
+            .flat_map(|(mf, mt_map)| {
+                mt_map.iter().map(move |(mt, sl)| {
+                    let has_recipe = self.engine.catalogue.get(*mf, *mt).is_some();
+                    (*mf, *mt, sl.clone(), has_recipe)
+                })
+            })
+            .collect();
+
+        // Parse sections in parallel using the global rayon pool.
+        let parsed: Vec<(i32, i32, EndfValue)> = tasks.par_iter()
+            .map(|(mf, mt, sl, has_recipe)| {
+                if *has_recipe {
+                    match self.engine.parse_section(*mf, *mt, sl.clone()) {
+                        Ok(data) => (*mf, *mt, data),
+                        Err(_) => (*mf, *mt, EndfValue::Str(sl.join("\n"))),
+                    }
+                } else {
+                    (*mf, *mt, EndfValue::Str(sl.join("\n")))
+                }
+            })
+            .collect();
+
+        // Assemble into nested dict.
+        let mut result = EndfValue::new_dict();
+        for (mf, mt, data) in parsed {
+            if !result.contains_key(EndfKey::Int(mf as i64)) {
+                result.insert(EndfKey::Int(mf as i64), EndfValue::new_dict());
+            }
+            let mf_dict = result.get_mut(EndfKey::Int(mf as i64)).unwrap();
+            mf_dict.insert(EndfKey::Int(mt as i64), data);
+        }
+        Ok(result)
+    }
+
+    /// Parse an ENDF file from disk with parallel section parsing.
+    ///
+    /// Uses rayon's global thread pool. See [`parse_parallel`](Self::parse_parallel).
+    pub fn parse_file_parallel(&self, path: &Path) -> EndfResult<EndfValue> {
+        let content = std::fs::read_to_string(path)?;
+        self.parse_parallel(&content)
+    }
+
     /// Write structured data back to ENDF format.
     pub fn write(&self, data: &EndfValue) -> EndfResult<String> {
         let mut all_lines: Vec<String> = Vec::new();

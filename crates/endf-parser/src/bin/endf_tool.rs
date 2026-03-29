@@ -54,6 +54,7 @@ fn print_usage() {
     eprintln!("  --recipes-dir <dir>  Load recipes from directory (overrides --format)");
     eprintln!("  --pretty             Pretty-print JSON (default: compact)");
     eprintln!("  --lossless           Use tagged JSON for lossless type roundtrip");
+    eprintln!("  --threads <n>        Parallel parsing threads (0=auto, 1=sequential, default: 1)");
     eprintln!("  --ignore-mismatches  Tolerate number/zero/varspec mismatches");
     eprintln!("  --ignore-send        Ignore SEND record validation");
     eprintln!("  --ignore-blank       Ignore blank lines");
@@ -67,6 +68,7 @@ struct Options {
     recipes_dir: Option<String>,
     pretty: bool,
     lossless: bool,
+    threads: usize,
     ignore_mismatches: bool,
     ignore_send: bool,
     ignore_blank: bool,
@@ -81,6 +83,7 @@ fn parse_options(args: &[String]) -> Options {
         recipes_dir: None,
         pretty: false,
         lossless: false,
+        threads: 1,
         ignore_mismatches: false,
         ignore_send: false,
         ignore_blank: false,
@@ -95,6 +98,7 @@ fn parse_options(args: &[String]) -> Options {
             "--recipes-dir" => { i += 1; if i < args.len() { opts.recipes_dir = Some(args[i].clone()); } }
             "--pretty" => { opts.pretty = true; }
             "--lossless" => { opts.lossless = true; }
+            "--threads" => { i += 1; if i < args.len() { opts.threads = args[i].parse().unwrap_or(1); } }
             "--ignore-mismatches" => { opts.ignore_mismatches = true; }
             "--ignore-send" => { opts.ignore_send = true; }
             "--ignore-blank" => { opts.ignore_blank = true; }
@@ -149,8 +153,20 @@ fn cmd_endf2json(args: &[String]) {
 
     let parser = build_parser(&opts);
 
-    eprintln!("Parsing {}...", opts.input);
-    let data = parser.parse_file(Path::new(&opts.input)).unwrap_or_else(|e| {
+    // Configure rayon global pool if parallel parsing requested.
+    if opts.threads != 1 {
+        let _ = rayon::ThreadPoolBuilder::new()
+            .num_threads(opts.threads)
+            .build_global();
+    }
+
+    eprintln!("Parsing {}{}...", opts.input,
+        if opts.threads != 1 { format!(" ({} threads)", opts.threads) } else { String::new() });
+    let data = if opts.threads == 1 {
+        parser.parse_file(Path::new(&opts.input))
+    } else {
+        parser.parse_file_parallel(Path::new(&opts.input))
+    }.unwrap_or_else(|e| {
         eprintln!("Parse error: {}", e);
         process::exit(1);
     });
