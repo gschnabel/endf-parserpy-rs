@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ENDF Explorer</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+         background: #f5f5f5; color: #333; }
+  header { background: #2c3e50; color: white; padding: 1rem 2rem; }
+  header h1 { font-size: 1.4rem; font-weight: 500; }
+  header small { opacity: 0.7; font-size: 0.85rem; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 1rem 2rem; }
+  .controls { display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;
+              flex-wrap: wrap; }
+  .controls label { font-weight: 600; }
+  .controls select, .controls input[type="file"] {
+    padding: 0.4rem; border: 1px solid #ccc; border-radius: 4px; }
+  .btn { padding: 0.4rem 1rem; border: 1px solid #ccc; border-radius: 4px;
+         background: #fff; cursor: pointer; font-size: 0.9rem; }
+  .btn:hover { background: #eee; }
+  .btn:disabled { opacity: 0.4; cursor: default; }
+  .btn-save { background: #2c3e50; color: white; border-color: #2c3e50; }
+  .btn-save:hover { background: #34495e; }
+  #status { padding: 0.5rem 1rem; background: #eef; border-radius: 4px;
+            font-size: 0.9rem; min-height: 2rem; }
+  #status.error { background: #fee; color: #c00; }
+  #status.success { background: #efe; color: #060; }
+  .tree-container { background: white; border: 1px solid #ddd; border-radius: 4px;
+                    padding: 1rem; margin-top: 1rem; max-height: 70vh;
+                    overflow: auto; font-family: 'Fira Code', 'Consolas', monospace;
+                    font-size: 0.85rem; line-height: 1.6; }
+  .tree-node { padding-left: 1.5rem; }
+  .tree-key { cursor: pointer; user-select: none; }
+  .tree-key:hover { background: #f0f0f0; }
+  .tree-toggle { display: inline-block; width: 1rem; text-align: center;
+                 color: #888; font-size: 0.7rem; }
+  .tree-key-name { color: #881391; font-weight: 600; }
+  .tree-val-num { color: #1a1aa6; }
+  .tree-val-str { color: #067d06; }
+  .tree-val-type { color: #888; font-style: italic; }
+  .collapsed > .tree-node { display: none; }
+  .tree-leaf { padding-left: 1.5rem; }
+  .editable { cursor: pointer; border-bottom: 1px dashed transparent; }
+  .editable:hover { border-bottom-color: #aaa; }
+  .edit-input { font-family: inherit; font-size: inherit; border: 1px solid #4a90d9;
+                border-radius: 2px; padding: 0 0.3rem; outline: none;
+                background: #fffde7; }
+  .modified { background: #fffde7; }
+</style>
+</head>
+<body>
+<header>
+  <h1>ENDF Explorer <small>client-side parsing via WebAssembly</small></h1>
+</header>
+<div class="container">
+  <div class="controls">
+    <label for="format">Format:</label>
+    <select id="format">
+      <option value="endf6">endf6</option>
+      <option value="endf6-ext" selected>endf6-ext</option>
+      <option value="jendl">jendl</option>
+      <option value="pendf">pendf</option>
+      <option value="errorr">errorr</option>
+    </select>
+    <input type="file" id="fileInput" accept=".endf,.dat,.txt">
+    <button class="btn btn-save" id="saveBtn" disabled>Save ENDF</button>
+  </div>
+  <div class="controls" id="writeOpts" style="font-size: 0.85rem;">
+    <span style="font-weight: 600;">Output options:</span>
+    <label><input type="checkbox" id="opt_abuse_signpos" checked>
+      Use sign position for extra precision</label>
+    <label><input type="checkbox" id="opt_skip_intzero" checked>
+      Omit leading zero (0.12 &rarr; .12)</label>
+    <label><input type="checkbox" id="opt_prefer_noexp" checked>
+      Prefer fixed-point notation</label>
+    <label><input type="checkbox" id="opt_keep_E">
+      Keep E in exponent (1.5E+7 vs 1.5+7)</label>
+  </div>
+  <div id="status">Select an ENDF file to parse.</div>
+  <div class="tree-container" id="tree"></div>
+</div>
+
+<script type="module">
+import init, { WasmEndfParser } from '../pkg/endf_wasm.js';
+
+let parser = null;
+let parsedData = null;
+let fileName = 'output.endf';
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderValueSpan(val) {
+  if (val === null || val === undefined) return '<span class="tree-val-num">null</span>';
+  if (typeof val === 'number') return `<span class="tree-val-num">${val}</span>`;
+  if (typeof val === 'string') {
+    const short = val.length > 80 ? val.slice(0, 80) + '...' : val;
+    return `<span class="tree-val-str">"${escHtml(short)}"</span>`;
+  }
+  return '';
+}
+
+// Resolve a path like ["3","1","ZA"] into the parent object and final key
+function resolvePath(obj, path) {
+  let current = obj;
+  for (let i = 0; i < path.length - 1; i++) {
+    const key = path[i];
+    if (Array.isArray(current)) {
+      current = current[parseInt(key)];
+    } else {
+      current = current[key];
+    }
+    if (current === null || current === undefined) return null;
+  }
+  return { parent: current, key: path[path.length - 1] };
+}
+
+function setValue(obj, path, newValue) {
+  const resolved = resolvePath(obj, path);
+  if (!resolved) return;
+  const { parent, key } = resolved;
+  if (Array.isArray(parent)) {
+    parent[parseInt(key)] = newValue;
+  } else {
+    parent[key] = newValue;
+  }
+}
+
+function startEdit(span, path) {
+  const resolved = resolvePath(parsedData, path);
+  if (!resolved) return;
+  const currentVal = resolved.parent[resolved.key];
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'edit-input';
+  input.value = typeof currentVal === 'string' ? currentVal : String(currentVal);
+  input.size = Math.max(input.value.length + 2, 8);
+
+  const parent = span.parentElement;
+  const valSpan = parent.querySelector('.editable');
+  valSpan.replaceWith(input);
+  input.focus();
+  input.select();
+
+  function commit() {
+    const raw = input.value;
+    let newVal;
+    if (raw === 'null') {
+      newVal = null;
+    } else if (/^-?\d+$/.test(raw)) {
+      newVal = parseInt(raw);
+    } else if (/^-?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(raw)) {
+      newVal = parseFloat(raw);
+    } else {
+      newVal = raw;
+    }
+    setValue(parsedData, path, newVal);
+
+    const newSpan = document.createElement('span');
+    newSpan.className = 'editable modified';
+    newSpan.innerHTML = renderValueSpan(newVal);
+    newSpan.addEventListener('click', (e) => { e.stopPropagation(); startEdit(newSpan, path); });
+    input.replaceWith(newSpan);
+  }
+
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') {
+      const newSpan = document.createElement('span');
+      newSpan.className = 'editable';
+      newSpan.innerHTML = renderValueSpan(currentVal);
+      newSpan.addEventListener('click', (ev) => { ev.stopPropagation(); startEdit(newSpan, path); });
+      input.replaceWith(newSpan);
+    }
+  });
+}
+
+function renderTree(obj, container, path = [], depth = 0) {
+  if (obj === null || obj === undefined || typeof obj !== 'object') {
+    container.innerHTML += renderValueSpan(obj);
+    return;
+  }
+
+  const isArray = Array.isArray(obj);
+  const entries = isArray ? obj.map((v, i) => [String(i), v]) : Object.entries(obj);
+
+  for (const [key, val] of entries) {
+    const currentPath = [...path, key];
+
+    if (val !== null && typeof val === 'object' && !Array.isArray(val)) {
+      const childCount = Object.keys(val).length;
+      const div = document.createElement('div');
+      div.className = 'collapsed';
+      div.innerHTML = `<div class="tree-key">` +
+        `<span class="tree-toggle">\u25B6</span>` +
+        `<span class="tree-key-name">${escHtml(String(key))}</span> ` +
+        `<span class="tree-val-type">{${childCount} fields}</span></div>`;
+      const childContainer = document.createElement('div');
+      childContainer.className = 'tree-node';
+      renderTree(val, childContainer, currentPath, depth + 1);
+      div.appendChild(childContainer);
+      container.appendChild(div);
+      div.querySelector('.tree-key').addEventListener('click', function() {
+        div.classList.toggle('collapsed');
+        const toggle = this.querySelector('.tree-toggle');
+        toggle.textContent = div.classList.contains('collapsed') ? '\u25B6' : '\u25BC';
+      });
+    } else if (Array.isArray(val)) {
+      const div = document.createElement('div');
+      div.className = 'collapsed';
+      const preview = val.length <= 5
+        ? `[${val.map(v => typeof v === 'number' ? v : '...').join(', ')}]`
+        : `[${val.length} items]`;
+      div.innerHTML = `<div class="tree-key">` +
+        `<span class="tree-toggle">\u25B6</span>` +
+        `<span class="tree-key-name">${escHtml(String(key))}</span> ` +
+        `<span class="tree-val-type">${escHtml(preview)}</span></div>`;
+      const childContainer = document.createElement('div');
+      childContainer.className = 'tree-node';
+      for (let i = 0; i < val.length; i++) {
+        const itemPath = [...currentPath, String(i)];
+        const leaf = document.createElement('div');
+        leaf.className = 'tree-leaf';
+        const keySpan = `<span class="tree-key-name">[${i}]</span> `;
+        const valSpan = document.createElement('span');
+        valSpan.className = 'editable';
+        valSpan.innerHTML = renderValueSpan(val[i]);
+        valSpan.addEventListener('click', (e) => { e.stopPropagation(); startEdit(valSpan, itemPath); });
+        leaf.innerHTML = keySpan;
+        leaf.appendChild(valSpan);
+        childContainer.appendChild(leaf);
+      }
+      div.appendChild(childContainer);
+      container.appendChild(div);
+      div.querySelector('.tree-key').addEventListener('click', function() {
+        div.classList.toggle('collapsed');
+        const toggle = this.querySelector('.tree-toggle');
+        toggle.textContent = div.classList.contains('collapsed') ? '\u25B6' : '\u25BC';
+      });
+    } else {
+      const leaf = document.createElement('div');
+      leaf.className = 'tree-leaf';
+      const keySpan = `<span class="tree-key-name">${escHtml(String(key))}</span>: `;
+      const valSpan = document.createElement('span');
+      valSpan.className = 'editable';
+      valSpan.innerHTML = renderValueSpan(val);
+      valSpan.addEventListener('click', (e) => { e.stopPropagation(); startEdit(valSpan, currentPath); });
+      leaf.innerHTML = keySpan;
+      leaf.appendChild(valSpan);
+      container.appendChild(leaf);
+    }
+  }
+}
+
+function saveFile(text, name) {
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+async function main() {
+  const status = document.getElementById('status');
+  const tree = document.getElementById('tree');
+  const saveBtn = document.getElementById('saveBtn');
+
+  try {
+    await init();
+    status.textContent = 'WASM loaded. Select an ENDF file to parse.';
+    status.className = '';
+  } catch (e) {
+    status.textContent = 'Failed to load WASM: ' + e;
+    status.className = 'error';
+    return;
+  }
+
+  saveBtn.addEventListener('click', () => {
+    if (!parser || !parsedData) return;
+    status.textContent = 'Writing ENDF file...';
+    status.className = '';
+    try {
+      const opts = {
+        abuse_signpos: document.getElementById('opt_abuse_signpos').checked,
+        skip_intzero: document.getElementById('opt_skip_intzero').checked,
+        prefer_noexp: document.getElementById('opt_prefer_noexp').checked,
+        keep_E: document.getElementById('opt_keep_E').checked,
+      };
+      const text = parser.write(parsedData, opts);
+      saveFile(text, fileName);
+      status.textContent = `Saved ${fileName}`;
+      status.className = 'success';
+    } catch (err) {
+      status.textContent = 'Write error: ' + err;
+      status.className = 'error';
+    }
+  });
+
+  document.getElementById('fileInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const format = document.getElementById('format').value;
+    status.textContent = `Parsing ${file.name} (${(file.size / 1024).toFixed(0)} KB) with ${format}...`;
+    status.className = '';
+    tree.innerHTML = '';
+    saveBtn.disabled = true;
+    parsedData = null;
+
+    await new Promise(r => setTimeout(r, 50));
+
+    try {
+      parser = new WasmEndfParser(format);
+      const text = await file.text();
+      const t0 = performance.now();
+      parsedData = parser.parse(text);
+      const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
+      const rate = (file.size / 1024 / 1024 / parseFloat(elapsed)).toFixed(1);
+
+      fileName = file.name.replace(/\.[^.]+$/, '_modified.endf');
+      status.textContent = `Parsed ${file.name} in ${elapsed}s (${rate} MB/s). Click values to edit.`;
+      status.className = 'success';
+      saveBtn.disabled = false;
+
+      renderTree(parsedData, tree);
+    } catch (err) {
+      status.textContent = 'Parse error: ' + err;
+      status.className = 'error';
+    }
+  });
+}
+
+main();
+</script>
+</body>
+</html>
