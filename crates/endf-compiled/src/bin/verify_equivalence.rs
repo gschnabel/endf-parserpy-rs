@@ -129,7 +129,7 @@ fn main() {
 
                 // Parse with compiled
                 let compiled_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                    endf_parser_compiled::parse_section(*mf, *mt, section_lines, &read_opts, &parse_opts)
+                    endf_compiled::parse_section(*mf, *mt, section_lines, &read_opts, &parse_opts)
                 }));
                 let compiled_sec = match compiled_result {
                     Ok(Ok(ref s)) if s.is_dict() => s,

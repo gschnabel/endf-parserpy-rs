@@ -46,10 +46,10 @@ fn main() {
                 let mt = match mt_key { EndfKey::Int(n) => *n as i32, _ => continue };
                 if !sec.is_dict() { continue; }
                 let entry = mf_results.entry(mf).or_insert((0,0,0));
-                match endf_parser_compiled::write_section(mf, mt, sec, &write_opts) {
+                match endf_compiled::write_section(mf, mt, sec, &write_opts) {
                     Ok(lines) => {
                         let lo: Vec<String> = lines.iter().map(|s| s.to_string()).collect();
-                        match endf_parser_compiled::parse_section(mf, mt, &lo, &ro, &po) {
+                        match endf_compiled::parse_section(mf, mt, &lo, &ro, &po) {
                             Ok(rep) => { let mut d = Vec::new(); compare(sec, &rep, "", &mut d, 3); if d.is_empty() { entry.0 += 1; } else { entry.1 += 1; } }
                             Err(_) => { entry.2 += 1; }
                         }

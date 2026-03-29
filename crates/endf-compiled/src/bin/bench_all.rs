@@ -26,7 +26,7 @@ fn compiled_parse_file(path: &Path, read_opts: &ReadOpts, parse_opts: &ParseOpts
             let ro = read_opts.clone();
             let po = parse_opts.clone();
             let parsed = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                endf_parser_compiled::parse_section(*mf, *mt, &sl, &ro, &po)
+                endf_compiled::parse_section(*mf, *mt, &sl, &ro, &po)
             }));
             match parsed {
                 Ok(Ok(data)) => { mf_dict.insert(EndfKey::Int(*mt as i64), data); }

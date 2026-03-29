@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "crates/endf",
-    "crates/endf-parser-compiled",
+    "crates/endf-compiled",
     "crates/endf-parserpy-rs",
     "crates/endf-wasm",
 ]

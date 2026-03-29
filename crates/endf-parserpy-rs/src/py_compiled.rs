@@ -86,7 +86,7 @@ impl CompiledParser {
         for (mf, mt_map) in &section_map {
             let mut mf_dict = EndfValue::new_dict();
             for (mt, section_lines) in mt_map {
-                match endf_parser_compiled::parse_section(
+                match endf_compiled::parse_section(
                     *mf, *mt, section_lines, &self.read_opts, &self.parse_opts
                 ) {
                     Ok(data) => { mf_dict.insert(EndfKey::Int(*mt as i64), data); }
@@ -159,7 +159,7 @@ impl CompiledParser {
                 if let EndfValue::Str(raw) = section_data {
                     all_lines.extend(raw.lines().map(String::from));
                 } else {
-                    match endf_parser_compiled::write_section(mf, mt, section_data, &self.write_opts) {
+                    match endf_compiled::write_section(mf, mt, section_data, &self.write_opts) {
                         Ok(mut section_lines) => {
                             endf::sections::add_linenumbers(&mut section_lines, mf, &self.write_opts);
                             all_lines.extend(section_lines);

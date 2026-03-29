@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 endf = { path = "../endf" }
-endf-parser-compiled = { path = "../endf-parser-compiled" }
+endf-compiled = { path = "../endf-compiled" }
 indexmap = "2"
 rustc-hash = "1"
 pyo3 = { version = "0.22", features = ["extension-module"] }

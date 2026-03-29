@@ -105,7 +105,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "endf-parser-compiled"
+name = "endf-compiled"
 version = "0.1.0"
 dependencies = [
  "endf",
@@ -116,7 +116,7 @@ name = "endf-parserpy-rs"
 version = "0.1.0"
 dependencies = [
  "endf",
- "endf-parser-compiled",
+ "endf-compiled",
  "indexmap",
  "pyo3",
  "rustc-hash",

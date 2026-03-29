@@ -114,7 +114,7 @@ fn main() {
 
                 // Compiled read
                 let compiled_data = match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                    endf_parser_compiled::parse_section(*mf, *mt, section_lines, &read_opts, &parse_opts)
+                    endf_compiled::parse_section(*mf, *mt, section_lines, &read_opts, &parse_opts)
                 })) {
                     Ok(Ok(d)) => d,
                     _ => { entry.2 += 1; continue; }
@@ -124,7 +124,7 @@ fn main() {
 
                 // Compiled write
                 let written_lines = match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                    endf_parser_compiled::write_section(*mf, *mt, &compiled_data, &write_opts)
+                    endf_compiled::write_section(*mf, *mt, &compiled_data, &write_opts)
                 })) {
                     Ok(Ok(l)) => l,
                     _ => { entry.2 += 1; continue; }
