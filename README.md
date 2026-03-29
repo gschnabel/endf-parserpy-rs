@@ -181,5 +181,5 @@ The recipe-driven approach used in this project is described in:
 
 [MIT](LICENSE)
 
-Copyright (c) 2022-2025 International Atomic Energy Agency
+Copyright (c) 2022-2025 International Atomic Energy Agency\
 Copyright (c) 2025-2026 Georg Schnabel
