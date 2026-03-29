@@ -461,3 +461,190 @@ let parser = EndfParser::builder()
     .recipes_dir("/path/to/my/recipes/")
     .build()?;
 ```
+
+---
+
+## Compiled Parser (`endf-parser-compiled`)
+
+The `endf-parser-compiled` crate provides statically generated parse and write
+functions for all ENDF-6 recipes. Instead of interpreting the recipe AST at
+runtime, the recipe-to-Rust compiler translates each recipe into a dedicated
+Rust function at build time, eliminating interpreter dispatch overhead.
+
+### When to Use
+
+| Use case | Recommended |
+|----------|-------------|
+| Parse many files quickly | **Compiled** — bypasses interpreter overhead |
+| Optimization loops (parse → modify → write → repeat) | **Compiled** — fast read and write |
+| Custom recipes or runtime recipe loading | **Interpreter** — compiled only supports built-in recipes |
+| Write-only (no parsing) | Either — both produce identical output |
+
+### Reading with the Compiled Parser
+
+```rust
+use endf_parser::sections::split_sections;
+use endf_parser::options::{ReadOpts, ParseOpts};
+use endf_parser::value::{EndfKey, EndfValue};
+
+let content = std::fs::read_to_string("neutrons.endf")?;
+let lines: Vec<&str> = content.lines().collect();
+
+let read_opts = ReadOpts {
+    ignore_send_records: true,
+    ignore_missing_tpid: true,
+    ..ReadOpts::default()
+};
+let parse_opts = ParseOpts {
+    ignore_number_mismatch: true,
+    ignore_zero_mismatch: true,
+    ..ParseOpts::default()
+};
+
+// Split file into MF/MT sections
+let section_map = split_sections(&lines, &read_opts)?;
+
+// Parse each section with the compiled parser
+for (mf, mt_map) in &section_map {
+    for (mt, section_lines) in mt_map {
+        let data = endf_parser_compiled::parse_section(
+            *mf, *mt, section_lines, &read_opts, &parse_opts
+        )?;
+        // data is an EndfValue::Dict, same structure as the interpreter
+    }
+}
+```
+
+### Writing with the Compiled Parser
+
+```rust
+use endf_parser::options::WriteOpts;
+use endf_parser::value::EndfValue;
+
+let write_opts = WriteOpts::default();
+
+// data is an EndfValue::Dict from a prior parse
+let lines: Vec<String> = endf_parser_compiled::write_section(
+    3, 1, &data, &write_opts
+)?;
+
+// lines contains the ENDF-formatted text (one string per line, without SEND)
+```
+
+The `write_section` function takes:
+- `mf: i32` — the MF number
+- `mt: i32` — the MT number
+- `data: &EndfValue` — the section dictionary (as returned by `parse_section`)
+- `write_opts: &WriteOpts` — formatting options
+
+It returns `Vec<String>` — one entry per ENDF line, without the SEND record.
+The caller is responsible for appending SEND/FEND/MEND/TEND records when
+assembling a complete file.
+
+### Roundtrip Example
+
+```rust
+use endf_parser::sections::split_sections;
+use endf_parser::records;
+use endf_parser::options::{ReadOpts, ParseOpts, WriteOpts};
+use endf_parser::value::{EndfKey, EndfValue};
+
+let read_opts = ReadOpts {
+    ignore_send_records: true,
+    ignore_missing_tpid: true,
+    ..ReadOpts::default()
+};
+let parse_opts = ParseOpts {
+    ignore_number_mismatch: true,
+    ignore_zero_mismatch: true,
+    ..ParseOpts::default()
+};
+let write_opts = WriteOpts::default();
+
+// Parse
+let content = std::fs::read_to_string("input.endf")?;
+let lines: Vec<&str> = content.lines().collect();
+let sections = split_sections(&lines, &read_opts)?;
+
+let mut output_lines: Vec<String> = Vec::new();
+let mut mat = 0i32;
+
+for (mf, mt_map) in &sections {
+    for (mt, section_lines) in mt_map {
+        // Read with compiled parser
+        let data = endf_parser_compiled::parse_section(
+            *mf, *mt, section_lines, &read_opts, &parse_opts
+        )?;
+
+        // Extract MAT for control records
+        if let Some(m) = data.get("MAT").and_then(|v| v.as_int()) {
+            mat = m as i32;
+        }
+
+        // Modify data here if needed...
+
+        // Write back with compiled parser
+        let written = endf_parser_compiled::write_section(
+            *mf, *mt, &data, &write_opts
+        )?;
+        output_lines.extend(written);
+        output_lines.push(records::write_send(mat, *mf, &write_opts));
+    }
+    output_lines.push(records::write_fend(mat, &write_opts));
+}
+output_lines.push(records::write_mend(&write_opts));
+output_lines.push(records::write_tend(&write_opts));
+
+std::fs::write("output.endf", output_lines.join("\n"))?;
+```
+
+### Regenerating the Compiled Parser
+
+The compiled parser source is generated from the recipe catalogue:
+
+```bash
+cd rust-test
+cargo run --bin compile_recipes -p endf-parser > crates/endf-parser-compiled/src/lib.rs
+cargo build --release -p endf-parser-compiled
+```
+
+This generates both `parse_mfX_mtY` and `write_mfX_mtY` functions for every
+recipe in the ENDF-6 catalogue, plus dispatch functions `parse_section` and
+`write_section`.
+
+### Interoperability
+
+The compiled parser produces the same `EndfValue` data structure as the
+interpreter. Data parsed by the compiled parser can be written by the
+interpreter and vice versa. This has been validated on the entire ENDF/B-VIII.1
+library (96,367 sections, 558 files):
+
+- **Compiled read → Compiled write → Compiled re-read**: 95,809/95,809 match
+- **Compiled read → Compiled write → Interpreter read**: 96,367/96,367 match
+- **Interpreter read vs Compiled read**: 96,367/96,367 match
+
+### Write Mode Details
+
+In write mode, the compiled functions:
+
+1. Read scalar variables from the `EndfValue::Dict` using `get_float`/`get_int`
+2. Navigate into named sections (`xstable`, `subsection[k]`, etc.) via `.get()`
+3. Construct ENDF records (`ContRecord`, `Tab1Body`, etc.) from the data
+4. Format lines using `write_cont`, `write_tab1_body`, etc.
+
+**Scope handling:** Variables from parent sections are accessible via a
+fallback chain. The write functions maintain a `_saved_data` reference to
+the parent scope so that conditions like `MT==MT1` (where `MT` comes from
+the top-level control record) work correctly inside nested sections.
+
+**Conditionals:** Unlike read mode, write mode does not need lookahead
+speculation. All variables are already present in the data dictionary,
+so conditions are evaluated directly.
+
+**Abbreviations:** Recipe abbreviations (e.g., `NT := NE*(NE-1)+1`) are
+expanded at compile time. In write mode, the expanded expression is
+evaluated from the data dictionary to compute field values like N1.
+
+**Supported record types:** HEAD/CONT, TAB1, TAB2, LIST (with nested
+body loops), TEXT, DIR, INTG, for-loops, if/elif/else, sections
+(simple and indexed), abbreviations.
