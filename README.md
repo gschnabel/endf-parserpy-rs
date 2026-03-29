@@ -16,8 +16,9 @@ in Rust for speed and safety.
 - **Python bindings** -- drop-in replacement for endf-parserpy with identical
   data structures (nested dicts), via PyO3
 - **CLI tool** -- `endf-tool` for converting between ENDF and JSON formats
-- **Lossless roundtrip** -- parse an ENDF file, modify values, and write it
-  back preserving formatting conventions
+- **Roundtrip support** -- parse an ENDF file, modify values, and write it
+  back to valid ENDF-6 format (data values are preserved; number formatting
+  may differ from the original)
 
 ## Project Structure
 
@@ -152,6 +153,16 @@ parser = EndfParserPy(ignore_zero_mismatch=True)
 from endf_parserpy_rs import EndfParser
 parser = EndfParser(ignore_zero_mismatch=True)
 ```
+
+## Status
+
+This project is in an early stage. Core parsing and writing functionality
+works and has been validated against endf-parserpy on the ENDF/B-VIII.1
+neutron sublibrary, but not all features and options have been
+comprehensively tested. In particular, write-mode formatting options,
+edge cases in less common MF/MT sections, and non-default recipe formats
+may contain bugs. Use with appropriate caution and please report any
+issues you encounter.
 
 ## References
 
