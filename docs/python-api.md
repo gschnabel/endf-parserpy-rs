@@ -434,3 +434,104 @@ data = parser.parsefile("input.endf")
 # Data access is identical
 za = data[3][1]["ZA"]
 ```
+
+---
+
+## Compiled Parser (`CompiledParser`)
+
+The `CompiledParser` class uses statically generated Rust functions for each
+MF/MT combination, bypassing the recipe interpreter entirely. It provides
+the same API as `EndfParser` but with better parsing performance for the
+built-in ENDF-6 recipes.
+
+### Quick Start
+
+```python
+from endf_parser_py import CompiledParser
+
+# Create with the same options as EndfParser
+parser = CompiledParser(
+    ignore_number_mismatch=True,
+    ignore_zero_mismatch=True,
+    ignore_varspec_mismatch=True,
+    ignore_send_records=True,
+    ignore_missing_tpid=True,
+    ignore_blank_lines=True,
+)
+
+# Parse — same API as EndfParser
+data = parser.parsefile("neutrons.endf")
+print(data[3][1]["ZA"])  # 1001
+
+# Write — same API as EndfParser
+parser.writefile("output.endf", data)
+```
+
+### When to Use
+
+| Scenario | Use |
+|----------|-----|
+| Parsing with built-in ENDF-6 recipes | `CompiledParser` — faster |
+| Custom recipes or runtime recipe loading | `EndfParser` — supports any recipe |
+| Writing ENDF files | Either — both produce identical output |
+| Optimization loops (parse → modify → write) | `CompiledParser` — faster read+write |
+
+### API Reference
+
+```python
+class CompiledParser:
+    def __init__(self, **kwargs)
+    def parse(self, text: str) -> dict
+    def parsefile(self, filename: str) -> dict
+    def write(self, data: dict) -> str
+    def writefile(self, filename: str, data: dict) -> None
+```
+
+**Constructor options:** Same as `EndfParser` (see above), except `recipes_dir`
+and `endf_format` are not supported — the compiled parser always uses the
+built-in ENDF-6 recipes.
+
+### Interoperability
+
+Data parsed by `CompiledParser` and `EndfParser` is fully interchangeable:
+
+```python
+from endf_parser_py import EndfParser, CompiledParser
+
+cp = CompiledParser(ignore_send_records=True, ignore_missing_tpid=True)
+ip = EndfParser(ignore_send_records=True, ignore_missing_tpid=True)
+
+# Parse with compiled, write with interpreter (or vice versa)
+data = cp.parsefile("input.endf")
+ip.writefile("output.endf", data)
+
+# Both produce the same data structure
+data_c = cp.parsefile("input.endf")
+data_i = ip.parsefile("input.endf")
+assert data_c[3][1]["ZA"] == data_i[3][1]["ZA"]
+```
+
+### Roundtrip Example
+
+```python
+from endf_parser_py import CompiledParser
+
+parser = CompiledParser(
+    ignore_number_mismatch=True,
+    ignore_zero_mismatch=True,
+    ignore_varspec_mismatch=True,
+    ignore_send_records=True,
+    ignore_missing_tpid=True,
+    ignore_blank_lines=True,
+)
+
+# Parse
+data = parser.parsefile("input.endf")
+
+# Modify cross sections
+xstable = data[3][1]["xstable"]
+xstable["xs"] = [v * 1.1 for v in xstable["xs"]]
+
+# Write back
+parser.writefile("modified.endf", data)
+```
