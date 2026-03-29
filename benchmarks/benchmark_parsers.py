@@ -10,8 +10,6 @@ import os
 import sys
 import time
 
-ENDF_DIR = "/path/to/endf/library"
-
 PARSER_OPTS = dict(
     ignore_number_mismatch=True,
     ignore_zero_mismatch=True,
@@ -44,7 +42,10 @@ def benchmark(name, parse_fn, files, mb):
 
 
 def main():
-    endf_dir = sys.argv[1] if len(sys.argv) > 1 else ENDF_DIR
+    if len(sys.argv) < 2:
+        print(f"Usage: {sys.argv[0]} <endf-directory>", file=sys.stderr)
+        sys.exit(1)
+    endf_dir = sys.argv[1]
     files = sorted(glob.glob(os.path.join(endf_dir, "*.endf")))
     total_bytes = sum(os.path.getsize(f) for f in files)
     mb = total_bytes / 1024 / 1024
@@ -62,7 +63,7 @@ def main():
 
     # --- Rust interpreter ---
     try:
-        from endf_parser_py import EndfParser
+        from endf_parserpy_rs import EndfParser
         interp = EndfParser(**PARSER_OPTS)
         benchmark("Rust interpreter", lambda f: interp.parsefile(f), files, mb)
     except ImportError:
@@ -70,7 +71,7 @@ def main():
 
     # --- Compiled Rust parser ---
     try:
-        from endf_parser_py import CompiledParser
+        from endf_parserpy_rs import CompiledParser
         compiled = CompiledParser(**PARSER_OPTS)
         benchmark("Compiled Rust parser", lambda f: compiled.parsefile(f), files, mb)
     except ImportError:

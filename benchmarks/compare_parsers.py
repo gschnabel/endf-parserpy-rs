@@ -12,8 +12,6 @@ import traceback
 from collections import defaultdict
 
 
-ENDF_DIR = "/path/to/endf/library"
-
 PARSER_OPTS = dict(
     ignore_number_mismatch=True,
     ignore_zero_mismatch=True,
@@ -30,7 +28,7 @@ def make_cpp_parser():
 
 
 def make_rust_parser():
-    from endf_parser_py import EndfParser
+    from endf_parserpy_rs import EndfParser
     return EndfParser(**PARSER_OPTS)
 
 
@@ -206,11 +204,15 @@ def run_tests(endf_dir, single_file=None, max_files=None):
 
 
 if __name__ == "__main__":
-    single = sys.argv[1] if len(sys.argv) > 1 else None
+    if len(sys.argv) < 2:
+        print(f"Usage: {sys.argv[0]} <endf-directory-or-file> [max-files]", file=sys.stderr)
+        sys.exit(1)
+    target = sys.argv[1]
     max_f = int(sys.argv[2]) if len(sys.argv) > 2 else None
-    if single and os.path.isdir(single):
-        run_tests(single, max_files=max_f)
-    elif single and os.path.isfile(single):
-        run_tests(ENDF_DIR, single_file=single, max_files=max_f)
+    if os.path.isdir(target):
+        run_tests(target, max_files=max_f)
+    elif os.path.isfile(target):
+        run_tests(os.path.dirname(target), single_file=target, max_files=max_f)
     else:
-        run_tests(ENDF_DIR, max_files=max_f)
+        print(f"Error: {target} not found", file=sys.stderr)
+        sys.exit(1)
