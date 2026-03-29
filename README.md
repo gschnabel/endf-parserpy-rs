@@ -172,6 +172,21 @@ The recipe-driven approach used in this project is described in:
 > *How to explain ENDF-6 to computers: A formal ENDF format description language*,
 > [arXiv:2312.08249](https://arxiv.org/abs/2312.08249) (2023)
 
+## WebAssembly Demo
+
+The interpreter also compiles to WebAssembly, enabling client-side ENDF
+parsing in the browser. A small demo app lets you upload an ENDF file,
+explore the parsed data as a collapsible tree, edit values, and save the
+result back to ENDF format — all without a server.
+
+```bash
+# requires wasm-pack: cargo install wasm-pack
+cd crates/endf-wasm
+wasm-pack build --target web --release
+python3 -m http.server 8080
+# open http://localhost:8080/www/
+```
+
 ## Documentation
 
 - [Python API](docs/python-api.md)
