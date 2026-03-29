@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
 use crate::error::{EndfError, EndfResult};
+use crate::fortran::fortstr_to_f64;
 use crate::options::{ReadOpts, WriteOpts};
 use crate::records::{read_ctrl, CtrlRecord};
 
@@ -26,11 +27,11 @@ fn validate_send_record(line: &str, ofs: usize, opts: &ReadOpts) -> EndfResult<(
         if field.is_empty() {
             continue; // blank ⇒ zero
         }
-        // Try integer first, then float.
+        // Try integer first, then Fortran-style float (e.g. 0.000000+0).
         let is_zero = field
             .parse::<i64>()
             .map(|v| v == 0)
-            .unwrap_or_else(|_| field.parse::<f64>().map(|v| v == 0.0).unwrap_or(false));
+            .unwrap_or_else(|_| fortstr_to_f64(field, opts).map(|v| v == 0.0).unwrap_or(false));
         if !is_zero {
             return Err(EndfError::NotSectionEndMsg {
                 message: format!(
