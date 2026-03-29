@@ -1,4 +1,4 @@
-# endf-parser-py — Python API Documentation
+# endf-parserpy-rs — Python API Documentation
 
 Python bindings for the Rust-based ENDF-6 toolkit. Provides high-performance
 reading, writing, and modification of ENDF-6 nuclear data files via PyO3.
@@ -7,18 +7,18 @@ reading, writing, and modification of ENDF-6 nuclear data files via PyO3.
 
 ```bash
 # Build with maturin (development)
-cd rust-test
+cd crates/endf-parserpy-rs
 maturin develop --release
 
 # Or build a wheel
 maturin build --release
-pip install target/wheels/endf_parser_py-*.whl
+pip install ../../target/wheels/endf_parserpy_rs-*.whl
 ```
 
 ## Quick Start
 
 ```python
-from endf_parser_py import EndfParser
+from endf_parserpy_rs import EndfParser
 
 # Parse an ENDF file
 parser = EndfParser()
@@ -290,7 +290,7 @@ parser.writefile("output.endf", data)
 ### Parse, inspect, and write
 
 ```python
-from endf_parser_py import EndfParser
+from endf_parserpy_rs import EndfParser
 
 parser = EndfParser()
 data = parser.parsefile("n-029_Cu_063.endf")
@@ -312,7 +312,7 @@ data2 = parser.parse(output)
 
 ```python
 import matplotlib.pyplot as plt
-from endf_parser_py import EndfParser
+from endf_parserpy_rs import EndfParser
 
 parser = EndfParser()
 data = parser.parsefile("n-029_Cu_063.endf")
@@ -333,7 +333,7 @@ plt.show()
 
 ```python
 import os
-from endf_parser_py import EndfParser
+from endf_parserpy_rs import EndfParser
 
 parser = EndfParser(
     ignore_number_mismatch=True,
@@ -363,7 +363,7 @@ for filename in sorted(os.listdir(endf_dir)):
 ### Compare two ENDF files
 
 ```python
-from endf_parser_py import EndfParser
+from endf_parserpy_rs import EndfParser
 
 parser = EndfParser()
 data_a = parser.parsefile("file_a.endf")
@@ -390,7 +390,7 @@ for mf in sorted(set(data_a.keys()) | set(data_b.keys())):
 ### Use custom recipes
 
 ```python
-from endf_parser_py import EndfParser
+from endf_parserpy_rs import EndfParser
 
 # Load recipes from a directory
 parser = EndfParser(recipes_dir="/path/to/custom/recipes/")
@@ -405,7 +405,7 @@ This package provides the same core functionality as the Python
 [endf-parserpy](https://github.com/IAEA-NDS/endf-parserpy) package but
 implemented in Rust for performance. Key differences:
 
-| Feature | endf-parserpy | endf-parser-py (this package) |
+| Feature | endf-parserpy | endf-parserpy-rs (this package) |
 |---------|--------------|-------------------------------|
 | Language | Python (with optional C++ compiled parsers) | Rust (via PyO3) |
 | Recipe system | Lark grammar + Python interpreter | Pest grammar + Rust interpreter |
@@ -426,8 +426,8 @@ from endf_parserpy import EndfParserPy
 parser = EndfParserPy(ignore_zero_mismatch=True)
 data = parser.parsefile("input.endf")
 
-# endf-parser-py (this package) — same API shape
-from endf_parser_py import EndfParser
+# endf-parserpy-rs (this package) — same API shape
+from endf_parserpy_rs import EndfParser
 parser = EndfParser(ignore_zero_mismatch=True)
 data = parser.parsefile("input.endf")
 
@@ -447,7 +447,7 @@ built-in ENDF-6 recipes.
 ### Quick Start
 
 ```python
-from endf_parser_py import CompiledParser
+from endf_parserpy_rs import CompiledParser
 
 # Create with the same options as EndfParser
 parser = CompiledParser(
@@ -496,7 +496,7 @@ built-in ENDF-6 recipes.
 Data parsed by `CompiledParser` and `EndfParser` is fully interchangeable:
 
 ```python
-from endf_parser_py import EndfParser, CompiledParser
+from endf_parserpy_rs import EndfParser, CompiledParser
 
 cp = CompiledParser(ignore_send_records=True, ignore_missing_tpid=True)
 ip = EndfParser(ignore_send_records=True, ignore_missing_tpid=True)
@@ -514,7 +514,7 @@ assert data_c[3][1]["ZA"] == data_i[3][1]["ZA"]
 ### Roundtrip Example
 
 ```python
-from endf_parser_py import CompiledParser
+from endf_parserpy_rs import CompiledParser
 
 parser = CompiledParser(
     ignore_number_mismatch=True,

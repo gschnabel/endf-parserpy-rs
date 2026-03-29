@@ -2,7 +2,7 @@
 members = [
     "crates/endf-parser",
     "crates/endf-parser-compiled",
-    "crates/endf-parser-py",
+    "crates/endf-parserpy-rs",
 ]
 resolver = "2"
 

@@ -1,11 +1,11 @@
 [package]
-name = "endf-parser-py"
+name = "endf-parserpy-rs"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
 
 [lib]
-name = "endf_parser_py"
+name = "endf_parserpy_rs"
 crate-type = ["cdylib"]
 
 [dependencies]
