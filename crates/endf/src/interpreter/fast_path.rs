@@ -418,7 +418,7 @@ fn read_list_from_strings(
     let body_lines_needed = (npl + 5) / 6;
     let end = (ofs + 1 + body_lines_needed).min(lines.len());
     let line_refs: Vec<&str> = lines[ofs + 1..end].iter().map(|s| s.as_str()).collect();
-    let (vals, body_end) = records::read_endf_numbers(&line_refs, npl, 0, false, read_opts)?;
+    let (vals, body_end) = records::read_endf_numbers(&line_refs, npl, 0, read_opts)?;
     Ok((cont, vals, ofs + 1 + body_end))
 }
 

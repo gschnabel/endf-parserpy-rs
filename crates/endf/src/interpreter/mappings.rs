@@ -126,7 +126,6 @@ fn get_simple_variable(expr: &Expr) -> Option<&ExtVarName> {
 fn try_fast_map_fields(
     exprs: &[Expr],
     field_values: &[f64],
-    _field_names: &[&str],
     state: &mut InterpreterState,
     parse_opts: &ParseOpts,
 ) -> EndfResult<bool> {
@@ -335,7 +334,7 @@ fn map_fields_to_datadic(
 
     // Fast path: if all fields are simple (scalars, constants, or indexed vars
     // with simple loop-var indices), bypass the expensive multi-pass evaluation.
-    if try_fast_map_fields(exprs, field_values, field_names, state, parse_opts)? {
+    if try_fast_map_fields(exprs, field_values, state, parse_opts)? {
         return Ok(());
     }
 
@@ -1043,7 +1042,7 @@ pub fn map_list(
 
         let npl = cont.n1 as usize;
         let line_refs: Vec<&str> = state.lines[state.ofs..].iter().map(|s| s.as_str()).collect();
-        let (vals, body_end) = read_endf_numbers(&line_refs, npl, 0, false, read_opts)?;
+        let (vals, body_end) = read_endf_numbers(&line_refs, npl, 0, read_opts)?;
         state.ofs += body_end;
 
         // Enter list section if named.

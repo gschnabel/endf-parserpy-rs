@@ -259,12 +259,14 @@ pub fn write_intg(
 
 /// Read `count` float values packed 6-per-line starting at line `ofs`.
 ///
-/// Returns the values and the new line offset.
+/// Returns the values and the new line offset. Callers that need integers
+/// (TAB1/TAB2 interpolation tables) cast the results with `as i64`; there
+/// is intentionally no `to_int` mode here because the Rust API keeps the
+/// canonical representation as `f64`.
 pub fn read_endf_numbers(
     lines: &[&str],
     count: usize,
     ofs: usize,
-    _to_int: bool,
     opts: &ReadOpts,
 ) -> EndfResult<(Vec<f64>, usize)> {
     let mut vals = Vec::with_capacity(count);
@@ -346,7 +348,7 @@ pub fn read_tab1_body(
     opts: &ReadOpts,
 ) -> EndfResult<(Tab1Body, usize)> {
     // Read 2*NR interleaved integers (NBT, INT pairs).
-    let (interp_vals, ofs2) = read_endf_numbers(lines, 2 * nr, ofs, true, opts)?;
+    let (interp_vals, ofs2) = read_endf_numbers(lines, 2 * nr, ofs, opts)?;
     let mut nbt = Vec::with_capacity(nr);
     let mut int = Vec::with_capacity(nr);
     for i in 0..nr {
@@ -354,7 +356,7 @@ pub fn read_tab1_body(
         int.push(interp_vals[2 * i + 1] as i64);
     }
     // Read 2*NP interleaved floats (X, Y pairs).
-    let (xy_vals, ofs3) = read_endf_numbers(lines, 2 * np, ofs2, false, opts)?;
+    let (xy_vals, ofs3) = read_endf_numbers(lines, 2 * np, ofs2, opts)?;
     let mut x = Vec::with_capacity(np);
     let mut y = Vec::with_capacity(np);
     for i in 0..np {
@@ -398,7 +400,7 @@ pub fn read_tab2_body(
     nr: usize,
     opts: &ReadOpts,
 ) -> EndfResult<(Tab2Body, usize)> {
-    let (interp_vals, ofs2) = read_endf_numbers(lines, 2 * nr, ofs, true, opts)?;
+    let (interp_vals, ofs2) = read_endf_numbers(lines, 2 * nr, ofs, opts)?;
     let mut nbt = Vec::with_capacity(nr);
     let mut int = Vec::with_capacity(nr);
     for i in 0..nr {
@@ -443,7 +445,7 @@ pub fn read_list(
     if npl == 0 {
         return Ok((cont, Vec::new(), ctrl, ofs + 1));
     }
-    let (vals, new_ofs) = read_endf_numbers(lines, npl, ofs + 1, false, opts)?;
+    let (vals, new_ofs) = read_endf_numbers(lines, npl, ofs + 1, opts)?;
     Ok((cont, vals, ctrl, new_ofs))
 }
 
@@ -684,7 +686,7 @@ mod tests {
         // 14 values -> 3 lines (6+6+2)
         assert_eq!(lines.len(), 3);
         let line_refs: Vec<&str> = lines.iter().map(|s| s.as_str()).collect();
-        let (parsed, new_ofs) = read_endf_numbers(&line_refs, 14, 0, false, &ropts).unwrap();
+        let (parsed, new_ofs) = read_endf_numbers(&line_refs, 14, 0, &ropts).unwrap();
         assert_eq!(new_ofs, 3);
         assert_eq!(parsed.len(), 14);
         for (i, (orig, got)) in vals.iter().zip(parsed.iter()).enumerate() {
@@ -711,7 +713,7 @@ mod tests {
         let lines = write_endf_numbers(&vals, &ctrl, true, &wopts);
         assert_eq!(lines.len(), 2);
         let line_refs: Vec<&str> = lines.iter().map(|s| s.as_str()).collect();
-        let (parsed, _) = read_endf_numbers(&line_refs, 7, 0, true, &ropts).unwrap();
+        let (parsed, _) = read_endf_numbers(&line_refs, 7, 0, &ropts).unwrap();
         for (orig, got) in vals.iter().zip(parsed.iter()) {
             assert_eq!(*orig, *got);
         }
