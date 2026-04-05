@@ -123,6 +123,17 @@ impl EndfValue {
         EndfValue::List(Vec::new())
     }
 
+    /// Convert an f64 to an `EndfValue`, preserving integer type for finite
+    /// values that are exactly representable as `i64`.
+    #[inline]
+    pub fn from_f64(v: f64) -> Self {
+        if v.is_finite() && v == (v as i64) as f64 {
+            EndfValue::Int(v as i64)
+        } else {
+            EndfValue::Float(v)
+        }
+    }
+
     /// Try to get this value as an i64.
     pub fn as_int(&self) -> Option<i64> {
         match self {

@@ -20,18 +20,6 @@ fn is_read(state: &InterpreterState) -> bool {
 }
 
 // ---------------------------------------------------------------------------
-// Helper: convert f64 to EndfValue preserving integer type
-// ---------------------------------------------------------------------------
-
-fn f64_to_endf_value(v: f64) -> EndfValue {
-    if v.is_finite() && v == (v as i64) as f64 {
-        EndfValue::Int(v as i64)
-    } else {
-        EndfValue::Float(v)
-    }
-}
-
-// ---------------------------------------------------------------------------
 // Helper: evaluate variable indices, then set value (borrow-safe)
 // ---------------------------------------------------------------------------
 
@@ -221,13 +209,13 @@ fn try_fast_map_fields(
     for (action, &value) in actions.iter().zip(field_values.iter()) {
         match action {
             FieldAction::SetScalar(name) => {
-                let val = f64_to_endf_value(value);
+                let val = EndfValue::from_f64(value);
                 resolved.push(ResolvedAction {
                     kind: ResolvedKind::SetScalar(name.clone(), val),
                 });
             }
             FieldAction::SetIndexed(name, idx_srcs) => {
-                let val = f64_to_endf_value(value);
+                let val = EndfValue::from_f64(value);
                 let mut indices = Vec::with_capacity(idx_srcs.len());
                 for src in idx_srcs {
                     match src {
@@ -430,7 +418,7 @@ fn map_fields_to_datadic(
                     false
                 };
                 if is_simple_variable(&exprs[i]) && !is_abbreviation {
-                    let new_value = f64_to_endf_value(field_values[i]);
+                    let new_value = EndfValue::from_f64(field_values[i]);
                     let var = get_simple_variable(&exprs[i]).unwrap();
                     let var_name = var.name.clone();
                     let var_indices = var.indices.clone();
@@ -479,7 +467,7 @@ fn map_fields_to_datadic(
                     let solved = resolve_field(&r, field_values[i], RwMode::Read)?;
                     let var_name = var.name.clone();
                     let var_indices = var.indices.clone();
-                    let new_value = f64_to_endf_value(solved);
+                    let new_value = EndfValue::from_f64(solved);
 
                     eval_and_set_var(
                         &var_name,

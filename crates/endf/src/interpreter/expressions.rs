@@ -250,7 +250,7 @@ pub fn get_var_value(
         if let Some(abbr_expr) = abbreviations.get(name) {
             let result = eval_expr(abbr_expr, scope_chain, loop_vars, abbreviations, opts).ok()?;
             if result.is_known() {
-                return Some(f64_to_endf_value(result.value));
+                return Some(EndfValue::from_f64(result.value));
             }
             return None;
         }
@@ -479,15 +479,6 @@ fn make_container(opts: &ParseOpts) -> EndfValue {
     match opts.array_type {
         ArrayType::Dict => EndfValue::new_dict(),
         ArrayType::List => EndfValue::new_list(),
-    }
-}
-
-/// Convert an f64 to an EndfValue, preserving integer type when possible.
-fn f64_to_endf_value(v: f64) -> EndfValue {
-    if is_integer(v) {
-        EndfValue::Int(v as i64)
-    } else {
-        EndfValue::Float(v)
     }
 }
 

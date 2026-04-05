@@ -285,16 +285,6 @@ pub fn detect_fast_pattern(body: &[RecipeNode]) -> Option<FastPattern> {
 // Fast-path executors
 // ---------------------------------------------------------------------------
 
-/// Convert f64 to EndfValue, preserving integer type for exact integers.
-#[inline]
-fn f64_to_endf_value(v: f64) -> EndfValue {
-    if v.is_finite() && v == (v as i64) as f64 {
-        EndfValue::Int(v as i64)
-    } else {
-        EndfValue::Float(v)
-    }
-}
-
 /// Resolve an IndexSource to a concrete i64 using loop_vars.
 #[inline]
 fn resolve_index(src: &IndexSource, loop_vars: &std::collections::HashMap<String, i64>) -> EndfResult<i64> {
@@ -329,14 +319,14 @@ fn resolve_header_fields<'a>(
         if let Some(ref fm) = mapping {
             match fm {
                 FieldMapping::Variable(name) => {
-                    let val = f64_to_endf_value(value);
+                    let val = EndfValue::from_f64(value);
                     assignments.push(ResolvedFieldAssignment::Scalar {
                         name: name.as_str(),
                         val,
                     });
                 }
                 FieldMapping::IndexedVariable { name, indices } => {
-                    let val = f64_to_endf_value(value);
+                    let val = EndfValue::from_f64(value);
                     let mut resolved = Vec::with_capacity(indices.len());
                     for idx_src in indices {
                         resolved.push(resolve_index(idx_src, loop_vars)?);
