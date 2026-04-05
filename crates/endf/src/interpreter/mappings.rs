@@ -99,6 +99,37 @@ fn contains_inconsistent_var(expr: &Expr) -> bool {
 }
 
 // ---------------------------------------------------------------------------
+// Helper: evaluate a (start, stop) expression pair as loop bounds
+// ---------------------------------------------------------------------------
+
+/// Evaluate `start` and `stop` expressions under the current interpreter
+/// scope and return them as `i64` loop bounds. The scope chain is built
+/// once and reused for both evaluations.
+fn eval_loop_bounds(
+    start: &Expr,
+    stop: &Expr,
+    state: &InterpreterState,
+    parse_opts: &ParseOpts,
+) -> EndfResult<(i64, i64)> {
+    let scope_chain = state.scope_chain();
+    let sv = eval_expr_known(
+        start,
+        &scope_chain,
+        &state.loop_vars,
+        &state.abbreviations,
+        parse_opts,
+    )? as i64;
+    let ev = eval_expr_known(
+        stop,
+        &scope_chain,
+        &state.loop_vars,
+        &state.abbreviations,
+        parse_opts,
+    )? as i64;
+    Ok((sv, ev))
+}
+
+// ---------------------------------------------------------------------------
 // Helper: check if an Expr is a simple variable reference (not a computed
 // expression). A simple variable is Expr::Variable or Expr::InconsistentVar.
 // This is used to detect cases where a variable like AWR appears in multiple
@@ -1283,13 +1314,7 @@ fn execute_list_plan(
                 *val_idx += 1;
             }
             ListBodyOp::LoopStart(var, start, stop) => {
-                // Evaluate loop bounds once.
-                let (sv, ev) = {
-                    let scope_chain = state.scope_chain();
-                    let s = eval_expr_known(start, &scope_chain, &state.loop_vars, &state.abbreviations, parse_opts)? as i64;
-                    let e = eval_expr_known(stop, &scope_chain, &state.loop_vars, &state.abbreviations, parse_opts)? as i64;
-                    (s, e)
-                };
+                let (sv, ev) = eval_loop_bounds(start, stop, state, parse_opts)?;
                 // Find matching LoopEnd to know the body range.
                 let body_start = i + 1;
                 let mut depth = 1;
@@ -1383,26 +1408,7 @@ fn process_list_items_read(
                 start,
                 stop,
             } => {
-                // Compute scope_chain once for both start and stop evaluation.
-                let (start_val, stop_val) = {
-                    let scope_chain = state.scope_chain();
-                    let sv = eval_expr_known(
-                        start,
-                        &scope_chain,
-                        &state.loop_vars,
-                        &state.abbreviations,
-                        parse_opts,
-                    )? as i64;
-                    let ev = eval_expr_known(
-                        stop,
-                        &scope_chain,
-                        &state.loop_vars,
-                        &state.abbreviations,
-                        parse_opts,
-                    )? as i64;
-                    (sv, ev)
-                };
-
+                let (start_val, stop_val) = eval_loop_bounds(start, stop, state, parse_opts)?;
                 for i in start_val..=stop_val {
                     state.loop_vars.insert(var.clone(), i);
                     process_list_items_read(loop_body, vals, val_idx, state, parse_opts)?;
@@ -1445,26 +1451,7 @@ fn process_list_items_write(
                 start,
                 stop,
             } => {
-                // Compute scope_chain once for both start and stop evaluation.
-                let (start_val, stop_val) = {
-                    let scope_chain = state.scope_chain();
-                    let sv = eval_expr_known(
-                        start,
-                        &scope_chain,
-                        &state.loop_vars,
-                        &state.abbreviations,
-                        parse_opts,
-                    )? as i64;
-                    let ev = eval_expr_known(
-                        stop,
-                        &scope_chain,
-                        &state.loop_vars,
-                        &state.abbreviations,
-                        parse_opts,
-                    )? as i64;
-                    (sv, ev)
-                };
-
+                let (start_val, stop_val) = eval_loop_bounds(start, stop, state, parse_opts)?;
                 for i in start_val..=stop_val {
                     state.loop_vars.insert(var.clone(), i);
                     process_list_items_write(loop_body, vals, state, parse_opts)?;
