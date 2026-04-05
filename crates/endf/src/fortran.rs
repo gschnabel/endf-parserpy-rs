@@ -406,6 +406,39 @@ mod tests {
         assert!(read_fort_int("abc").is_err());
     }
 
+    // ── Python-parity tests for WriteOpts::default() ──────────────
+
+    /// Asserts that `f64_to_fortstr` with the default `WriteOpts` produces
+    /// byte-identical output to the Python endf-parserpy reference with its
+    /// own defaults. Ground-truth strings were captured from
+    /// `endf_parserpy.interpreter.fortran_utils.write_fort_floats` on the
+    /// venv installation; any future drift on either side will trip this
+    /// test. See chunk P0a in the option-alignment work.
+    #[test]
+    fn test_f64_to_fortstr_matches_python_defaults() {
+        let opts = WriteOpts::default();
+        let cases: &[(f64, &str)] = &[
+            // Straddles the prefer_noexp / scientific decision:
+            (0.12345678_f64, " 1.234568-1"),
+            (1.234567e-1_f64, " 1.234567-1"),
+            // Negative, scientific form — unaffected by abuse_signpos:
+            (-1.23456e7_f64, "-1.234560+7"),
+            // Large positive — would use the sign slot if abuse_signpos=true:
+            (9.87654321e10_f64, " 9.87654+10"),
+            // Trivial integer-valued float:
+            (1.0_f64, " 1.000000+0"),
+        ];
+        for (v, expected) in cases {
+            let got = f64_to_fortstr(*v, &opts);
+            assert_eq!(
+                got, *expected,
+                "f64_to_fortstr({}) with defaults: got {:?}, expected {:?} (Python)",
+                v, got, expected
+            );
+            assert_eq!(got.len(), 11, "width must be 11 for {:?}", got);
+        }
+    }
+
     // ── Exponential formatting tests ───────────────────────────────
 
     #[test]

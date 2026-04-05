@@ -39,11 +39,16 @@ pub struct WriteOpts {
 
 impl Default for WriteOpts {
     fn default() -> Self {
+        // Defaults match the Python endf-parserpy reference implementation:
+        // abuse_signpos / skip_intzero / prefer_noexp are opt-in precision
+        // extensions that violate strict ENDF column semantics, so they
+        // are disabled by default. Enable them via the builder to get
+        // maximum precision at the cost of non-standard layout.
         Self {
             width: 11,
-            abuse_signpos: true,
-            skip_intzero: true,
-            prefer_noexp: true,
+            abuse_signpos: false,
+            skip_intzero: false,
+            prefer_noexp: false,
             keep_e: false,
             include_linenum: true,
             strict_datatypes: false,
