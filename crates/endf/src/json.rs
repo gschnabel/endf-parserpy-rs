@@ -43,24 +43,6 @@ pub fn endf_to_json(val: &EndfValue) -> JsonValue {
             }).collect();
             JsonValue::Array(arr)
         }
-        EndfValue::Table(t) => {
-            let mut map = JsonMap::new();
-            map.insert("NBT".to_string(), endf_to_json(&EndfValue::List(
-                t.nbt.iter().map(|v| Some(EndfValue::Int(*v))).collect()
-            )));
-            map.insert("INT".to_string(), endf_to_json(&EndfValue::List(
-                t.int.iter().map(|v| Some(EndfValue::Int(*v))).collect()
-            )));
-            if t.is_tab1() {
-                map.insert("X".to_string(), endf_to_json(&EndfValue::List(
-                    t.x.iter().map(|v| Some(EndfValue::Float(*v))).collect()
-                )));
-                map.insert("Y".to_string(), endf_to_json(&EndfValue::List(
-                    t.y.iter().map(|v| Some(EndfValue::Float(*v))).collect()
-                )));
-            }
-            JsonValue::Object(map)
-        }
     }
 }
 

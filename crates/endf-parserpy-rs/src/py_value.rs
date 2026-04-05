@@ -27,33 +27,7 @@ pub fn endf_value_to_py(py: Python<'_>, val: &EndfValue) -> PyResult<PyObject> {
             }
             Ok(list.into_py(py))
         }
-        EndfValue::Table(t) => {
-            let dict = PyDict::new_bound(py);
-            dict.set_item("NBT", endf_i64_vec_to_py(py, &t.nbt)?)?;
-            dict.set_item("INT", endf_i64_vec_to_py(py, &t.int)?)?;
-            if t.is_tab1() {
-                dict.set_item("X", endf_f64_vec_to_py(py, &t.x)?)?;
-                dict.set_item("Y", endf_f64_vec_to_py(py, &t.y)?)?;
-            }
-            Ok(dict.into_py(py))
-        }
     }
-}
-
-fn endf_i64_vec_to_py(py: Python<'_>, v: &[i64]) -> PyResult<PyObject> {
-    let list = PyList::empty_bound(py);
-    for item in v {
-        list.append(*item)?;
-    }
-    Ok(list.into_py(py))
-}
-
-fn endf_f64_vec_to_py(py: Python<'_>, v: &[f64]) -> PyResult<PyObject> {
-    let list = PyList::empty_bound(py);
-    for item in v {
-        list.append(*item)?;
-    }
-    Ok(list.into_py(py))
 }
 
 fn endf_key_to_py(py: Python<'_>, key: &EndfKey) -> PyResult<PyObject> {

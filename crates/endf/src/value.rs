@@ -68,34 +68,14 @@ impl fmt::Display for EndfKey {
     }
 }
 
-/// Table data from TAB1/TAB2 records.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct EndfTable {
-    pub nbt: Vec<i64>,
-    pub int: Vec<i64>,
-    pub x: Vec<f64>,   // TAB1 only (empty for TAB2)
-    pub y: Vec<f64>,   // TAB1 only (empty for TAB2)
-}
-
-impl EndfTable {
-    pub fn new_tab1(nbt: Vec<i64>, int: Vec<i64>, x: Vec<f64>, y: Vec<f64>) -> Self {
-        Self { nbt, int, x, y }
-    }
-
-    pub fn new_tab2(nbt: Vec<i64>, int: Vec<i64>) -> Self {
-        Self { nbt, int, x: Vec::new(), y: Vec::new() }
-    }
-
-    pub fn is_tab1(&self) -> bool {
-        !self.x.is_empty() || !self.y.is_empty()
-    }
-}
-
 /// The core dynamic value type for ENDF data.
 ///
 /// ENDF data is inherently dynamically typed: the same structure can contain
-/// integers, floats, strings, nested dictionaries (sections), lists (arrays),
-/// and interpolation tables.
+/// integers, floats, strings, nested dictionaries (sections) and lists
+/// (arrays). TAB1/TAB2 interpolation tables are not represented by a
+/// dedicated variant; they are decomposed into their NBT/INT/X/Y arrays at
+/// parse time and stored directly under the recipe's variable names, which
+/// matches the Python reference layout.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum EndfValue {
     /// Integer value (control fields, counters, flags)
@@ -108,8 +88,6 @@ pub enum EndfValue {
     Dict(FxIndexMap<EndfKey, EndfValue>),
     /// List-mode array (dense, with None for gaps)
     List(Vec<Option<EndfValue>>),
-    /// Interpolation table data (TAB1/TAB2)
-    Table(EndfTable),
 }
 
 impl EndfValue {
@@ -192,14 +170,6 @@ impl EndfValue {
         }
     }
 
-    /// Try to get this value as a table.
-    pub fn as_table(&self) -> Option<&EndfTable> {
-        match self {
-            EndfValue::Table(t) => Some(t),
-            _ => None,
-        }
-    }
-
     /// Check if this is a dictionary.
     pub fn is_dict(&self) -> bool {
         matches!(self, EndfValue::Dict(_))
@@ -278,13 +248,6 @@ impl fmt::Display for EndfValue {
             EndfValue::Str(s) => write!(f, "\"{}\"", s),
             EndfValue::Dict(d) => write!(f, "{{dict with {} entries}}", d.len()),
             EndfValue::List(l) => write!(f, "[list with {} entries]", l.len()),
-            EndfValue::Table(t) => {
-                if t.is_tab1() {
-                    write!(f, "Table(NR={}, NP={})", t.nbt.len(), t.x.len())
-                } else {
-                    write!(f, "Table(NR={})", t.nbt.len())
-                }
-            }
         }
     }
 }

@@ -1,7 +1,7 @@
 //! Tests for serde support, nofail mode, and CRLF handling.
 
 use endf::parser::EndfParser;
-use endf::value::{EndfKey, EndfValue, EndfTable};
+use endf::value::{EndfKey, EndfValue};
 
 // ---------------------------------------------------------------------------
 // Feature 1: serde JSON roundtrip
@@ -40,25 +40,6 @@ fn test_serde_json_roundtrip_dict() {
     assert_eq!(d.get(&EndfKey::Str("ZA".into())).unwrap().as_float(), Some(26056.0));
     assert_eq!(d.get(&EndfKey::Str("AWR".into())).unwrap().as_float(), Some(55.845));
     assert_eq!(d.get(&EndfKey::Int(1)).unwrap().as_int(), Some(99));
-}
-
-#[test]
-fn test_serde_json_roundtrip_table() {
-    let table = EndfValue::Table(EndfTable::new_tab1(
-        vec![3],
-        vec![2],
-        vec![1.0e-5, 1.0e6, 2.0e7],
-        vec![10.0, 20.0, 5.0],
-    ));
-
-    let json = serde_json::to_string(&table).expect("serialize");
-    let back: EndfValue = serde_json::from_str(&json).expect("deserialize");
-
-    let t = back.as_table().expect("should be table");
-    assert_eq!(t.nbt, vec![3]);
-    assert_eq!(t.int, vec![2]);
-    assert_eq!(t.x, vec![1.0e-5, 1.0e6, 2.0e7]);
-    assert_eq!(t.y, vec![10.0, 20.0, 5.0]);
 }
 
 #[test]

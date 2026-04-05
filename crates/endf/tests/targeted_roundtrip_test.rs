@@ -61,19 +61,11 @@ fn compare_values(a: &EndfValue, b: &EndfValue, path: &str, diffs: &mut Vec<Stri
                 }
             }
         }
-        (EndfValue::Table(ta), EndfValue::Table(tb)) => {
-            if ta.nbt != tb.nbt { diffs.push(format!("{}/NBT differs", path)); }
-            if ta.int != tb.int { diffs.push(format!("{}/INT differs", path)); }
-            let xclose = ta.x.len() == tb.x.len() && ta.x.iter().zip(&tb.x).all(|(a,b)| floats_close(*a,*b));
-            let yclose = ta.y.len() == tb.y.len() && ta.y.iter().zip(&tb.y).all(|(a,b)| floats_close(*a,*b));
-            if !xclose { diffs.push(format!("{}/X differs", path)); }
-            if !yclose { diffs.push(format!("{}/Y differs", path)); }
-        }
         _ => {
             let tl = |v: &EndfValue| match v {
                 EndfValue::Int(_) => "Int", EndfValue::Float(_) => "Float",
                 EndfValue::Str(_) => "Str", EndfValue::Dict(_) => "Dict",
-                EndfValue::List(_) => "List", EndfValue::Table(_) => "Table",
+                EndfValue::List(_) => "List",
             };
             diffs.push(format!("{}: type {} vs {}", path, tl(a), tl(b)));
         }

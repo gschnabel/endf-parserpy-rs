@@ -183,13 +183,6 @@ fn compare_values(a: &EndfValue, b: &EndfValue, path: &str, result: &mut Compare
             }
         }
 
-        (EndfValue::Table(ta), EndfValue::Table(tb)) => {
-            compare_int_vecs(&ta.nbt, &tb.nbt, path, "NBT", result);
-            compare_int_vecs(&ta.int, &tb.int, path, "INT", result);
-            compare_float_vecs(&ta.x, &tb.x, path, "X", result);
-            compare_float_vecs(&ta.y, &tb.y, path, "Y", result);
-        }
-
         _ => {
             // Type mismatch
             result.differences.push(format!(
@@ -209,7 +202,6 @@ fn variant_name(v: &EndfValue) -> &'static str {
         EndfValue::Str(_) => "Str",
         EndfValue::Dict(_) => "Dict",
         EndfValue::List(_) => "List",
-        EndfValue::Table(_) => "Table",
     }
 }
 

@@ -51,7 +51,6 @@ fn compare(a: &EndfValue, b: &EndfValue, path: &str, diffs: &mut Vec<String>, ma
                 }
             }
         }
-        (EndfValue::Table(_), EndfValue::Table(_)) => {}
         _ => { diffs.push(format!("{}: type {} vs {}", path, type_name(a), type_name(b))); }
     }
 }
@@ -60,7 +59,7 @@ fn type_name(v: &EndfValue) -> &'static str {
     match v {
         EndfValue::Int(_) => "Int", EndfValue::Float(_) => "Float",
         EndfValue::Str(_) => "Str", EndfValue::Dict(_) => "Dict",
-        EndfValue::List(_) => "List", EndfValue::Table(_) => "Table",
+        EndfValue::List(_) => "List",
     }
 }
 

@@ -65,7 +65,7 @@ fn generate_header() -> String {
 use endf::records::{self, read_cont, read_tab1, read_tab1_body, read_tab2, read_tab2_body, read_list, read_intg, read_endf_numbers};
 use endf::records::{write_cont, write_text, write_dir, write_intg, write_tab1_body, write_tab2_body, write_send, ContRecord, TextRecord, DirRecord, IntgRecord, Tab1Body, Tab2Body, CtrlRecord};
 use endf::fortran::{fortstr_to_f64, read_fort_int, f64_to_fortstr};
-use endf::value::{EndfKey, EndfValue, EndfTable};
+use endf::value::{EndfKey, EndfValue};
 use endf::options::{ReadOpts, ParseOpts, WriteOpts};
 use endf::error::{EndfError, EndfResult};
 

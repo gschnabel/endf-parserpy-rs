@@ -60,12 +60,6 @@ fn compare_values(a: &EndfValue, b: &EndfValue, path: &str, diffs: &mut Vec<Stri
                 }
             }
         }
-        (EndfValue::Table(ta), EndfValue::Table(tb)) => {
-            if ta.nbt != tb.nbt { diffs.push(format!("{}/NBT: differs", path)); }
-            if ta.int != tb.int { diffs.push(format!("{}/INT: differs", path)); }
-            if !vecs_close(&ta.x, &tb.x) { diffs.push(format!("{}/X: differs", path)); }
-            if !vecs_close(&ta.y, &tb.y) { diffs.push(format!("{}/Y: differs", path)); }
-        }
         _ => {
             diffs.push(format!("{}: type mismatch ({} vs {})", path, type_label(a), type_label(b)));
         }
@@ -89,7 +83,6 @@ fn type_label(v: &EndfValue) -> &'static str {
         EndfValue::Str(_) => "Str",
         EndfValue::Dict(_) => "Dict",
         EndfValue::List(_) => "List",
-        EndfValue::Table(_) => "Table",
     }
 }
 

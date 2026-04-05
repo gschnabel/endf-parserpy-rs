@@ -30,26 +30,6 @@ fn endf_value_to_js(val: &EndfValue) -> JsValue {
             }
             arr.into()
         }
-        EndfValue::Table(table) => {
-            let obj = js_sys::Object::new();
-            let to_js_arr = |v: &[f64]| -> JsValue {
-                let arr = js_sys::Array::new();
-                for x in v { arr.push(&JsValue::from_f64(*x)); }
-                arr.into()
-            };
-            let to_js_int_arr = |v: &[i64]| -> JsValue {
-                let arr = js_sys::Array::new();
-                for x in v { arr.push(&JsValue::from_f64(*x as f64)); }
-                arr.into()
-            };
-            js_sys::Reflect::set(&obj, &"NBT".into(), &to_js_int_arr(&table.nbt)).unwrap();
-            js_sys::Reflect::set(&obj, &"INT".into(), &to_js_int_arr(&table.int)).unwrap();
-            if !table.x.is_empty() {
-                js_sys::Reflect::set(&obj, &"x".into(), &to_js_arr(&table.x)).unwrap();
-                js_sys::Reflect::set(&obj, &"y".into(), &to_js_arr(&table.y)).unwrap();
-            }
-            obj.into()
-        }
     }
 }
 
