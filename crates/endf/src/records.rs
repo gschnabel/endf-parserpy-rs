@@ -475,48 +475,38 @@ fn zero_field(is_float: bool, zero_as_blank: bool, width: usize, opts: &WriteOpt
     }
 }
 
-/// Write a SEND (section-end) record.
-pub fn write_send(mat: i32, mf: i32, opts: &WriteOpts) -> String {
+/// Write a boundary record (SEND/FEND/MEND/TEND): six zero fields plus
+/// the control record and an optional line number.
+fn write_boundary_record(ctrl: CtrlRecord, linenum: &str, opts: &WriteOpts) -> String {
     let w = opts.width;
     let zf = zero_field(true, opts.zero_as_blank, w, opts);
     let zi = zero_field(false, opts.zero_as_blank, w, opts);
-    let ctrl = write_ctrl(&CtrlRecord { mat, mf, mt: 0 });
+    let ctrl_str = write_ctrl(&ctrl);
+    format!("{}{}{}{}{}{}{}{}", zf, zf, zi, zi, zi, zi, ctrl_str, linenum)
+}
+
+/// Write a SEND (section-end) record.
+pub fn write_send(mat: i32, mf: i32, opts: &WriteOpts) -> String {
     let linenum = if opts.include_linenum { "99999" } else { "" };
-    format!("{}{}{}{}{}{}{}{}", zf, zf, zi, zi, zi, zi, ctrl, linenum)
+    write_boundary_record(CtrlRecord { mat, mf, mt: 0 }, linenum, opts)
 }
 
 /// Write a FEND (file-end) record.
 pub fn write_fend(mat: i32, opts: &WriteOpts) -> String {
-    let w = opts.width;
-    let zf = zero_field(true, opts.zero_as_blank, w, opts);
-    let zi = zero_field(false, opts.zero_as_blank, w, opts);
-    let ctrl = write_ctrl(&CtrlRecord { mat, mf: 0, mt: 0 });
     let linenum = if opts.include_linenum { "    0" } else { "" };
-    format!("{}{}{}{}{}{}{}{}", zf, zf, zi, zi, zi, zi, ctrl, linenum)
+    write_boundary_record(CtrlRecord { mat, mf: 0, mt: 0 }, linenum, opts)
 }
 
 /// Write a MEND (material-end) record.
 pub fn write_mend(opts: &WriteOpts) -> String {
-    let w = opts.width;
-    let zf = zero_field(true, opts.zero_as_blank, w, opts);
-    let zi = zero_field(false, opts.zero_as_blank, w, opts);
-    let ctrl = write_ctrl(&CtrlRecord { mat: 0, mf: 0, mt: 0 });
     let linenum = if opts.include_linenum { "    0" } else { "" };
-    format!("{}{}{}{}{}{}{}{}", zf, zf, zi, zi, zi, zi, ctrl, linenum)
+    write_boundary_record(CtrlRecord { mat: 0, mf: 0, mt: 0 }, linenum, opts)
 }
 
 /// Write a TEND (tape-end) record.
 pub fn write_tend(opts: &WriteOpts) -> String {
-    let w = opts.width;
-    let zf = zero_field(true, opts.zero_as_blank, w, opts);
-    let zi = zero_field(false, opts.zero_as_blank, w, opts);
-    let ctrl = write_ctrl(&CtrlRecord {
-        mat: -1,
-        mf: 0,
-        mt: 0,
-    });
     let linenum = if opts.include_linenum { "    0" } else { "" };
-    format!("{}{}{}{}{}{}{}{}", zf, zf, zi, zi, zi, zi, ctrl, linenum)
+    write_boundary_record(CtrlRecord { mat: -1, mf: 0, mt: 0 }, linenum, opts)
 }
 
 /// Check if a line is blank (all whitespace).
