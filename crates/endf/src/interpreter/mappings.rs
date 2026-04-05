@@ -72,33 +72,30 @@ fn eval_and_set_var(
 }
 
 // ---------------------------------------------------------------------------
-// Helper: check if an Expr contains a DesiredNumber anywhere
+// Helper: recursive Expr predicate check
 // ---------------------------------------------------------------------------
 
-fn contains_desired_number(expr: &Expr) -> bool {
+/// Returns true if any node in `expr` (root or descendant reachable through
+/// the arithmetic/bracket/negation operators) satisfies `pred`.
+fn expr_contains<F: Fn(&Expr) -> bool>(expr: &Expr, pred: &F) -> bool {
+    if pred(expr) {
+        return true;
+    }
     match expr {
-        Expr::DesiredNumber(_) => true,
-        Expr::Neg(inner) | Expr::Bracket(inner) => contains_desired_number(inner),
+        Expr::Neg(inner) | Expr::Bracket(inner) => expr_contains(inner, pred),
         Expr::Add(a, b) | Expr::Sub(a, b) | Expr::Mul(a, b) | Expr::Div(a, b) | Expr::Mod(a, b) => {
-            contains_desired_number(a) || contains_desired_number(b)
+            expr_contains(a, pred) || expr_contains(b, pred)
         }
         _ => false,
     }
 }
 
-// ---------------------------------------------------------------------------
-// Helper: check if an Expr contains an InconsistentVar anywhere
-// ---------------------------------------------------------------------------
+fn contains_desired_number(expr: &Expr) -> bool {
+    expr_contains(expr, &|e| matches!(e, Expr::DesiredNumber(_)))
+}
 
 fn contains_inconsistent_var(expr: &Expr) -> bool {
-    match expr {
-        Expr::InconsistentVar(_) => true,
-        Expr::Neg(inner) | Expr::Bracket(inner) => contains_inconsistent_var(inner),
-        Expr::Add(a, b) | Expr::Sub(a, b) | Expr::Mul(a, b) | Expr::Div(a, b) | Expr::Mod(a, b) => {
-            contains_inconsistent_var(a) || contains_inconsistent_var(b)
-        }
-        _ => false,
-    }
+    expr_contains(expr, &|e| matches!(e, Expr::InconsistentVar(_)))
 }
 
 // ---------------------------------------------------------------------------
