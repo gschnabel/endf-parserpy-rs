@@ -241,6 +241,12 @@ impl EndfParser {
         std::fs::write(path, content)?;
         Ok(())
     }
+
+    /// Borrow the underlying recipe catalogue. Useful for introspection
+    /// and for tests that need to verify which recipe flavour is active.
+    pub fn catalogue(&self) -> &crate::recipe::catalogue::RecipeCatalogue {
+        &self.engine.catalogue
+    }
 }
 
 impl Default for EndfParser {
@@ -265,7 +271,12 @@ impl Default for EndfParserBuilder {
             read_opts: ReadOpts::default(),
             write_opts: WriteOpts::default(),
             recipes_dir: None,
-            endf_format: "endf6".to_string(),
+            // Match the Python endf-parserpy reference default: the
+            // tolerant "endf6-ext" superset, which includes JENDL's
+            // MF8/MT457 variant and an extended MF4 recipe. Real-world
+            // libraries often deviate from strict ENDF-6 in these
+            // exact places.
+            endf_format: "endf6-ext".to_string(),
         }
     }
 }

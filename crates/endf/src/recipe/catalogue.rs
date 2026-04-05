@@ -419,4 +419,63 @@ mod tests {
         assert!(RecipeCatalogue::for_format("errorr").is_ok());
         assert!(RecipeCatalogue::for_format("unknown").is_err());
     }
+
+    /// endf6-ext overrides MF4 (wildcard) with a recipe that additionally
+    /// supports the obsolete LVT > 0 energy-transformation-matrix layout.
+    /// The two recipes therefore have different AST contents. This test
+    /// asserts the structural difference and is a prerequisite for the
+    /// default-flavour test below: if the two catalogues had identical
+    /// MF4 recipes, a default-flavour check would be vacuous.
+    #[test]
+    fn test_endf6_ext_differs_from_endf6_for_mf4() {
+        let base = RecipeCatalogue::endf6().expect("endf6 load");
+        let ext = RecipeCatalogue::endf6_ext().expect("endf6-ext load");
+
+        let base_mf4 = base.get(4, -1).expect("endf6 MF4 wildcard");
+        let ext_mf4 = ext.get(4, -1).expect("endf6-ext MF4 wildcard");
+
+        let base_dbg = format!("{:?}", base_mf4);
+        let ext_dbg = format!("{:?}", ext_mf4);
+        assert_ne!(
+            base_dbg, ext_dbg,
+            "endf6 and endf6-ext MF4 recipes must differ \
+             (endf6-ext adds the LVT>0 branch)"
+        );
+    }
+
+    /// The default EndfParser flavour must be "endf6-ext", matching the
+    /// Python reference. Verified by comparing the default parser's MF4
+    /// wildcard recipe against the two candidate catalogues.
+    #[test]
+    fn test_default_parser_flavour_is_endf6_ext() {
+        use crate::parser::EndfParser;
+
+        let parser = EndfParser::builder().build().expect("default build");
+        let default_mf4 = parser
+            .catalogue()
+            .get(4, -1)
+            .expect("default parser MF4 wildcard");
+        let default_dbg = format!("{:?}", default_mf4);
+
+        let ext_dbg = format!(
+            "{:?}",
+            RecipeCatalogue::endf6_ext()
+                .unwrap()
+                .get(4, -1)
+                .unwrap()
+        );
+        let base_dbg = format!(
+            "{:?}",
+            RecipeCatalogue::endf6().unwrap().get(4, -1).unwrap()
+        );
+
+        assert_eq!(
+            default_dbg, ext_dbg,
+            "default parser MF4 recipe must match endf6-ext"
+        );
+        assert_ne!(
+            default_dbg, base_dbg,
+            "default parser MF4 recipe must NOT match strict endf6"
+        );
+    }
 }
