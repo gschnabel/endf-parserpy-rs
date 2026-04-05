@@ -847,37 +847,26 @@ pub fn map_tab1(
         let (body, body_end) = read_tab1_body(&line_refs, 0, nr, np, read_opts)?;
         state.ofs += body_end;
 
-        // Enter table section if named.
-        let section_depth = conditional_enter_section(table_name, state, parse_opts)?;
-
-        // Store table data: NBT, INT arrays.
-        store_int_array("NBT", &body.nbt, state, parse_opts)?;
-        store_int_array("INT", &body.int, state, parse_opts)?;
-
-        // Store x and y using the variable names from the recipe.
-        store_float_array(&x_var.name, &body.x, state, parse_opts)?;
-        store_float_array(&y_var.name, &body.y, state, parse_opts)?;
-
-        // Exit table section if entered.
-        if section_depth > 0 {
-            exit_section(state, section_depth);
-        }
+        // Store table data inside the (optional) named section.
+        with_section(state, table_name, parse_opts, |state| {
+            store_int_array("NBT", &body.nbt, state, parse_opts)?;
+            store_int_array("INT", &body.int, state, parse_opts)?;
+            // Store x and y using the variable names from the recipe.
+            store_float_array(&x_var.name, &body.x, state, parse_opts)?;
+            store_float_array(&y_var.name, &body.y, state, parse_opts)?;
+            Ok(())
+        })?;
     } else {
         // Write mode.
 
-        // Enter table section if named.
-        let section_depth = conditional_enter_section(table_name, state, parse_opts)?;
-
-        // Read table data from datadic.
-        let nbt = read_int_array("NBT", state, parse_opts)?;
-        let int = read_int_array("INT", state, parse_opts)?;
-        let x = read_float_array(&x_var.name, state, parse_opts)?;
-        let y = read_float_array(&y_var.name, state, parse_opts)?;
-
-        // Exit table section.
-        if section_depth > 0 {
-            exit_section(state, section_depth);
-        }
+        // Read table data from datadic, inside the (optional) named section.
+        let (nbt, int, x, y) = with_section(state, table_name, parse_opts, |state| {
+            let nbt = read_int_array("NBT", state, parse_opts)?;
+            let int = read_int_array("INT", state, parse_opts)?;
+            let x = read_float_array(&x_var.name, state, parse_opts)?;
+            let y = read_float_array(&y_var.name, state, parse_opts)?;
+            Ok((nbt, int, x, y))
+        })?;
 
         let nr = nbt.len() as i64;
         let np = x.len() as i64;
@@ -962,26 +951,19 @@ pub fn map_tab2(
         let (body, body_end) = read_tab2_body(&line_refs, 0, nr, read_opts)?;
         state.ofs += body_end;
 
-        // Enter table section if named.
-        let section_depth = conditional_enter_section(table_name, state, parse_opts)?;
-
-        // Store NBT, INT.
-        store_int_array("NBT", &body.nbt, state, parse_opts)?;
-        store_int_array("INT", &body.int, state, parse_opts)?;
-
-        if section_depth > 0 {
-            exit_section(state, section_depth);
-        }
+        // Store NBT, INT inside the (optional) named section.
+        with_section(state, table_name, parse_opts, |state| {
+            store_int_array("NBT", &body.nbt, state, parse_opts)?;
+            store_int_array("INT", &body.int, state, parse_opts)?;
+            Ok(())
+        })?;
     } else {
         // Write mode.
-        let section_depth = conditional_enter_section(table_name, state, parse_opts)?;
-
-        let nbt = read_int_array("NBT", state, parse_opts)?;
-        let int = read_int_array("INT", state, parse_opts)?;
-
-        if section_depth > 0 {
-            exit_section(state, section_depth);
-        }
+        let (nbt, int) = with_section(state, table_name, parse_opts, |state| {
+            let nbt = read_int_array("NBT", state, parse_opts)?;
+            let int = read_int_array("INT", state, parse_opts)?;
+            Ok((nbt, int))
+        })?;
 
         let nr = nbt.len() as i64;
 
@@ -1060,42 +1042,33 @@ pub fn map_list(
         let (vals, body_end) = read_endf_numbers(&line_refs, npl, 0, read_opts)?;
         state.ofs += body_end;
 
-        // Enter list section if named.
-        let section_depth = conditional_enter_section(list_name, state, parse_opts)?;
+        // Process list body items inside the (optional) named section.
+        // Note: with_section guarantees the section is exited even when the
+        // inner body returns Err (e.g. UnconsumedListElements), so the
+        // scope path cannot leak on error.
+        with_section(state, list_name, parse_opts, |state| {
+            // Try fast bulk processing if all items are simple variables.
+            let mut val_idx: usize = 0;
+            if !try_fast_list_body(&vals, body, &mut val_idx, state, parse_opts)? {
+                process_list_items_read(body, &vals, &mut val_idx, state, parse_opts)?;
+            }
 
-        // Process list body items.
-        // Try fast bulk processing if all items are simple variables.
-        let mut val_idx: usize = 0;
-        if !try_fast_list_body(&vals, body, &mut val_idx, state, parse_opts)? {
-            process_list_items_read(body, &vals, &mut val_idx, state, parse_opts)?;
-        }
-
-        // Verify all values were consumed.
-        if val_idx < vals.len() {
-            // Not a hard error in all cases, but we flag it.
-            // The Python code raises UnconsumedListElementsError.
-            // We'll return an error for now.
-            return Err(EndfError::UnconsumedListElements {
-                remaining: vals.len() - val_idx,
-            });
-        }
-
-        if section_depth > 0 {
-            exit_section(state, section_depth);
-        }
+            // Verify all values were consumed.
+            if val_idx < vals.len() {
+                return Err(EndfError::UnconsumedListElements {
+                    remaining: vals.len() - val_idx,
+                });
+            }
+            Ok(())
+        })?;
     } else {
         // Write mode: evaluate header, then build body values.
 
-        // Enter list section if named (for reading body values from datadic).
-        let section_depth = conditional_enter_section(list_name, state, parse_opts)?;
-
         // Build list body values first (we may need the count for N1).
         let mut vals: Vec<f64> = Vec::new();
-        process_list_items_write(body, &mut vals, state, parse_opts)?;
-
-        if section_depth > 0 {
-            exit_section(state, section_depth);
-        }
+        with_section(state, list_name, parse_opts, |state| {
+            process_list_items_write(body, &mut vals, state, parse_opts)
+        })?;
 
         // Ensure NPL is available for header evaluation.
         {
@@ -1661,7 +1634,8 @@ fn exit_section(state: &mut InterpreterState, depth: usize) {
 /// If `name` is `Some`, enter the named section and return the resulting
 /// scope depth. If `None`, do nothing and return 0. Dispatches to the
 /// read-mode or write-mode entry routine based on the current `state.rwmode`.
-/// Use the returned depth with `exit_section` to unwind.
+/// Use the returned depth with `exit_section` to unwind, or prefer
+/// `with_section` which handles unwinding automatically.
 fn conditional_enter_section(
     name: &Option<ExtVarName>,
     state: &mut InterpreterState,
@@ -1672,6 +1646,25 @@ fn conditional_enter_section(
         Some(n) => enter_section_write(n, state, parse_opts),
         None => Ok(0),
     }
+}
+
+/// Run `body` inside the scope of the section named by `name`. If `name`
+/// is `Some`, the section is entered beforehand and unconditionally exited
+/// afterwards — even when `body` returns an error, which prevents scope
+/// leaks on early-return paths. Dispatches to read or write entry based on
+/// the current `state.rwmode`.
+fn with_section<R>(
+    state: &mut InterpreterState,
+    name: &Option<ExtVarName>,
+    parse_opts: &ParseOpts,
+    body: impl FnOnce(&mut InterpreterState) -> EndfResult<R>,
+) -> EndfResult<R> {
+    let depth = conditional_enter_section(name, state, parse_opts)?;
+    let result = body(state);
+    if depth > 0 {
+        exit_section(state, depth);
+    }
+    result
 }
 
 /// Compute the sequence of EndfKeys for a section name.
