@@ -316,6 +316,23 @@ pub fn write_endf_numbers(
     result_lines
 }
 
+/// Interleave two equal-length slices `a` and `b` into a single `Vec<f64>`
+/// in the order `a[0], b[0], a[1], b[1], ...`, applying `to_f64` to each
+/// element. Used to build the flat interpolation / x-y buffers for TAB1 /
+/// TAB2 records. A closure is used instead of `Into<f64>` because `i64`
+/// does not implement `Into<f64>` (would be lossy for large values, but
+/// ENDF interpolation counts fit comfortably in f64).
+#[inline]
+fn interleave_pairs<T: Copy>(a: &[T], b: &[T], to_f64: impl Fn(T) -> f64) -> Vec<f64> {
+    debug_assert_eq!(a.len(), b.len());
+    let mut out = Vec::with_capacity(a.len() * 2);
+    for (av, bv) in a.iter().zip(b.iter()) {
+        out.push(to_f64(*av));
+        out.push(to_f64(*bv));
+    }
+    out
+}
+
 // ---------------------------------------------------------------------------
 // TAB1 record
 // ---------------------------------------------------------------------------
@@ -349,20 +366,9 @@ pub fn read_tab1_body(
 
 /// Write the body of a TAB1 record as multiple lines.
 pub fn write_tab1_body(body: &Tab1Body, ctrl: &CtrlRecord, opts: &WriteOpts) -> Vec<String> {
-    // Interleave NBT and INT.
-    let mut interleaved_int: Vec<f64> = Vec::with_capacity(body.nbt.len() * 2);
-    for i in 0..body.nbt.len() {
-        interleaved_int.push(body.nbt[i] as f64);
-        interleaved_int.push(body.int[i] as f64);
-    }
+    let interleaved_int = interleave_pairs(&body.nbt, &body.int, |v| v as f64);
     let mut lines = write_endf_numbers(&interleaved_int, ctrl, true, opts);
-
-    // Interleave X and Y.
-    let mut interleaved_xy: Vec<f64> = Vec::with_capacity(body.x.len() * 2);
-    for i in 0..body.x.len() {
-        interleaved_xy.push(body.x[i]);
-        interleaved_xy.push(body.y[i]);
-    }
+    let interleaved_xy = interleave_pairs(&body.x, &body.y, |v| v);
     lines.extend(write_endf_numbers(&interleaved_xy, ctrl, false, opts));
     lines
 }
@@ -404,11 +410,7 @@ pub fn read_tab2_body(
 
 /// Write the body of a TAB2 record as multiple lines.
 pub fn write_tab2_body(body: &Tab2Body, ctrl: &CtrlRecord, opts: &WriteOpts) -> Vec<String> {
-    let mut interleaved: Vec<f64> = Vec::with_capacity(body.nbt.len() * 2);
-    for i in 0..body.nbt.len() {
-        interleaved.push(body.nbt[i] as f64);
-        interleaved.push(body.int[i] as f64);
-    }
+    let interleaved = interleave_pairs(&body.nbt, &body.int, |v| v as f64);
     write_endf_numbers(&interleaved, ctrl, true, opts)
 }
 
