@@ -633,6 +633,45 @@ fn remaining_lines_for_list<'a>(state: &'a InterpreterState, read_opts: &ReadOpt
 }
 
 // ---------------------------------------------------------------------------
+// Symmetric single-line record mapping
+// ---------------------------------------------------------------------------
+
+/// Map a single-line record whose N fields round-trip symmetrically through
+/// the data dictionary. The caller supplies:
+///
+/// * `read_line`  — parse the current line into exactly N field values,
+/// * `build_line` — rebuild the line from N field values plus the ctrl record.
+///
+/// The helper handles the direction switch, the line advance/push, and the
+/// `[f64; N]` ↔ `Vec<f64>` shuttling so that callers can concentrate on the
+/// record-specific field layout.
+fn map_symmetric_record<const N: usize>(
+    fields: &[Expr; N],
+    field_names: &[&str; N],
+    state: &mut InterpreterState,
+    parse_opts: &ParseOpts,
+    read_line: impl FnOnce(&str) -> EndfResult<[f64; N]>,
+    build_line: impl FnOnce([f64; N], &CtrlRecord) -> String,
+) -> EndfResult<()> {
+    if is_read(state) {
+        let line = state.current_line()?;
+        let values = read_line(line)?;
+        state.advance();
+        map_fields_to_datadic(fields, &values, field_names, state, parse_opts)?;
+    } else {
+        let values_vec = map_fields_from_datadic(fields, state, parse_opts)?;
+        // map_fields_from_datadic returns exactly `fields.len() == N` values.
+        let values: [f64; N] = values_vec
+            .try_into()
+            .expect("map_fields_from_datadic returns one value per field");
+        let ctrl = get_ctrl_from_state(state)?;
+        let line = build_line(values, &ctrl);
+        state.push_line(line);
+    }
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
 // CONT / HEAD record mapping
 // ---------------------------------------------------------------------------
 
@@ -644,35 +683,34 @@ pub fn map_head_or_cont(
     read_opts: &ReadOpts,
     write_opts: &WriteOpts,
 ) -> EndfResult<()> {
-    if is_read(state) {
-        let line = state.current_line()?;
-        let (rec, _ctrl) = read_cont(line, read_opts)?;
-        state.advance();
-        let field_values = [
-            rec.c1,
-            rec.c2,
-            rec.l1 as f64,
-            rec.l2 as f64,
-            rec.n1 as f64,
-            rec.n2 as f64,
-        ];
-        let field_names = ["C1", "C2", "L1", "L2", "N1", "N2"];
-        map_fields_to_datadic(fields, &field_values, &field_names, state, parse_opts)?;
-    } else {
-        let field_values = map_fields_from_datadic(fields, state, parse_opts)?;
-        let rec = ContRecord {
-            c1: field_values[0],
-            c2: field_values[1],
-            l1: field_values[2] as i64,
-            l2: field_values[3] as i64,
-            n1: field_values[4] as i64,
-            n2: field_values[5] as i64,
-        };
-        let ctrl = get_ctrl_from_state(state)?;
-        let line = write_cont(&rec, &ctrl, write_opts);
-        state.push_line(line);
-    }
-    Ok(())
+    map_symmetric_record(
+        fields,
+        &["C1", "C2", "L1", "L2", "N1", "N2"],
+        state,
+        parse_opts,
+        |line| {
+            let (rec, _ctrl) = read_cont(line, read_opts)?;
+            Ok([
+                rec.c1,
+                rec.c2,
+                rec.l1 as f64,
+                rec.l2 as f64,
+                rec.n1 as f64,
+                rec.n2 as f64,
+            ])
+        },
+        |v, ctrl| {
+            let rec = ContRecord {
+                c1: v[0],
+                c2: v[1],
+                l1: v[2] as i64,
+                l2: v[3] as i64,
+                n1: v[4] as i64,
+                n2: v[5] as i64,
+            };
+            write_cont(&rec, ctrl, write_opts)
+        },
+    )
 }
 
 // ---------------------------------------------------------------------------
@@ -1434,26 +1472,25 @@ pub fn map_dir(
     read_opts: &ReadOpts,
     write_opts: &WriteOpts,
 ) -> EndfResult<()> {
-    if is_read(state) {
-        let line = state.current_line()?;
-        let (rec, _ctrl) = read_dir(line, read_opts)?;
-        state.advance();
-        let field_values = [rec.l1 as f64, rec.l2 as f64, rec.n1 as f64, rec.n2 as f64];
-        let field_names = ["L1", "L2", "N1", "N2"];
-        map_fields_to_datadic(fields, &field_values, &field_names, state, parse_opts)?;
-    } else {
-        let field_values = map_fields_from_datadic(fields, state, parse_opts)?;
-        let rec = DirRecord {
-            l1: field_values[0] as i64,
-            l2: field_values[1] as i64,
-            n1: field_values[2] as i64,
-            n2: field_values[3] as i64,
-        };
-        let ctrl = get_ctrl_from_state(state)?;
-        let line = write_dir(&rec, &ctrl, write_opts);
-        state.push_line(line);
-    }
-    Ok(())
+    map_symmetric_record(
+        fields,
+        &["L1", "L2", "N1", "N2"],
+        state,
+        parse_opts,
+        |line| {
+            let (rec, _ctrl) = read_dir(line, read_opts)?;
+            Ok([rec.l1 as f64, rec.l2 as f64, rec.n1 as f64, rec.n2 as f64])
+        },
+        |v, ctrl| {
+            let rec = DirRecord {
+                l1: v[0] as i64,
+                l2: v[1] as i64,
+                n1: v[2] as i64,
+                n2: v[3] as i64,
+            };
+            write_dir(&rec, ctrl, write_opts)
+        },
+    )
 }
 
 // ---------------------------------------------------------------------------
