@@ -848,11 +848,7 @@ pub fn map_tab1(
         state.ofs += body_end;
 
         // Enter table section if named.
-        let section_depth = if let Some(ref tn) = table_name {
-            enter_section(tn, state, parse_opts)?
-        } else {
-            0
-        };
+        let section_depth = conditional_enter_section(table_name, state, parse_opts)?;
 
         // Store table data: NBT, INT arrays.
         store_int_array("NBT", &body.nbt, state, parse_opts)?;
@@ -870,11 +866,7 @@ pub fn map_tab1(
         // Write mode.
 
         // Enter table section if named.
-        let section_depth = if let Some(ref tn) = table_name {
-            enter_section_write(tn, state, parse_opts)?
-        } else {
-            0
-        };
+        let section_depth = conditional_enter_section(table_name, state, parse_opts)?;
 
         // Read table data from datadic.
         let nbt = read_int_array("NBT", state, parse_opts)?;
@@ -971,11 +963,7 @@ pub fn map_tab2(
         state.ofs += body_end;
 
         // Enter table section if named.
-        let section_depth = if let Some(ref tn) = table_name {
-            enter_section(tn, state, parse_opts)?
-        } else {
-            0
-        };
+        let section_depth = conditional_enter_section(table_name, state, parse_opts)?;
 
         // Store NBT, INT.
         store_int_array("NBT", &body.nbt, state, parse_opts)?;
@@ -986,11 +974,7 @@ pub fn map_tab2(
         }
     } else {
         // Write mode.
-        let section_depth = if let Some(ref tn) = table_name {
-            enter_section_write(tn, state, parse_opts)?
-        } else {
-            0
-        };
+        let section_depth = conditional_enter_section(table_name, state, parse_opts)?;
 
         let nbt = read_int_array("NBT", state, parse_opts)?;
         let int = read_int_array("INT", state, parse_opts)?;
@@ -1077,11 +1061,7 @@ pub fn map_list(
         state.ofs += body_end;
 
         // Enter list section if named.
-        let section_depth = if let Some(ref ln) = list_name {
-            enter_section(ln, state, parse_opts)?
-        } else {
-            0
-        };
+        let section_depth = conditional_enter_section(list_name, state, parse_opts)?;
 
         // Process list body items.
         // Try fast bulk processing if all items are simple variables.
@@ -1107,11 +1087,7 @@ pub fn map_list(
         // Write mode: evaluate header, then build body values.
 
         // Enter list section if named (for reading body values from datadic).
-        let section_depth = if let Some(ref ln) = list_name {
-            enter_section_write(ln, state, parse_opts)?
-        } else {
-            0
-        };
+        let section_depth = conditional_enter_section(list_name, state, parse_opts)?;
 
         // Build list body values first (we may need the count for N1).
         let mut vals: Vec<f64> = Vec::new();
@@ -1680,6 +1656,22 @@ fn enter_section_write(
 fn exit_section(state: &mut InterpreterState, depth: usize) {
     let new_len = state.scope_path.len() - depth;
     state.scope_path.truncate(new_len);
+}
+
+/// If `name` is `Some`, enter the named section and return the resulting
+/// scope depth. If `None`, do nothing and return 0. Dispatches to the
+/// read-mode or write-mode entry routine based on the current `state.rwmode`.
+/// Use the returned depth with `exit_section` to unwind.
+fn conditional_enter_section(
+    name: &Option<ExtVarName>,
+    state: &mut InterpreterState,
+    parse_opts: &ParseOpts,
+) -> EndfResult<usize> {
+    match name {
+        Some(n) if is_read(state) => enter_section(n, state, parse_opts),
+        Some(n) => enter_section_write(n, state, parse_opts),
+        None => Ok(0),
+    }
 }
 
 /// Compute the sequence of EndfKeys for a section name.
