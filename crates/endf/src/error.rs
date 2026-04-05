@@ -59,6 +59,8 @@ pub enum EndfError {
     LoopVariableError { name: String },
     #[error("stop: {message}")]
     Stop { message: String },
+    #[error("file already exists: {path}")]
+    FileExists { path: std::path::PathBuf },
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
 }

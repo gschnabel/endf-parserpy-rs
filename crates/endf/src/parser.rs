@@ -235,8 +235,34 @@ impl EndfParser {
         Ok(all_lines.join("\n"))
     }
 
-    /// Write structured data to a file.
+    /// Write structured data to a file, failing if the target already
+    /// exists. Matches the Python reference `writefile(..., overwrite=False)`
+    /// default behaviour. Uses `OpenOptions::create_new` so the existence
+    /// check and the create are a single atomic syscall (no TOCTOU race).
+    ///
+    /// To overwrite an existing file, use [`EndfParser::write_file_overwrite`].
     pub fn write_file(&self, path: &Path, data: &EndfValue) -> EndfResult<()> {
+        use std::io::Write;
+        let content = self.write(data)?;
+        let mut file = match std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(path)
+        {
+            Ok(f) => f,
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
+                return Err(EndfError::FileExists { path: path.to_path_buf() });
+            }
+            Err(e) => return Err(EndfError::Io(e)),
+        };
+        file.write_all(content.as_bytes())?;
+        Ok(())
+    }
+
+    /// Write structured data to a file, overwriting any existing file at
+    /// the target path. Use this when you explicitly want the Python
+    /// `writefile(..., overwrite=True)` behaviour.
+    pub fn write_file_overwrite(&self, path: &Path, data: &EndfValue) -> EndfResult<()> {
         let content = self.write(data)?;
         std::fs::write(path, content)?;
         Ok(())
