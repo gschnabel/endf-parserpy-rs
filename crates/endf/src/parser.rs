@@ -8,6 +8,87 @@ use crate::records;
 use crate::sections;
 use crate::value::{EndfKey, EndfValue};
 
+/// Selector for a single section or a whole MF file. Used to build a
+/// [`SectionFilter`] for the `*_filtered` parse/write methods.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum MfMtSelector {
+    /// Match every MT under the given MF.
+    Mf(i32),
+    /// Match exactly this (MF, MT) pair.
+    MfMt(i32, i32),
+}
+
+impl MfMtSelector {
+    #[inline]
+    fn matches(&self, mf: i32, mt: i32) -> bool {
+        match self {
+            MfMtSelector::Mf(m) => *m == mf,
+            MfMtSelector::MfMt(m, t) => *m == mf && *t == mt,
+        }
+    }
+}
+
+/// Per-call filter for `parse_filtered` / `write_filtered` (and their
+/// file variants). Mirrors the Python reference's `exclude` / `include`
+/// parameters on `parse` / `write`.
+///
+/// Semantics (faithful to `EndfParserPy.should_skip_section` in
+/// `endf_parserpy/interpreter/endf_parser.py:888`):
+///
+/// * When `exclude` is `Some`, sections matching any selector in it are
+///   skipped. `include` is **ignored entirely** in this case — a
+///   non-`None` `exclude` takes absolute precedence over `include`,
+///   even when the exclude list is empty.
+/// * When `exclude` is `None` and `include` is `Some`, sections not
+///   matching any selector in `include` are skipped.
+/// * When both are `None`, no filtering is applied.
+///
+/// On the **parse** side, a skipped section is left in the result as
+/// a raw `EndfValue::Str` (the verbatim line block from the input),
+/// the same representation used for sections lacking a recipe.
+///
+/// On the **write** side, a skipped section is omitted from the output
+/// entirely. FEND records are only emitted for an MF that had at least
+/// one MT actually written.
+#[derive(Clone, Debug, Default)]
+pub struct SectionFilter {
+    pub exclude: Option<Vec<MfMtSelector>>,
+    pub include: Option<Vec<MfMtSelector>>,
+}
+
+impl SectionFilter {
+    /// "Exclude these sections, parse/write everything else normally."
+    /// Sets `exclude = Some(...)` and leaves `include` as `None`.
+    pub fn excluding<I: IntoIterator<Item = MfMtSelector>>(sels: I) -> Self {
+        Self {
+            exclude: Some(sels.into_iter().collect()),
+            include: None,
+        }
+    }
+
+    /// "Only parse/write these sections; skip all others."
+    /// Sets `include = Some(...)` and leaves `exclude` as `None`.
+    pub fn including<I: IntoIterator<Item = MfMtSelector>>(sels: I) -> Self {
+        Self {
+            exclude: None,
+            include: Some(sels.into_iter().collect()),
+        }
+    }
+
+    /// Return `true` iff this filter says `(mf, mt)` should be skipped.
+    /// Mirrors `should_skip_section` in the Python reference.
+    pub fn should_skip(&self, mf: i32, mt: i32) -> bool {
+        if let Some(ex) = &self.exclude {
+            // exclude is non-None → include is ignored, even if exclude is empty.
+            ex.iter().any(|s| s.matches(mf, mt))
+        } else if let Some(inc) = &self.include {
+            !inc.iter().any(|s| s.matches(mf, mt))
+        } else {
+            false
+        }
+    }
+}
+
 /// Main ENDF parser. Reads and writes ENDF-6 files using recipe-driven
 /// interpretation.
 pub struct EndfParser {
@@ -28,7 +109,24 @@ impl EndfParser {
     /// Parse ENDF text into structured data.
     ///
     /// Returns a nested dictionary: `MF -> MT -> section data`.
+    ///
+    /// Equivalent to `parse_filtered(input, &SectionFilter::default())`.
     pub fn parse(&self, input: &str) -> EndfResult<EndfValue> {
+        self.parse_filtered(input, &SectionFilter::default())
+    }
+
+    /// Parse ENDF text, honouring `filter` to exclude or include specific
+    /// MF/MT sections. Sections skipped by the filter are preserved in
+    /// the result as raw `EndfValue::Str` blocks (verbatim line text),
+    /// matching Python's `EndfParserPy.parse(..., exclude=, include=)`.
+    ///
+    /// See [`SectionFilter`] for exact selector semantics (notably: a
+    /// non-`None` `exclude` takes precedence over `include`).
+    pub fn parse_filtered(
+        &self,
+        input: &str,
+        filter: &SectionFilter,
+    ) -> EndfResult<EndfValue> {
         // Normalize CRLF line endings to LF
         let normalized;
         let input = if input.contains('\r') {
@@ -46,7 +144,8 @@ impl EndfParser {
         for (mf, mt_map) in &section_map {
             let mut mf_dict = EndfValue::new_dict();
             for (mt, section_lines) in mt_map {
-                if self.engine.catalogue.get(*mf, *mt).is_some() {
+                let skipped = filter.should_skip(*mf, *mt);
+                if !skipped && self.engine.catalogue.get(*mf, *mt).is_some() {
                     match self.engine.parse_section(*mf, *mt, section_lines.clone()) {
                         Ok(data) => {
                             mf_dict.insert(EndfKey::Int(*mt as i64), data);
@@ -62,7 +161,8 @@ impl EndfParser {
                         }
                     }
                 } else {
-                    // No recipe: store as raw lines
+                    // Either the filter said skip, or there's no recipe:
+                    // store as raw lines.
                     let raw = EndfValue::Str(section_lines.join("\n"));
                     mf_dict.insert(EndfKey::Int(*mt as i64), raw);
                 }
@@ -76,6 +176,17 @@ impl EndfParser {
     pub fn parse_file(&self, path: &Path) -> EndfResult<EndfValue> {
         let content = std::fs::read_to_string(path)?;
         self.parse(&content)
+    }
+
+    /// Parse an ENDF file from disk with a section filter. See
+    /// [`EndfParser::parse_filtered`] for filter semantics.
+    pub fn parse_file_filtered(
+        &self,
+        path: &Path,
+        filter: &SectionFilter,
+    ) -> EndfResult<EndfValue> {
+        let content = std::fs::read_to_string(path)?;
+        self.parse_filtered(&content, filter)
     }
 
     /// Parse ENDF text with parallel section parsing.
@@ -149,7 +260,27 @@ impl EndfParser {
     }
 
     /// Write structured data back to ENDF format.
+    ///
+    /// Equivalent to `write_filtered(data, &SectionFilter::default())`.
     pub fn write(&self, data: &EndfValue) -> EndfResult<String> {
+        self.write_filtered(data, &SectionFilter::default())
+    }
+
+    /// Write structured data to ENDF format, honouring `filter` to
+    /// exclude or include specific MF/MT sections. Skipped sections are
+    /// omitted from the output entirely (not replaced by raw text).
+    ///
+    /// FEND records are only emitted for an MF that had at least one MT
+    /// actually written — consistent with the Python reference and
+    /// necessary for filtered output to remain structurally valid.
+    /// MEND and TEND are always emitted.
+    ///
+    /// See [`SectionFilter`] for exact selector semantics.
+    pub fn write_filtered(
+        &self,
+        data: &EndfValue,
+        filter: &SectionFilter,
+    ) -> EndfResult<String> {
         let mut all_lines: Vec<String> = Vec::new();
         let mf_dict = data.as_dict().ok_or_else(|| EndfError::RecipeParse {
             message: "top-level value must be a Dict".to_string(),
@@ -171,6 +302,14 @@ impl EndfParser {
             if mat > 0 { break; }
         }
 
+        // Track whether any material section (MF > 0) was actually
+        // emitted. MEND is a material-terminator and is only legal after
+        // at least one material section; `split_sections` rejects an
+        // MEND at tape level as "expected MAT=-1, got MAT=0". If the
+        // filter excludes every material, we must suppress MEND as well
+        // as the per-MF FENDs to keep the output structurally valid.
+        let mut any_material_written = false;
+
         for (mf_key, mt_dict_val) in mf_dict {
             let mf = match mf_key {
                 EndfKey::Int(n) => *n as i32,
@@ -178,10 +317,18 @@ impl EndfParser {
             };
 
             // MF0 is the TPID (tape identification) — a single text line
-            // with no SEND/FEND records. Handle it specially.
+            // with no SEND/FEND records. Handle it specially. The filter
+            // still applies: an excluded MF=0 entry is simply not emitted.
             if mf == 0 {
                 if let Some(mt_d) = mt_dict_val.as_dict() {
-                    for (_mt_key, section_data) in mt_d {
+                    for (mt_key, section_data) in mt_d {
+                        let mt = match mt_key {
+                            EndfKey::Int(n) => *n as i32,
+                            _ => continue,
+                        };
+                        if filter.should_skip(0, mt) {
+                            continue;
+                        }
                         if let Some(EndfValue::Str(ref text)) = section_data.get("TPID") {
                             let ctrl = records::CtrlRecord { mat: 0, mf: 0, mt: 0 };
                             let rec = records::TextRecord { text: text.clone() };
@@ -205,11 +352,20 @@ impl EndfParser {
                 message: format!("MF {} value must be a Dict", mf),
             })?;
 
+            // Track whether this MF contributed any output. FEND must only
+            // be emitted when at least one MT under the current MF was
+            // actually written (i.e., not filtered out).
+            let mut some_mt_emitted = false;
+
             for (mt_key, section_data) in mt_dict {
                 let mt = match mt_key {
                     EndfKey::Int(n) => *n as i32,
                     _ => continue,
                 };
+
+                if filter.should_skip(mf, mt) {
+                    continue;
+                }
 
                 if let EndfValue::Str(raw) = section_data {
                     // Unparsed section: output raw
@@ -224,12 +380,20 @@ impl EndfParser {
                 }
                 // Add SEND
                 all_lines.push(records::write_send(mat, mf, &self.engine.write_opts));
+                some_mt_emitted = true;
             }
-            // Add FEND
-            all_lines.push(records::write_fend(mat, &self.engine.write_opts));
+            // Add FEND only if at least one MT under this MF was written.
+            if some_mt_emitted {
+                all_lines.push(records::write_fend(mat, &self.engine.write_opts));
+                any_material_written = true;
+            }
         }
-        // Add MEND and TEND
-        all_lines.push(records::write_mend(&self.engine.write_opts));
+        // MEND is only legal after at least one material section; skip
+        // it when no material was written (e.g., filter excluded every
+        // material section). TEND is always emitted.
+        if any_material_written {
+            all_lines.push(records::write_mend(&self.engine.write_opts));
+        }
         all_lines.push(records::write_tend(&self.engine.write_opts));
 
         Ok(all_lines.join("\n"))
@@ -264,6 +428,46 @@ impl EndfParser {
     /// `writefile(..., overwrite=True)` behaviour.
     pub fn write_file_overwrite(&self, path: &Path, data: &EndfValue) -> EndfResult<()> {
         let content = self.write(data)?;
+        std::fs::write(path, content)?;
+        Ok(())
+    }
+
+    /// Write structured data to a file with a section filter, failing
+    /// if the target already exists. See [`EndfParser::write_file`] for
+    /// the existence-check semantics and [`SectionFilter`] for filter
+    /// semantics.
+    pub fn write_file_filtered(
+        &self,
+        path: &Path,
+        data: &EndfValue,
+        filter: &SectionFilter,
+    ) -> EndfResult<()> {
+        use std::io::Write;
+        let content = self.write_filtered(data, filter)?;
+        let mut file = match std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(path)
+        {
+            Ok(f) => f,
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
+                return Err(EndfError::FileExists { path: path.to_path_buf() });
+            }
+            Err(e) => return Err(EndfError::Io(e)),
+        };
+        file.write_all(content.as_bytes())?;
+        Ok(())
+    }
+
+    /// Write structured data to a file with a section filter, overwriting
+    /// any existing file at the target path.
+    pub fn write_file_filtered_overwrite(
+        &self,
+        path: &Path,
+        data: &EndfValue,
+        filter: &SectionFilter,
+    ) -> EndfResult<()> {
+        let content = self.write_filtered(data, filter)?;
         std::fs::write(path, content)?;
         Ok(())
     }
