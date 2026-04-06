@@ -176,6 +176,17 @@ fn get_endf_value_vec<'a>(data: &'a EndfValue, key: &str) -> Vec<&'a EndfValue> 
     }
 }
 
+/// Compare expected vs actual field value, with optional fuzzy tolerance.
+/// Mirrors the interpreter's `values_match` in mappings.rs.
+#[inline]
+fn values_match(expected: f64, actual: f64, parse_opts: &ParseOpts) -> bool {
+    if parse_opts.fuzzy_matching {
+        (expected - actual).abs() <= 1e-7 + 1e-5 * expected.abs()
+    } else {
+        expected == actual
+    }
+}
+
 /// Create an empty container for indexed variables, respecting array_type.
 /// Dict mode creates an EndfValue::Dict; List mode creates an EndfValue::List.
 #[inline]
@@ -920,26 +931,66 @@ impl CodeGen {
             _ => None,
         };
 
+        let field_label = cont_field.to_uppercase();
+        let field_val_expr = if is_int {
+            format!("cont.{} as f64", cont_field)
+        } else {
+            format!("cont.{}", cont_field)
+        };
+
         match expr {
             Expr::Number(n) => {
-                // Constant validation: optionally check at runtime
-                if *n == 0.0 {
-                    self.line(&format!(
-                        "// field {} expected 0 (validation skipped in compiled mode)",
-                        cont_field
-                    ));
+                let n_lit = if *n == (*n as i64) as f64 && n.is_finite() {
+                    format!("{}_f64", *n as i64)
                 } else {
+                    format!("{}_f64", n)
+                };
+                self.line(&format!(
+                    "if !values_match({}, {}, parse_opts) {{",
+                    n_lit, field_val_expr
+                ));
+                self.indent += 1;
+                if *n == 0.0 {
+                    // Zero-expected: tolerable via ignore_zero_mismatch
+                    self.line("if !parse_opts.ignore_zero_mismatch {");
+                    self.indent += 1;
                     self.line(&format!(
-                        "// field {} expected {} (validation skipped in compiled mode)",
-                        cont_field, n
+                        "return Err(EndfError::ZeroMismatch {{ got: {}, field: \"{}\".to_string() }});",
+                        field_val_expr, field_label
+                    ));
+                    self.indent -= 1;
+                    self.line("}");
+                } else {
+                    // Non-zero constant: hard requirement, no tolerance flag
+                    self.line(&format!(
+                        "return Err(EndfError::NumberMismatch {{ expected: {}, got: {}, field: \"{}\".to_string() }});",
+                        n_lit, field_val_expr, field_label
                     ));
                 }
+                self.indent -= 1;
+                self.line("}");
             }
             Expr::DesiredNumber(n) => {
+                let n_lit = if *n == (*n as i64) as f64 && n.is_finite() {
+                    format!("{}_f64", *n as i64)
+                } else {
+                    format!("{}_f64", n)
+                };
                 self.line(&format!(
-                    "// field {} desired {} (validation skipped)",
-                    cont_field, n
+                    "if !values_match({}, {}, parse_opts) {{",
+                    n_lit, field_val_expr
                 ));
+                self.indent += 1;
+                self.line("if !parse_opts.ignore_number_mismatch {");
+                self.indent += 1;
+                self.line(&format!(
+                    "return Err(EndfError::NumberMismatch {{ expected: {}, got: {}, field: \"{}\".to_string() }});",
+                    n_lit, field_val_expr, field_label
+                ));
+                self.indent -= 1;
+                self.line("}");
+                self.indent -= 1;
+                self.line("}");
             }
             Expr::Variable(v) if v.indices.is_empty() => {
                 if self.is_abbreviation(&v.name) {
