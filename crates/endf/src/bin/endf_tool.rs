@@ -95,6 +95,43 @@ enum Commands {
         #[command(flatten)]
         common: CommonOpts,
     },
+    /// Replace a section or variable in ENDF file(s) from a source file
+    Replace {
+        /// Path to the element to replace (e.g., "1/451/ZA" or "3/1")
+        endfpath: String,
+        /// Source file to extract the replacement from
+        source: String,
+        /// Destination file(s) to replace in
+        dest: Vec<String>,
+        /// Disable backup file creation
+        #[arg(short = 'n', long)]
+        no_backup: bool,
+        #[command(flatten)]
+        common: CommonOpts,
+    },
+    /// Insert description text into MF1/MT451 (reads from stdin)
+    InsertText {
+        /// ENDF file to modify
+        file: String,
+        /// Insert after this line number (0 = beginning)
+        #[arg(short = 'l', long, default_value = "0")]
+        line: usize,
+        /// Disable backup file creation
+        #[arg(short = 'n', long)]
+        no_backup: bool,
+        #[command(flatten)]
+        common: CommonOpts,
+    },
+    /// Update/regenerate the MF1/MT451 directory listing
+    UpdateDirectory {
+        /// ENDF file to modify
+        file: String,
+        /// Disable backup file creation
+        #[arg(short = 'n', long)]
+        no_backup: bool,
+        #[command(flatten)]
+        common: CommonOpts,
+    },
     /// Compare two ENDF files
     Compare {
         /// First ENDF file
@@ -541,6 +578,338 @@ fn display_entries(entries: &[(String, &EndfValue)]) {
     }
 }
 
+fn cmd_replace(endfpath_str: &str, source: &str, dests: &[String],
+               no_backup: bool, common: &CommonOpts) {
+    let path = EndfPath::parse(endfpath_str).unwrap_or_else(|e| {
+        eprintln!("Invalid path '{}': {}", endfpath_str, e);
+        process::exit(1);
+    });
+
+    // For sub-section replacement (path > 2 elements), enable
+    // preserve_value_strings to keep formatting of untouched fields.
+    let mut opts = common.clone();
+    opts.ignore_send_records = true;
+    opts.ignore_missing_tpid = true;
+    if path.len() > 2 {
+        opts.preserve_value_strings = true;
+    }
+
+    let parser = build_parser(&opts);
+    let filter = if path.len() <= 2 {
+        endf::parser::SectionFilter::default()
+    } else {
+        path.to_include_filter()
+    };
+
+    // Extract replacement value from source
+    let source_data = parser
+        .parse_file_filtered(Path::new(source), &filter)
+        .unwrap_or_else(|e| {
+            eprintln!("Parse error on source {}: {}", source, e);
+            process::exit(1);
+        });
+    let replacement = path.get(&source_data).unwrap_or_else(|| {
+        eprintln!("Path {} not found in source {}", path, source);
+        process::exit(1);
+    }).clone();
+
+    // Apply to each destination
+    for dest in dests {
+        let dest_path = Path::new(dest);
+        if !dest_path.exists() {
+            eprintln!("Destination file not found: {}", dest);
+            process::exit(1);
+        }
+        let mut dest_data = parser
+            .parse_file_filtered(dest_path, &filter)
+            .unwrap_or_else(|e| {
+                eprintln!("Parse error on {}: {}", dest, e);
+                process::exit(1);
+            });
+        path.set(&mut dest_data, replacement.clone()).unwrap_or_else(|e| {
+            eprintln!("Set error on {}: {}", dest, e);
+            process::exit(1);
+        });
+        if !no_backup {
+            create_backup(dest_path);
+        }
+        parser
+            .write_file_overwrite(dest_path, &dest_data)
+            .unwrap_or_else(|e| {
+                eprintln!("Write error on {}: {}", dest, e);
+                process::exit(1);
+            });
+        eprintln!("Replaced {} in {}", path, dest);
+    }
+}
+
+fn cmd_insert_text(file: &str, line_no: usize, no_backup: bool, common: &CommonOpts) {
+    let mut opts = common.clone();
+    opts.ignore_send_records = true;
+    opts.ignore_missing_tpid = true;
+    let parser = build_parser(&opts);
+
+    let filter = endf::parser::SectionFilter::including([
+        endf::parser::MfMtSelector::MfMt(1, 451),
+    ]);
+    let mut data = parser
+        .parse_file_filtered(Path::new(file), &filter)
+        .unwrap_or_else(|e| {
+            eprintln!("Parse error: {}", e);
+            process::exit(1);
+        });
+
+    // Read text from stdin
+    let mut text = String::new();
+    std::io::Read::read_to_string(&mut std::io::stdin(), &mut text).unwrap_or_else(|e| {
+        eprintln!("Stdin read error: {}", e);
+        process::exit(1);
+    });
+
+    // Get existing description
+    let descr_path = EndfPath::parse("1/451/DESCRIPTION").unwrap();
+    let mut lines: Vec<String> = Vec::new();
+    if let Some(descr) = descr_path.get(&data) {
+        if let Some(d) = descr.as_dict() {
+            let mut keys: Vec<i64> = d.keys().filter_map(|k| {
+                if let EndfKey::Int(n) = k { Some(*n) } else { None }
+            }).collect();
+            keys.sort();
+            for k in keys {
+                if let Some(val) = d.get(&EndfKey::Int(k)) {
+                    lines.push(val.as_str().unwrap_or("").to_string());
+                }
+            }
+        }
+    }
+
+    // Insert new text at the specified position
+    let new_lines: Vec<&str> = text.lines().collect();
+    let mut result_lines: Vec<String> = Vec::new();
+    result_lines.extend(lines[..line_no.min(lines.len())].iter().cloned());
+    result_lines.extend(new_lines.iter().map(|s| s.to_string()));
+    if line_no < lines.len() {
+        result_lines.extend(lines[line_no..].iter().cloned());
+    }
+
+    // Rebuild DESCRIPTION dict (1-based keys, padded to 66 chars)
+    let mut descr_dict = EndfValue::new_dict();
+    for (i, line) in result_lines.iter().enumerate() {
+        descr_dict.insert(
+            EndfKey::Int((i + 1) as i64),
+            EndfValue::Str(format!("{:<66}", line)),
+        );
+    }
+    let nwd = (result_lines.len() + 5) as i64;
+
+    // Update data
+    if let Some(mt451) = data
+        .get_mut(EndfKey::Int(1))
+        .and_then(|mf| mf.get_mut(EndfKey::Int(451)))
+    {
+        mt451.insert("DESCRIPTION", descr_dict);
+        mt451.insert("NWD", EndfValue::Int(nwd));
+    }
+
+    // Update directory (line counts changed)
+    update_directory(&mut data, &parser);
+
+    // Write back
+    let file_path = Path::new(file);
+    if !no_backup {
+        create_backup(file_path);
+    }
+    parser
+        .write_file_overwrite(file_path, &data)
+        .unwrap_or_else(|e| {
+            eprintln!("Write error: {}", e);
+            process::exit(1);
+        });
+    eprintln!("Inserted {} lines of text into MF1/MT451 of {}", new_lines.len(), file);
+}
+
+fn cmd_update_directory(file: &str, no_backup: bool, common: &CommonOpts) {
+    let mut opts = common.clone();
+    opts.ignore_send_records = true;
+    opts.ignore_missing_tpid = true;
+    let parser = build_parser(&opts);
+
+    let filter = endf::parser::SectionFilter::including([
+        endf::parser::MfMtSelector::MfMt(1, 451),
+    ]);
+    let mut data = parser
+        .parse_file_filtered(Path::new(file), &filter)
+        .unwrap_or_else(|e| {
+            eprintln!("Parse error: {}", e);
+            process::exit(1);
+        });
+
+    update_directory(&mut data, &parser);
+
+    let file_path = Path::new(file);
+    if !no_backup {
+        create_backup(file_path);
+    }
+    parser
+        .write_file_overwrite(file_path, &data)
+        .unwrap_or_else(|e| {
+            eprintln!("Write error: {}", e);
+            process::exit(1);
+        });
+    eprintln!("Updated directory in {}", file);
+}
+
+// ---------------------------------------------------------------------------
+// Backup helper
+// ---------------------------------------------------------------------------
+
+/// Create a backup of `path` by renaming it to `path.bak` (or
+/// `path.bak.bak`, etc., up to 10 levels). On Unix, uses hard-link +
+/// unlink for atomicity. Matches Python endf-parserpy's
+/// `create_backup_file` behaviour.
+fn create_backup(path: &Path) {
+    let original = path.to_path_buf();
+    let mut backup = original.clone();
+    for _ in 0..10 {
+        let mut name = backup
+            .file_name()
+            .unwrap_or_default()
+            .to_os_string();
+        name.push(".bak");
+        backup.set_file_name(name);
+        // Try atomic rename (hard-link + unlink on Unix, rename on other)
+        match atomic_rename(&original, &backup) {
+            Ok(()) => return,
+            Err(_) => continue,
+        }
+    }
+    eprintln!(
+        "Warning: could not create backup for {}",
+        path.display()
+    );
+}
+
+fn atomic_rename(src: &Path, dst: &Path) -> std::io::Result<()> {
+    // If dst already exists, we can't hard-link to it.
+    if dst.exists() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::AlreadyExists,
+            "backup target exists",
+        ));
+    }
+    #[cfg(unix)]
+    {
+        std::fs::hard_link(src, dst)?;
+        std::fs::remove_file(src)?;
+        Ok(())
+    }
+    #[cfg(not(unix))]
+    {
+        std::fs::rename(src, dst)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// update_directory: recompute MF1/MT451 directory metadata
+// ---------------------------------------------------------------------------
+
+/// Recompute the MF1/MT451 directory (the index listing all MF/MT
+/// sections, their line counts, and modification flags). This requires
+/// serializing the full file to count lines per section.
+///
+/// Updates NXC, MFx, MTx, NCx, MOD in `data[1][451]`.
+fn update_directory(data: &mut EndfValue, parser: &EndfParser) {
+    use endf::sections;
+
+    // Serialize to text so we can count lines per section.
+    let text = parser.write(data).unwrap_or_else(|e| {
+        eprintln!("Write error during directory update: {}", e);
+        process::exit(1);
+    });
+
+    let lines: Vec<&str> = text.lines().collect();
+    let read_opts = {
+        let mut r = endf::options::ReadOpts::default();
+        r.ignore_missing_tpid = true;
+        r.ignore_send_records = true;
+        r.ignore_blank_lines = true;
+        r
+    };
+    let section_map = sections::split_sections(&lines, &read_opts).unwrap_or_else(|e| {
+        eprintln!("Section split error during directory update: {}", e);
+        process::exit(1);
+    });
+
+    // Count lines per (MF, MT), excluding MF=0 (tape head).
+    let mut counts: std::collections::BTreeMap<(i32, i32), usize> = std::collections::BTreeMap::new();
+    let mut numsecs = 0usize;
+    for (&mf, mt_map) in &section_map {
+        if mf == 0 { continue; }
+        for (&mt, section_lines) in mt_map {
+            numsecs += 1;
+            counts.insert((mf, mt), section_lines.len());
+        }
+    }
+
+    // Get NWD from the current data.
+    let nwd = data
+        .get(EndfKey::Int(1))
+        .and_then(|mf| mf.get(EndfKey::Int(451)))
+        .and_then(|mt| mt.get("NWD"))
+        .and_then(|v| v.as_int())
+        .unwrap_or(0) as usize;
+
+    // MF1/MT451 length = 4 header lines + NWD description lines + numsecs directory entries
+    counts.insert((1, 451), 4 + nwd + numsecs);
+
+    // Preserve existing MOD values.
+    let mut old_mod: std::collections::HashMap<(i64, i64), i64> = std::collections::HashMap::new();
+    if let Some(mt451) = data.get(EndfKey::Int(1)).and_then(|mf| mf.get(EndfKey::Int(451))) {
+        if let (Some(mfx), Some(mtx), Some(modv)) = (
+            mt451.get("MFx").and_then(|v| v.as_dict()),
+            mt451.get("MTx").and_then(|v| v.as_dict()),
+            mt451.get("MOD").and_then(|v| v.as_dict()),
+        ) {
+            for (key, mf_val) in mfx {
+                if let (Some(mf), Some(mt), Some(m)) = (
+                    mf_val.as_int(),
+                    mtx.get(key).and_then(|v| v.as_int()),
+                    modv.get(key).and_then(|v| v.as_int()),
+                ) {
+                    old_mod.insert((mf, mt), m);
+                }
+            }
+        }
+    }
+
+    // Build new directory arrays.
+    let mut mfx = EndfValue::new_dict();
+    let mut mtx = EndfValue::new_dict();
+    let mut ncx = EndfValue::new_dict();
+    let mut modv = EndfValue::new_dict();
+
+    for (i, (&(mf, mt), &count)) in counts.iter().enumerate() {
+        let idx = EndfKey::Int((i + 1) as i64);
+        mfx.insert(idx.clone(), EndfValue::Int(mf as i64));
+        mtx.insert(idx.clone(), EndfValue::Int(mt as i64));
+        ncx.insert(idx.clone(), EndfValue::Int(count as i64));
+        let m = old_mod.get(&(mf as i64, mt as i64)).copied().unwrap_or(0);
+        modv.insert(idx, EndfValue::Int(m));
+    }
+
+    // Update MT451
+    if let Some(mt451) = data
+        .get_mut(EndfKey::Int(1))
+        .and_then(|mf| mf.get_mut(EndfKey::Int(451)))
+    {
+        mt451.insert("NXC", EndfValue::Int(numsecs as i64));
+        mt451.insert("MFx", mfx);
+        mt451.insert("MTx", mtx);
+        mt451.insert("NCx", ncx);
+        mt451.insert("MOD", modv);
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Output helper
 // ---------------------------------------------------------------------------
@@ -578,6 +947,15 @@ fn main() {
         }
         Commands::Show { endfpath, file, common } => {
             cmd_show(&endfpath, &file, &common);
+        }
+        Commands::Replace { endfpath, source, dest, no_backup, common } => {
+            cmd_replace(&endfpath, &source, &dest, no_backup, &common);
+        }
+        Commands::InsertText { file, line, no_backup, common } => {
+            cmd_insert_text(&file, line, no_backup, &common);
+        }
+        Commands::UpdateDirectory { file, no_backup, common } => {
+            cmd_update_directory(&file, no_backup, &common);
         }
         Commands::Compare { file1, file2, atol, rtol, common } => {
             cmd_compare(&file1, &file2, atol, rtol, &common);

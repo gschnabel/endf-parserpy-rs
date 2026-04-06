@@ -329,7 +329,10 @@ impl EndfParser {
                         if filter.should_skip(0, mt) {
                             continue;
                         }
-                        if let Some(EndfValue::Str(ref text)) = section_data.get("TPID") {
+                        if let EndfValue::Str(raw) = section_data {
+                            // Unparsed MF=0 section: emit raw text.
+                            all_lines.extend(raw.lines().map(String::from));
+                        } else if let Some(EndfValue::Str(ref text)) = section_data.get("TPID") {
                             let ctrl = records::CtrlRecord { mat: 0, mf: 0, mt: 0 };
                             let rec = records::TextRecord { text: text.clone() };
                             let tpid_line = records::write_text(
