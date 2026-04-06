@@ -8,9 +8,10 @@
 //!   convert     Convert between ENDF and JSON (unified)
 
 use clap::{Args, Parser, Subcommand};
+use endf::endf_path::EndfPath;
 use endf::json;
 use endf::parser::EndfParser;
-use endf::value::EndfValue;
+use endf::value::{EndfKey, EndfValue};
 use std::path::Path;
 use std::process;
 
@@ -82,6 +83,15 @@ enum Commands {
     Validate {
         /// ENDF files to validate (glob patterns supported)
         files: Vec<String>,
+        #[command(flatten)]
+        common: CommonOpts,
+    },
+    /// Display a section or variable from an ENDF file
+    Show {
+        /// Path to the element (e.g., "1/451/ZA" or "3/1/xstable")
+        endfpath: String,
+        /// ENDF file to inspect
+        file: String,
         #[command(flatten)]
         common: CommonOpts,
     },
@@ -461,6 +471,76 @@ fn compare_values(
     }
 }
 
+fn cmd_show(endfpath_str: &str, file: &str, common: &CommonOpts) {
+    let path = EndfPath::parse(endfpath_str).unwrap_or_else(|e| {
+        eprintln!("Invalid path '{}': {}", endfpath_str, e);
+        process::exit(1);
+    });
+
+    let parser = build_parser(common);
+    let filter = path.to_include_filter();
+    let data = parser
+        .parse_file_filtered(Path::new(file), &filter)
+        .unwrap_or_else(|e| {
+            eprintln!("Parse error: {}", e);
+            process::exit(1);
+        });
+
+    match path.get(&data) {
+        Some(element) => display_element(element),
+        None => {
+            eprintln!("Path {} not found in {}", path, file);
+            process::exit(1);
+        }
+    }
+}
+
+/// Display an EndfValue element — scalars are printed directly,
+/// containers show one level of their contents with aligned columns.
+fn display_element(val: &EndfValue) {
+    match val {
+        EndfValue::Int(n) => println!("{}", n),
+        EndfValue::Float(f) | EndfValue::PreservedFloat(f, _) => println!("{}", f),
+        EndfValue::Str(s) => println!("{}", s),
+        EndfValue::Dict(d) => {
+            let entries: Vec<(String, &EndfValue)> = d
+                .iter()
+                .map(|(k, v)| (format!("{}", k), v))
+                .collect();
+            display_entries(&entries);
+        }
+        EndfValue::List(l) => {
+            let entries: Vec<(String, &EndfValue)> = l
+                .iter()
+                .enumerate()
+                .filter_map(|(i, opt)| opt.as_ref().map(|v| (format!("{}", i), v)))
+                .collect();
+            display_entries(&entries);
+        }
+    }
+}
+
+fn display_entries(entries: &[(String, &EndfValue)]) {
+    if entries.is_empty() {
+        println!("(empty)");
+        return;
+    }
+    let max_key_len = entries.iter().map(|(k, _)| k.len() + 1).max().unwrap_or(1);
+    for (key, val) in entries {
+        let label = format!("/{}", key);
+        match val {
+            EndfValue::Int(n) => println!("{:<w$}  {}", label, n, w = max_key_len + 1),
+            EndfValue::Float(f) | EndfValue::PreservedFloat(f, _) => {
+                println!("{:<w$}  {}", label, f, w = max_key_len + 1)
+            }
+            EndfValue::Str(s) => println!("{:<w$}  {}", label, s.trim(), w = max_key_len + 1),
+            EndfValue::Dict(_) | EndfValue::List(_) => {
+                println!("{:<w$}  <subsection or array>", label, w = max_key_len + 1)
+            }
+        }
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Output helper
 // ---------------------------------------------------------------------------
@@ -495,6 +575,9 @@ fn main() {
         }
         Commands::Validate { files, common } => {
             cmd_validate(&files, &common);
+        }
+        Commands::Show { endfpath, file, common } => {
+            cmd_show(&endfpath, &file, &common);
         }
         Commands::Compare { file1, file2, atol, rtol, common } => {
             cmd_compare(&file1, &file2, atol, rtol, &common);
