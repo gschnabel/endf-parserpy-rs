@@ -362,6 +362,7 @@ fn cmd_convert(source: &str, dest: &str, to: &str, indent: Option<usize>,
 }
 
 fn cmd_validate(files: &[String], common: &CommonOpts) {
+    let files = expand_globs(files);
     if files.is_empty() {
         eprintln!("No files specified.");
         process::exit(1);
@@ -369,16 +370,16 @@ fn cmd_validate(files: &[String], common: &CommonOpts) {
 
     let parser = build_parser(common);
     let mut any_failed = false;
-    let mut results: Vec<(&str, &str)> = Vec::new();
+    let mut results: Vec<(String, &str)> = Vec::new();
 
-    for file in files {
+    for file in &files {
         match parser.parse_file(Path::new(file)) {
             Ok(_) => {
-                results.push((file, "ok"));
+                results.push((file.clone(), "ok"));
             }
             Err(e) => {
                 any_failed = true;
-                results.push((file, "FAILED"));
+                results.push((file.clone(), "FAILED"));
                 eprintln!("{}", "=".repeat(80));
                 eprintln!("Validation of {} failed:", file);
                 eprintln!("{}", e);
@@ -578,8 +579,9 @@ fn display_entries(entries: &[(String, &EndfValue)]) {
     }
 }
 
-fn cmd_replace(endfpath_str: &str, source: &str, dests: &[String],
+fn cmd_replace(endfpath_str: &str, source: &str, dests_raw: &[String],
                no_backup: bool, common: &CommonOpts) {
+    let dests = expand_globs(dests_raw);
     let path = EndfPath::parse(endfpath_str).unwrap_or_else(|e| {
         eprintln!("Invalid path '{}': {}", endfpath_str, e);
         process::exit(1);
@@ -614,7 +616,7 @@ fn cmd_replace(endfpath_str: &str, source: &str, dests: &[String],
     }).clone();
 
     // Apply to each destination
-    for dest in dests {
+    for dest in &dests {
         let dest_path = Path::new(dest);
         if !dest_path.exists() {
             eprintln!("Destination file not found: {}", dest);
@@ -908,6 +910,41 @@ fn update_directory(data: &mut EndfValue, parser: &EndfParser) {
         mt451.insert("NCx", ncx);
         mt451.insert("MOD", modv);
     }
+}
+
+// ---------------------------------------------------------------------------
+// Output helper
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Glob expansion
+// ---------------------------------------------------------------------------
+
+/// Expand a list of file paths, treating each as a potential glob pattern.
+/// Non-matching patterns are returned as-is (so the error is caught later
+/// when the file doesn't exist).
+fn expand_globs(patterns: &[String]) -> Vec<String> {
+    let mut result = Vec::new();
+    for pattern in patterns {
+        match glob::glob(pattern) {
+            Ok(paths) => {
+                let mut found = false;
+                for entry in paths.flatten() {
+                    result.push(entry.to_string_lossy().to_string());
+                    found = true;
+                }
+                if !found {
+                    // No match — keep the literal pattern so a meaningful
+                    // "file not found" error can be reported later.
+                    result.push(pattern.clone());
+                }
+            }
+            Err(_) => {
+                result.push(pattern.clone());
+            }
+        }
+    }
+    result
 }
 
 // ---------------------------------------------------------------------------
