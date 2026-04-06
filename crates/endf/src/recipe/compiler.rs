@@ -915,11 +915,26 @@ impl CodeGen {
             }
             self.known_vars.insert(var_name.to_lowercase());
         } else {
-            // Fully known or non-linear — validation only.
+            // Fully known or non-linear: validate the computed expression
+            // against the field value.
+            let expr_rust = self.expr_to_rust(&expanded);
+            let field_val = if is_int {
+                format!("cont.{} as f64", cont_field)
+            } else {
+                format!("cont.{}", cont_field)
+            };
+            let field_label = cont_field.to_uppercase();
             self.line(&format!(
-                "// field {} complex expression (validation skipped in compiled mode)",
-                cont_field
+                "if !values_match({}, {}, parse_opts) {{",
+                expr_rust, field_val
             ));
+            self.indent += 1;
+            self.line(&format!(
+                "return Err(EndfError::NumberMismatch {{ expected: {}, got: {}, field: \"{}\".to_string() }});",
+                expr_rust, field_val, field_label
+            ));
+            self.indent -= 1;
+            self.line("}");
         }
     }
 
@@ -1543,7 +1558,20 @@ impl CodeGen {
         match expr {
             Expr::Variable(v) if v.indices.is_empty() => {
                 if self.is_abbreviation(&v.name) {
-                    self.line("// list body abbreviation (validation skipped)");
+                    // Abbreviation in list body: validate computed value.
+                    let expanded = self.expand_abbreviations(expr);
+                    let abbr_rust = self.expr_to_rust(&expanded);
+                    self.line(&format!(
+                        "if !values_match({}, vals[vi], parse_opts) {{",
+                        abbr_rust
+                    ));
+                    self.indent += 1;
+                    self.line(&format!(
+                        "return Err(EndfError::NumberMismatch {{ expected: {}, got: vals[vi], field: \"LIST[vi]\".to_string() }});",
+                        abbr_rust
+                    ));
+                    self.indent -= 1;
+                    self.line("}");
                     self.line("vi += 1;");
                 } else {
                     self.line("let _val = vals[vi];");
@@ -1564,21 +1592,102 @@ impl CodeGen {
                 self.line("vi += 1;");
             }
             Expr::Number(n) => {
-                self.line(&format!("// list body constant {} (validation skipped)", n));
+                // Constant in list body: validate against the actual value.
+                let n_lit = if *n == (*n as i64) as f64 && n.is_finite() {
+                    format!("{}_f64", *n as i64)
+                } else {
+                    format!("{}_f64", n)
+                };
+                self.line(&format!(
+                    "if !values_match({}, vals[vi], parse_opts) {{",
+                    n_lit
+                ));
+                self.indent += 1;
+                if *n == 0.0 {
+                    self.line("if !parse_opts.ignore_zero_mismatch {");
+                    self.indent += 1;
+                    self.line(&format!(
+                        "return Err(EndfError::ZeroMismatch {{ got: vals[vi], field: \"LIST[vi]\".to_string() }});",
+                    ));
+                    self.indent -= 1;
+                    self.line("}");
+                } else {
+                    self.line(&format!(
+                        "return Err(EndfError::NumberMismatch {{ expected: {}, got: vals[vi], field: \"LIST[vi]\".to_string() }});",
+                        n_lit
+                    ));
+                }
+                self.indent -= 1;
+                self.line("}");
+                self.line("vi += 1;");
+            }
+            Expr::DesiredNumber(n) => {
+                let n_lit = if *n == (*n as i64) as f64 && n.is_finite() {
+                    format!("{}_f64", *n as i64)
+                } else {
+                    format!("{}_f64", n)
+                };
+                self.line(&format!(
+                    "if !values_match({}, vals[vi], parse_opts) {{",
+                    n_lit
+                ));
+                self.indent += 1;
+                self.line("if !parse_opts.ignore_number_mismatch {");
+                self.indent += 1;
+                self.line(&format!(
+                    "return Err(EndfError::NumberMismatch {{ expected: {}, got: vals[vi], field: \"LIST[vi]\".to_string() }});",
+                    n_lit
+                ));
+                self.indent -= 1;
+                self.line("}");
+                self.indent -= 1;
+                self.line("}");
                 self.line("vi += 1;");
             }
             Expr::InconsistentVar(v) if v.indices.is_empty() => {
                 if self.is_abbreviation(&v.name) {
-                    self.line("// list body abbreviation (validation skipped)");
+                    let expanded = self.expand_abbreviations(expr);
+                    let abbr_rust = self.expr_to_rust(&expanded);
+                    self.line(&format!(
+                        "if !values_match({}, vals[vi], parse_opts) {{",
+                        abbr_rust
+                    ));
+                    self.indent += 1;
+                    self.line(&format!(
+                        "return Err(EndfError::NumberMismatch {{ expected: {}, got: vals[vi], field: \"LIST[vi]\".to_string() }});",
+                        abbr_rust
+                    ));
+                    self.indent -= 1;
+                    self.line("}");
                     self.line("vi += 1;");
                 } else {
+                    // Validate against prior value.
+                    self.line("{");
+                    self.indent += 1;
                     self.line("let _val = vals[vi];");
+                    self.line(&format!(
+                        "if let Some(_prev) = {}.get(\"{}\").and_then(|v| v.as_float()) {{",
+                        target, v.name
+                    ));
+                    self.indent += 1;
+                    self.line("if !values_match(_prev, _val, parse_opts) && !parse_opts.ignore_varspec_mismatch {");
+                    self.indent += 1;
+                    self.line(&format!(
+                        "return Err(EndfError::InconsistentVariableAssignment {{ name: \"{}\".to_string() }});",
+                        v.name
+                    ));
+                    self.indent -= 1;
+                    self.line("}");
+                    self.indent -= 1;
+                    self.line("}");
                     self.line("let _orig = _vals_with_origs[vi].1.clone();");
                     self.line(&format!(
                         "{}.insert(\"{}\", f64_to_endf_value_preserved(_val, _orig));",
                         target, v.name
                     ));
                     self.declare_or_assign_f64(&v.name, "_val");
+                    self.indent -= 1;
+                    self.line("}");
                     self.line("vi += 1;");
                 }
             }
@@ -1589,7 +1698,20 @@ impl CodeGen {
                 self.line("vi += 1;");
             }
             _ => {
-                self.line("// list body expression (validation skipped)");
+                // Complex expression in list body: validate.
+                let expanded = self.expand_abbreviations(expr);
+                let expr_rust = self.expr_to_rust(&expanded);
+                self.line(&format!(
+                    "if !values_match({}, vals[vi], parse_opts) {{",
+                    expr_rust
+                ));
+                self.indent += 1;
+                self.line(&format!(
+                    "return Err(EndfError::NumberMismatch {{ expected: {}, got: vals[vi], field: \"LIST[vi]\".to_string() }});",
+                    expr_rust
+                ));
+                self.indent -= 1;
+                self.line("}");
                 self.line("vi += 1;");
             }
         }
