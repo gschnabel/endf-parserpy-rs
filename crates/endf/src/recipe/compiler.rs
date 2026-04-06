@@ -1062,36 +1062,42 @@ impl CodeGen {
             return;
         }
 
-        // Build chain of get_mut/ensure-exists for all but the last index.
-        // Use a local variable to navigate into the nested structure.
-        let mut current = format!("{}.get_mut(\"{}\").unwrap()", target, name);
-        for (depth, idx_expr) in indices[..indices.len() - 1].iter().enumerate() {
+        // Use variable shadowing (_scope) to navigate into the nested
+        // structure with proper mutable bindings at each level.
+        self.line("{");
+        self.indent += 1;
+        self.line(&format!(
+            "let _scope = {}.get_mut(\"{}\").unwrap();",
+            target, name
+        ));
+
+        for (_depth, idx_expr) in indices[..indices.len() - 1].iter().enumerate() {
             let idx = self.expr_to_rust(idx_expr);
             self.line(&format!(
-                "if !contains_indexed(&{}, {} as i64) {{",
-                current, idx
+                "if !contains_indexed(_scope, {} as i64) {{",
+                idx
             ));
             self.indent += 1;
             self.line(&format!(
-                "insert_indexed(&mut {}, {} as i64, make_container(parse_opts));",
-                current, idx
+                "insert_indexed(_scope, {} as i64, make_container(parse_opts));",
+                idx
             ));
             self.indent -= 1;
             self.line("}");
-            let nav_var = format!("_nav_{}", depth);
+            // Shadow _scope with a deeper mutable reference.
             self.line(&format!(
-                "let {} = get_indexed_mut(&mut {}, {} as i64).unwrap();",
-                nav_var, current, idx
+                "let _scope = get_indexed_mut(_scope, {} as i64).unwrap();",
+                idx
             ));
-            current = nav_var;
         }
 
-        // Insert value at the last index.
         let last_idx = self.expr_to_rust(indices.last().unwrap());
         self.line(&format!(
-            "insert_indexed(&mut {}, {} as i64, {});",
-            current, last_idx, val_expr
+            "insert_indexed(_scope, {} as i64, {});",
+            last_idx, val_expr
         ));
+        self.indent -= 1;
+        self.line("}");
     }
 
     /// Like emit_nested_insert but assumes the top-level container
@@ -1110,29 +1116,33 @@ impl CodeGen {
             return;
         }
 
-        // First level: container exists, just get_mut.
-        let mut current = format!("{}.get_mut(\"{}\").unwrap()", target, name);
+        // Use variable shadowing (_scope) with proper mutable bindings.
+        self.line("{");
+        self.indent += 1;
+        self.line(&format!(
+            "let _scope = {}.get_mut(\"{}\").unwrap();",
+            target, name
+        ));
 
-        // Intermediate levels: ensure-exists + descend.
-        for (depth, idx_expr) in indices[..indices.len() - 1].iter().enumerate() {
+        for (_depth, idx_expr) in indices[..indices.len() - 1].iter().enumerate() {
             let idx = self.expr_to_rust(idx_expr);
             self.line(&format!(
-                "if !contains_indexed(&{}, {} as i64) {{ insert_indexed(&mut {}, {} as i64, make_container(parse_opts)); }}",
-                current, idx, current, idx
+                "if !contains_indexed(_scope, {} as i64) {{ insert_indexed(_scope, {} as i64, make_container(parse_opts)); }}",
+                idx, idx
             ));
-            let nav_var = format!("_nav_{}", depth);
             self.line(&format!(
-                "let {} = get_indexed_mut(&mut {}, {} as i64).unwrap();",
-                nav_var, current, idx
+                "let _scope = get_indexed_mut(_scope, {} as i64).unwrap();",
+                idx
             ));
-            current = nav_var;
         }
 
         let last_idx = self.expr_to_rust(indices.last().unwrap());
         self.line(&format!(
-            "insert_indexed(&mut {}, {} as i64, {});",
-            current, last_idx, val_expr
+            "insert_indexed(_scope, {} as i64, {});",
+            last_idx, val_expr
         ));
+        self.indent -= 1;
+        self.line("}");
     }
 
     /// Generate a Rust expression that reads an indexed variable from the
@@ -2292,7 +2302,7 @@ impl WriteCodeGen {
                 let mut e = format!("{}.get(\"{}\")", scope, v.name);
                 for idx in &v.indices {
                     let idx_rust = self.expr_to_rust(idx, scope);
-                    e = format!("{}.and_then(|d| d.get(EndfKey::Int({} as i64)))", e, idx_rust);
+                    e = format!("{}.and_then(|d| get_indexed(d, {} as i64))", e, idx_rust);
                 }
                 format!("{}.and_then(|v| v.as_float()).unwrap_or(0.0)", e)
             }
@@ -2318,7 +2328,7 @@ impl WriteCodeGen {
                 let mut e = format!("{}.get(\"{}\")", scope, v.name);
                 for idx in &v.indices {
                     let idx_rust = self.expr_to_rust(idx, scope);
-                    e = format!("{}.and_then(|d| d.get(EndfKey::Int({} as i64)))", e, idx_rust);
+                    e = format!("{}.and_then(|d| get_indexed(d, {} as i64))", e, idx_rust);
                 }
                 format!("{}.and_then(|v| v.as_float()).unwrap_or(0.0)", e)
             }
@@ -2446,7 +2456,7 @@ impl WriteCodeGen {
                 let mut e = format!("{}.get(\"{}\")", scope, tn.name);
                 for idx in &tn.indices {
                     let idx_rust = self.expr_to_rust(idx, scope);
-                    e = format!("{}.and_then(|d| d.get(EndfKey::Int({} as i64)))", e, idx_rust);
+                    e = format!("{}.and_then(|d| get_indexed(d, {} as i64))", e, idx_rust);
                 }
                 format!("{}.unwrap()", e)
             }
@@ -2483,7 +2493,7 @@ impl WriteCodeGen {
                 let mut e = format!("{}.get(\"{}\")", scope, tn.name);
                 for idx in &tn.indices {
                     let idx_rust = self.expr_to_rust(idx, scope);
-                    e = format!("{}.and_then(|d| d.get(EndfKey::Int({} as i64)))", e, idx_rust);
+                    e = format!("{}.and_then(|d| get_indexed(d, {} as i64))", e, idx_rust);
                 }
                 format!("{}.unwrap()", e)
             }
@@ -2518,7 +2528,7 @@ impl WriteCodeGen {
                 let mut e = format!("{}.get(\"{}\")", scope, ln.name);
                 for idx in &ln.indices {
                     let idx_rust = self.expr_to_rust(idx, scope);
-                    e = format!("{}.and_then(|d| d.get(EndfKey::Int({} as i64)))", e, idx_rust);
+                    e = format!("{}.and_then(|d| get_indexed(d, {} as i64))", e, idx_rust);
                 }
                 format!("{}.unwrap()", e)
             }
@@ -2606,7 +2616,7 @@ impl WriteCodeGen {
                     let mut e = format!("{}.get(\"{}\")", scope, v.name);
                     for idx in &v.indices {
                         let idx_rust = self.expr_to_rust(idx, scope);
-                        e = format!("{}.and_then(|d| d.get(EndfKey::Int({} as i64)))", e, idx_rust);
+                        e = format!("{}.and_then(|d| get_indexed(d, {} as i64))", e, idx_rust);
                     }
                     format!("match {} {{ Some(EndfValue::Str(s)) => s.clone(), _ => String::new() }}", e)
                 };
@@ -2659,7 +2669,7 @@ impl WriteCodeGen {
                     let mut e = format!("{}.get(\"{}\")", scope, v.name);
                     for idx in &v.indices {
                         let idx_rust = self.expr_to_rust(idx, scope);
-                        e = format!("{}.and_then(|d| d.get(EndfKey::Int({} as i64)))", e, idx_rust);
+                        e = format!("{}.and_then(|d| get_indexed(d, {} as i64))", e, idx_rust);
                     }
                     // Read as int vec from the nested value
                     format!("match {} {{ Some(EndfValue::List(l)) => l.iter().map(|v| v.as_ref().and_then(|e| e.as_int()).unwrap_or(0)).collect(), _ => Vec::new() }}", e)
@@ -2730,7 +2740,7 @@ impl WriteCodeGen {
             let mut e = format!("data.get(\"{}\")", name.name);
             for idx in &name.indices {
                 let idx_rust = self.expr_to_rust(idx, "data");
-                e = format!("{}.and_then(|d| d.get(EndfKey::Int({} as i64)))", e, idx_rust);
+                e = format!("{}.and_then(|d| get_indexed(d, {} as i64))", e, idx_rust);
             }
             format!("{}.unwrap()", e)
         };
