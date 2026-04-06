@@ -994,12 +994,23 @@ impl CodeGen {
             }
             Expr::Variable(v) if v.indices.is_empty() => {
                 if self.is_abbreviation(&v.name) {
-                    // Abbreviation in field position: expanded expression is a
-                    // known quantity — this is validation, not a variable read.
+                    // Abbreviation in field position: compare the computed
+                    // abbreviation value against the field value at runtime.
+                    let expanded = self.expand_abbreviations(expr);
+                    let abbr_rust = self.expr_to_rust(&expanded);
                     self.line(&format!(
-                        "// field {} = abbreviation {} (validation skipped in compiled mode)",
-                        cont_field, v.name
+                        "if !values_match({}, {}, parse_opts) {{",
+                        abbr_rust, field_val_expr
                     ));
+                    self.indent += 1;
+                    // Abbreviation mismatch behaves like a number mismatch:
+                    // no specific tolerance flag (it's a computed requirement).
+                    self.line(&format!(
+                        "return Err(EndfError::NumberMismatch {{ expected: {}, got: {}, field: \"{}\".to_string() }});",
+                        abbr_rust, field_val_expr, field_label
+                    ));
+                    self.indent -= 1;
+                    self.line("}");
                 } else {
                     if is_int {
                         self.declare_or_assign_i64(&v.name, &format!("cont.{}", cont_field));
@@ -1021,10 +1032,20 @@ impl CodeGen {
             }
             Expr::InconsistentVar(v) if v.indices.is_empty() => {
                 if self.is_abbreviation(&v.name) {
+                    // Abbreviation validation (same as Variable case).
+                    let expanded = self.expand_abbreviations(expr);
+                    let abbr_rust = self.expr_to_rust(&expanded);
                     self.line(&format!(
-                        "// field {} = abbreviation {} (validation skipped in compiled mode)",
-                        cont_field, v.name
+                        "if !values_match({}, {}, parse_opts) {{",
+                        abbr_rust, field_val_expr
                     ));
+                    self.indent += 1;
+                    self.line(&format!(
+                        "return Err(EndfError::NumberMismatch {{ expected: {}, got: {}, field: \"{}\".to_string() }});",
+                        abbr_rust, field_val_expr, field_label
+                    ));
+                    self.indent -= 1;
+                    self.line("}");
                 } else {
                     // Validate against prior value if the variable was already set.
                     self.line(&format!(
@@ -1072,14 +1093,21 @@ impl CodeGen {
                 self.emit_indexed_var_store(v, cont_field, is_int, "result", orig_expr);
             }
             _ => {
-                // Complex expression — should only be reached from Pass 1
-                // (before other fields are known). In the two-pass approach,
-                // these are deferred to Pass 2 via emit_complex_field_solve.
-                // If called directly, just emit validation.
+                // Complex expression: expand abbreviations and validate
+                // the computed value against the field.
+                let expanded = self.expand_abbreviations(expr);
+                let expr_rust = self.expr_to_rust(&expanded);
                 self.line(&format!(
-                    "// field {} complex expression (validation skipped in compiled mode)",
-                    cont_field
+                    "if !values_match({}, {}, parse_opts) {{",
+                    expr_rust, field_val_expr
                 ));
+                self.indent += 1;
+                self.line(&format!(
+                    "return Err(EndfError::NumberMismatch {{ expected: {}, got: {}, field: \"{}\".to_string() }});",
+                    expr_rust, field_val_expr, field_label
+                ));
+                self.indent -= 1;
+                self.line("}");
             }
         }
     }
