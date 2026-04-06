@@ -209,8 +209,13 @@ impl Engine {
                 stop,
                 body,
             } => {
-                // Try fast path for read mode only.
-                if state.rwmode == RwMode::Read && !state.in_lookahead() {
+                // Try fast path for read mode only. Disabled when
+                // preserve_value_strings is on because the fast path
+                // stores plain Float(v), losing original field strings.
+                if state.rwmode == RwMode::Read
+                    && !state.in_lookahead()
+                    && !self.read_opts.preserve_value_strings
+                {
                     if let Some(pattern) = fast_path::detect_fast_pattern(body) {
                         // Evaluate loop bounds
                         let evaluator = Evaluator {
