@@ -176,6 +176,39 @@ fn get_endf_value_vec<'a>(data: &'a EndfValue, key: &str) -> Vec<&'a EndfValue> 
     }
 }
 
+/// Extract an integer field value from an EndfValue, respecting strict_datatypes.
+/// Lenient (default): accepts Int directly, accepts Float if integer-valued, errors otherwise.
+/// Strict: accepts only Int, rejects any Float (even integer-valued like 5.0).
+fn get_int_checked(val: &EndfValue, field: &str, write_opts: &WriteOpts) -> EndfResult<i64> {
+    match val {
+        EndfValue::Int(n) => Ok(*n),
+        EndfValue::Float(f) | EndfValue::PreservedFloat(f, _) => {
+            if write_opts.strict_datatypes {
+                Err(EndfError::StrictFloatInIntField {
+                    field: field.to_string(),
+                    value: *f,
+                })
+            } else if f.is_finite() && *f == (*f as i64) as f64 {
+                Ok(*f as i64)
+            } else {
+                Err(EndfError::NonIntegerField {
+                    field: field.to_string(),
+                    value: *f,
+                })
+            }
+        }
+        _ => Ok(0),
+    }
+}
+
+/// Extract an integer field from a data dict with strict_datatypes checking.
+fn get_int_field(data: &EndfValue, key: &str, field: &str, write_opts: &WriteOpts) -> EndfResult<i64> {
+    match data.get(key) {
+        Some(val) => get_int_checked(val, field, write_opts),
+        None => Ok(0),
+    }
+}
+
 /// Compare expected vs actual field value, with optional fuzzy tolerance.
 /// Mirrors the interpreter's `values_match` in mappings.rs.
 #[inline]
@@ -2653,16 +2686,41 @@ impl WriteCodeGen {
         }
     }
 
+    /// Generate a Rust expression that extracts an integer field value
+    /// from the data dict with strict_datatypes checking. For simple
+    /// variable references, uses `get_int_field(scope, key, label, write_opts)?`.
+    /// For computed expressions, uses `(expr) as i64` (no strict check).
+    fn expr_to_int_rust(&self, expr: &Expr, scope: &str, field_label: &str) -> String {
+        match expr {
+            Expr::Variable(v) if v.indices.is_empty() && !self.is_abbreviation(&v.name)
+                && !self.loop_vars.iter().any(|lv| lv.eq_ignore_ascii_case(&v.name))
+                && !matches!(v.name.to_lowercase().as_str(), "mat" | "mf" | "mt") =>
+            {
+                format!("get_int_field({}, \"{}\", \"{}\", write_opts)?", scope, v.name, field_label)
+            }
+            Expr::InconsistentVar(v) if v.indices.is_empty() && !self.is_abbreviation(&v.name)
+                && !self.loop_vars.iter().any(|lv| lv.eq_ignore_ascii_case(&v.name))
+                && !matches!(v.name.to_lowercase().as_str(), "mat" | "mf" | "mt") =>
+            {
+                format!("get_int_field({}, \"{}\", \"{}\", write_opts)?", scope, v.name, field_label)
+            }
+            _ => {
+                let f64_expr = self.expr_to_rust(expr, scope);
+                format!("{} as i64", f64_expr)
+            }
+        }
+    }
+
     fn emit_write_cont(&mut self, fields: &[Expr; 6], scope: &str) {
         self.line("// Write HEAD/CONT");
         let c1_ev = self.expr_to_endf_value_rust(&fields[0], scope);
         let c2_ev = self.expr_to_endf_value_rust(&fields[1], scope);
-        let l1 = self.expr_to_rust(&fields[2], scope);
-        let l2 = self.expr_to_rust(&fields[3], scope);
-        let n1 = self.expr_to_rust(&fields[4], scope);
-        let n2 = self.expr_to_rust(&fields[5], scope);
+        let l1 = self.expr_to_int_rust(&fields[2], scope, "L1");
+        let l2 = self.expr_to_int_rust(&fields[3], scope, "L2");
+        let n1 = self.expr_to_int_rust(&fields[4], scope, "N1");
+        let n2 = self.expr_to_int_rust(&fields[5], scope, "N2");
         self.line(&format!(
-            "lines.push(write_cont_preserved(&{}, &{}, {} as i64, {} as i64, {} as i64, {} as i64, &ctrl, write_opts));",
+            "lines.push(write_cont_preserved(&{}, &{}, {}, {}, {}, {}, &ctrl, write_opts));",
             c1_ev, c2_ev, l1, l2, n1, n2
         ));
     }
@@ -2696,10 +2754,10 @@ impl WriteCodeGen {
         // Header: C1, C2, L1, L2 from fields, N1=NR, N2=NP
         let c1_ev = self.expr_to_endf_value_rust(&fields[0], scope);
         let c2_ev = self.expr_to_endf_value_rust(&fields[1], scope);
-        let l1 = self.expr_to_rust(&fields[2], scope);
-        let l2 = self.expr_to_rust(&fields[3], scope);
+        let l1 = self.expr_to_int_rust(&fields[2], scope, "L1");
+        let l2 = self.expr_to_int_rust(&fields[3], scope, "L2");
         self.line(&format!(
-            "lines.push(write_cont_preserved(&{}, &{}, {} as i64, {} as i64, _nr, _np, &ctrl, write_opts));",
+            "lines.push(write_cont_preserved(&{}, &{}, {}, {}, _nr, _np, &ctrl, write_opts));",
             c1_ev, c2_ev, l1, l2
         ));
         self.line("lines.extend(write_tab1_body_preserved(&_nbt, &_int, &_x_vals, &_y_vals, &ctrl, write_opts));")
@@ -2729,11 +2787,11 @@ impl WriteCodeGen {
 
         let c1_ev = self.expr_to_endf_value_rust(&fields[0], scope);
         let c2_ev = self.expr_to_endf_value_rust(&fields[1], scope);
-        let l1 = self.expr_to_rust(&fields[2], scope);
-        let l2 = self.expr_to_rust(&fields[3], scope);
-        let n2 = self.expr_to_rust(&fields[5], scope);
+        let l1 = self.expr_to_int_rust(&fields[2], scope, "L1");
+        let l2 = self.expr_to_int_rust(&fields[3], scope, "L2");
+        let n2 = self.expr_to_int_rust(&fields[5], scope, "N2");
         self.line(&format!(
-            "lines.push(write_cont_preserved(&{}, &{}, {} as i64, {} as i64, _nr, {} as i64, &ctrl, write_opts));",
+            "lines.push(write_cont_preserved(&{}, &{}, {}, {}, _nr, {}, &ctrl, write_opts));",
             c1_ev, c2_ev, l1, l2, n2
         ));
         self.line("let _body = Tab2Body { nbt: _nbt, int: _int };");
@@ -2765,11 +2823,11 @@ impl WriteCodeGen {
         let npl = "_ev_vals.len() as i64";
         let c1_ev = self.expr_to_endf_value_rust(&fields[0], scope);
         let c2_ev = self.expr_to_endf_value_rust(&fields[1], scope);
-        let l1 = self.expr_to_rust(&fields[2], scope);
-        let l2 = self.expr_to_rust(&fields[3], scope);
-        let n2 = self.expr_to_rust(&fields[5], scope);
+        let l1 = self.expr_to_int_rust(&fields[2], scope, "L1");
+        let l2 = self.expr_to_int_rust(&fields[3], scope, "L2");
+        let n2 = self.expr_to_int_rust(&fields[5], scope, "N2");
         self.line(&format!(
-            "lines.push(write_cont_preserved(&{}, &{}, {} as i64, {} as i64, {}, {} as i64, &ctrl, write_opts));",
+            "lines.push(write_cont_preserved(&{}, &{}, {}, {}, {}, {}, &ctrl, write_opts));",
             c1_ev, c2_ev, l1, l2, npl, n2
         ));
         self.line("let _ev_refs: Vec<&EndfValue> = _ev_vals.iter().collect();");
