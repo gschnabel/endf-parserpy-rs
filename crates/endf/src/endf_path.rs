@@ -172,6 +172,11 @@ impl EndfPath {
         }
     }
 
+    /// Append an element to the path.
+    pub fn push(&mut self, elem: EndfPathElement) {
+        self.elements.push(elem);
+    }
+
     /// Check whether this path contains any wildcard elements.
     pub fn has_wildcards(&self) -> bool {
         self.elements.iter().any(|e| matches!(e, EndfPathElement::Wildcard))

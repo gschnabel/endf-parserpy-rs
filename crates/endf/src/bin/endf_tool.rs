@@ -132,6 +132,16 @@ enum Commands {
         #[command(flatten)]
         common: CommonOpts,
     },
+    /// Search ENDF files using query expressions
+    Match {
+        /// ENDF files to search (glob patterns supported)
+        files: Vec<String>,
+        /// Query expression (e.g., "/1/451/ZA > 92000")
+        #[arg(short = 'q', long)]
+        query: String,
+        #[command(flatten)]
+        common: CommonOpts,
+    },
     /// Compare two ENDF files
     Compare {
         /// First ENDF file
@@ -579,6 +589,48 @@ fn display_entries(entries: &[(String, &EndfValue)]) {
     }
 }
 
+fn cmd_match(files: &[String], query: &str, common: &CommonOpts) {
+    let files = expand_globs(files);
+    if files.is_empty() {
+        eprintln!("No files specified.");
+        process::exit(1);
+    }
+
+    let parser = build_parser(common);
+    let mut any_failed = false;
+
+    for file in &files {
+        let data = match parser.parse_file(Path::new(file)) {
+            Ok(d) => d,
+            Err(e) => {
+                eprintln!("Parse failed for {}: {}", file, e);
+                any_failed = true;
+                continue;
+            }
+        };
+
+        match endf::match_query::evaluate_query_with_matches(query, &data) {
+            Ok((true, assignments)) => {
+                println!("match: {}", file);
+                for (path, value) in &assignments {
+                    println!("  {} = {}", path, value);
+                }
+            }
+            Ok((false, _)) => {
+                // No match — silent.
+            }
+            Err(e) => {
+                eprintln!("Query error on {}: {}", file, e);
+                any_failed = true;
+            }
+        }
+    }
+
+    if any_failed {
+        process::exit(1);
+    }
+}
+
 fn cmd_replace(endfpath_str: &str, source: &str, dests_raw: &[String],
                no_backup: bool, common: &CommonOpts) {
     let dests = expand_globs(dests_raw);
@@ -984,6 +1036,9 @@ fn main() {
         }
         Commands::Show { endfpath, file, common } => {
             cmd_show(&endfpath, &file, &common);
+        }
+        Commands::Match { files, query, common } => {
+            cmd_match(&files, &query, &common);
         }
         Commands::Replace { endfpath, source, dest, no_backup, common } => {
             cmd_replace(&endfpath, &source, &dest, no_backup, &common);

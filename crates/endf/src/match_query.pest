@@ -1,0 +1,34 @@
+// Match query grammar for ENDF file search expressions.
+//
+// Examples:
+//   /1/451/ZA > 92000
+//   /3/1/NR == 1 & /1/451/ZA > 26000
+//   exists(/8/457)
+//   !(/1/451/LFI == 0)
+//   /3/*/NR > 0
+
+WHITESPACE = _{ " " | "\t" }
+
+query = { SOI ~ logical_or ~ EOI }
+
+logical_or  = { logical_and ~ ("|" ~ logical_and)* }
+logical_and = { atom ~ ("&" ~ atom)* }
+
+atom = {
+    "!" ~ atom
+  | "exists" ~ "(" ~ endf_path ~ ")"
+  | "(" ~ logical_or ~ ")"
+  | relation
+}
+
+relation = { expr ~ cmp_op ~ expr }
+
+cmp_op = { "<=" | ">=" | "!=" | "==" | "<" | ">" }
+
+expr = { number | endf_path }
+
+number = @{ "-"? ~ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? ~ (("e" | "E") ~ ("+" | "-")? ~ ASCII_DIGIT+)? }
+
+endf_path = @{ "/" ~ path_element ~ ("/" ~ path_element)* ~ "/"? }
+
+path_element = @{ (ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")*) | ASCII_DIGIT+ | "*" }

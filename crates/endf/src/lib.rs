@@ -1,6 +1,7 @@
 pub mod endf_float;
 pub mod endf_path;
 pub mod error;
+pub mod match_query;
 pub mod fortran;
 pub mod interpreter;
 pub mod json;
