@@ -27,10 +27,14 @@ fn compare_values(a: &EndfValue, b: &EndfValue, path: &str, diffs: &mut Vec<Stri
         (EndfValue::Int(x), EndfValue::Int(y)) => {
             if x != y { diffs.push(format!("{}: int {} != {}", path, x, y)); }
         }
-        (EndfValue::Float(x), EndfValue::Float(y)) => {
+        (EndfValue::Float(x), EndfValue::Float(y))
+        | (EndfValue::PreservedFloat(x, _), EndfValue::Float(y))
+        | (EndfValue::Float(x), EndfValue::PreservedFloat(y, _))
+        | (EndfValue::PreservedFloat(x, _), EndfValue::PreservedFloat(y, _)) => {
             if !floats_close(*x, *y) { diffs.push(format!("{}: float {} != {}", path, x, y)); }
         }
-        (EndfValue::Int(x), EndfValue::Float(y)) | (EndfValue::Float(y), EndfValue::Int(x)) => {
+        (EndfValue::Int(x), EndfValue::Float(y)) | (EndfValue::Float(y), EndfValue::Int(x))
+        | (EndfValue::Int(x), EndfValue::PreservedFloat(y, _)) | (EndfValue::PreservedFloat(y, _), EndfValue::Int(x)) => {
             if !floats_close(*x as f64, *y) { diffs.push(format!("{}: num {} != {}", path, x, y)); }
         }
         (EndfValue::Str(x), EndfValue::Str(y)) => {
@@ -63,7 +67,7 @@ fn compare_values(a: &EndfValue, b: &EndfValue, path: &str, diffs: &mut Vec<Stri
         }
         _ => {
             let tl = |v: &EndfValue| match v {
-                EndfValue::Int(_) => "Int", EndfValue::Float(_) => "Float",
+                EndfValue::Int(_) => "Int", EndfValue::Float(_) | EndfValue::PreservedFloat(_, _) => "Float",
                 EndfValue::Str(_) => "Str", EndfValue::Dict(_) => "Dict",
                 EndfValue::List(_) => "List",
             };

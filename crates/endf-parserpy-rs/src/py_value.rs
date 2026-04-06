@@ -6,7 +6,7 @@ use endf::value::{EndfKey, EndfValue};
 pub fn endf_value_to_py(py: Python<'_>, val: &EndfValue) -> PyResult<PyObject> {
     match val {
         EndfValue::Int(v) => Ok(v.into_py(py)),
-        EndfValue::Float(v) => Ok(v.into_py(py)),
+        EndfValue::Float(v) | EndfValue::PreservedFloat(v, _) => Ok(v.into_py(py)),
         EndfValue::Str(s) => Ok(s.into_py(py)),
         EndfValue::Dict(d) => {
             let dict = PyDict::new_bound(py);

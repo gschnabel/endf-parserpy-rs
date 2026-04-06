@@ -4,6 +4,7 @@ use crate::error::{EndfError, EndfResult};
 use crate::options::{ParseOpts, ReadOpts, WriteOpts};
 use crate::recipe::ast::*;
 use crate::records::*;
+use crate::fortran::f64_to_fortstr;
 use crate::value::{EndfKey, EndfValue};
 
 use super::expressions::{
@@ -589,6 +590,7 @@ fn map_fields_from_datadic(
 /// Extract a float value from an EndfValue for a float field. Both Int and
 /// Float are accepted unconditionally (integers are losslessly widened).
 #[inline]
+#[allow(dead_code)]
 fn endf_val_to_f64(val: &EndfValue) -> f64 {
     val.as_float().unwrap_or(0.0)
 }
@@ -609,7 +611,7 @@ fn endf_val_to_i64(
 ) -> EndfResult<i64> {
     match val {
         EndfValue::Int(n) => Ok(*n),
-        EndfValue::Float(f) => {
+        EndfValue::Float(f) | EndfValue::PreservedFloat(f, _) => {
             if strict {
                 Err(EndfError::StrictFloatInIntField {
                     field: field_name.into(),
@@ -627,6 +629,60 @@ fn endf_val_to_i64(
         _ => Err(EndfError::VariableNotFound {
             name: field_name.into(),
         }),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Helper: format a float-typed EndfValue to a fixed-width string
+// ---------------------------------------------------------------------------
+
+/// Format a float-typed EndfValue to a fixed-width string. If the value
+/// is PreservedFloat, emit the original string verbatim (right-justified);
+/// otherwise fall back to f64_to_fortstr.
+fn format_endf_float(val: &EndfValue, opts: &WriteOpts) -> String {
+    match val {
+        EndfValue::PreservedFloat(_v, ref orig) => {
+            let w = opts.width;
+            if orig.len() == w {
+                orig.clone()
+            } else if orig.len() <= w {
+                format!("{:>width$}", orig, width = w)
+            } else {
+                f64_to_fortstr(val.as_float().unwrap_or(0.0), opts)
+            }
+        }
+        _ => f64_to_fortstr(val.as_float().unwrap_or(0.0), opts),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Helper: apply preserved float originals after map_fields_to_datadic
+// ---------------------------------------------------------------------------
+
+/// For each expression that maps to a simple variable, check if the
+/// corresponding original string is available and if so, replace the
+/// stored `Float(v)` or `Int(v)` with `PreservedFloat(v, orig)`.
+fn apply_preserved_originals(
+    field_exprs: &[&Expr],
+    originals: &[Option<String>],
+    state: &mut InterpreterState,
+) {
+    for (i, expr) in field_exprs.iter().enumerate() {
+        if let Some(ref orig) = originals[i] {
+            if let Some(var) = get_simple_variable(expr) {
+                if var.indices.is_empty() {
+                    let scope = state.current_scope_mut();
+                    if let Some(existing) = scope.get(&*var.name) {
+                        if let Some(fv) = existing.as_float() {
+                            scope.insert(
+                                var.name.as_str(),
+                                EndfValue::PreservedFloat(fv, orig.clone()),
+                            );
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -761,35 +817,46 @@ pub fn map_head_or_cont(
     read_opts: &ReadOpts,
     write_opts: &WriteOpts,
 ) -> EndfResult<()> {
-    map_symmetric_record(
-        fields,
-        &["C1", "C2", "L1", "L2", "N1", "N2"],
-        state,
-        parse_opts,
-        |line| {
-            let (rec, _ctrl) = read_cont(line, read_opts)?;
-            Ok([
-                rec.c1,
-                rec.c2,
-                rec.l1 as f64,
-                rec.l2 as f64,
-                rec.n1 as f64,
-                rec.n2 as f64,
-            ])
-        },
-        |v, ctrl| {
-            let strict = write_opts.strict_datatypes;
-            let rec = ContRecord {
-                c1: endf_val_to_f64(&v[0]),
-                c2: endf_val_to_f64(&v[1]),
-                l1: endf_val_to_i64(&v[2], "L1", strict)?,
-                l2: endf_val_to_i64(&v[3], "L2", strict)?,
-                n1: endf_val_to_i64(&v[4], "N1", strict)?,
-                n2: endf_val_to_i64(&v[5], "N2", strict)?,
-            };
-            Ok(write_cont(&rec, ctrl, write_opts))
-        },
-    )
+    if is_read(state) {
+        let line = state.current_line()?;
+        let cont_origs = extract_cont_originals(line, read_opts);
+        let (rec, _ctrl) = read_cont(line, read_opts)?;
+        state.advance();
+        let values = [
+            rec.c1,
+            rec.c2,
+            rec.l1 as f64,
+            rec.l2 as f64,
+            rec.n1 as f64,
+            rec.n2 as f64,
+        ];
+        let field_names = ["C1", "C2", "L1", "L2", "N1", "N2"];
+        map_fields_to_datadic(fields, &values, &field_names, state, parse_opts)?;
+
+        // Post-process: apply preserved float originals for C1 and C2.
+        if read_opts.preserve_value_strings {
+            apply_preserved_originals(&[&fields[0], &fields[1]], &cont_origs, state);
+        }
+    } else {
+        let values_vec = map_fields_from_datadic(fields, state, parse_opts)?;
+        let v: [EndfValue; 6] = values_vec
+            .try_into()
+            .expect("map_fields_from_datadic returns one value per field");
+        let ctrl = get_ctrl_from_state(state)?;
+        let strict = write_opts.strict_datatypes;
+        let c1_str = format_endf_float(&v[0], write_opts);
+        let c2_str = format_endf_float(&v[1], write_opts);
+        let l1 = endf_val_to_i64(&v[2], "L1", strict)?;
+        let l2 = endf_val_to_i64(&v[3], "L2", strict)?;
+        let n1 = endf_val_to_i64(&v[4], "N1", strict)?;
+        let n2 = endf_val_to_i64(&v[5], "N2", strict)?;
+        let w = write_opts.width;
+        let ctrl_str = write_ctrl(&ctrl);
+        let line = format!("{}{}{:>w$}{:>w$}{:>w$}{:>w$}{}",
+            c1_str, c2_str, l1, l2, n1, n2, ctrl_str, w = w);
+        state.push_line(line);
+    }
+    Ok(())
 }
 
 // ---------------------------------------------------------------------------
@@ -935,6 +1002,7 @@ pub fn map_tab1(
     if is_read(state) {
         // Step 1: Read only the header line (as a CONT record).
         let line = state.current_line()?;
+        let cont_origs = extract_cont_originals(line, read_opts);
         let (cont, _ctrl) = read_cont(line, read_opts)?;
         state.advance();
 
@@ -951,6 +1019,11 @@ pub fn map_tab1(
         let field_names = ["C1", "C2", "L1", "L2"];
         map_fields_to_datadic(header_fields, &header_values, &field_names, state, parse_opts)?;
 
+        // Post-process: apply preserved float originals for C1 and C2.
+        if read_opts.preserve_value_strings {
+            apply_preserved_originals(&[&fields[0], &fields[1]], &cont_origs, state);
+        }
+
         // Step 2: Read the table body as a separate action.
         // In lookahead mode, the body counts as a distinct step so that
         // lookahead=1 reads only the header (matching Python behavior).
@@ -961,7 +1034,7 @@ pub fn map_tab1(
         let nr = cont.n1 as usize;
         let np = cont.n2 as usize;
         let line_refs: Vec<&str> = state.lines[state.ofs..].iter().map(|s| s.as_str()).collect();
-        let (body, body_end) = read_tab1_body(&line_refs, 0, nr, np, read_opts)?;
+        let (body, body_end, x_origs, y_origs) = read_tab1_body(&line_refs, 0, nr, np, read_opts)?;
         state.ofs += body_end;
 
         // Store table data inside the (optional) named section.
@@ -969,51 +1042,55 @@ pub fn map_tab1(
             store_int_array("NBT", &body.nbt, state, parse_opts)?;
             store_int_array("INT", &body.int, state, parse_opts)?;
             // Store x and y using the variable names from the recipe.
-            store_float_array(&x_var.name, &body.x, state, parse_opts)?;
-            store_float_array(&y_var.name, &body.y, state, parse_opts)?;
+            store_float_array_preserved(&x_var.name, &body.x, &x_origs, state, parse_opts)?;
+            store_float_array_preserved(&y_var.name, &body.y, &y_origs, state, parse_opts)?;
             Ok(())
         })?;
     } else {
         // Write mode.
 
         // Read table data from datadic, inside the (optional) named section.
-        let (nbt, int, x, y) = with_section(state, table_name, parse_opts, |state| {
+        let (nbt, int, x_vals, y_vals) = with_section(state, table_name, parse_opts, |state| {
             let nbt = read_int_array("NBT", state, parse_opts)?;
             let int = read_int_array("INT", state, parse_opts)?;
-            let x = read_float_array(&x_var.name, state, parse_opts)?;
-            let y = read_float_array(&y_var.name, state, parse_opts)?;
-            Ok((nbt, int, x, y))
+            let x_vals = read_endf_value_array(&x_var.name, state, parse_opts)?;
+            let y_vals = read_endf_value_array(&y_var.name, state, parse_opts)?;
+            Ok((nbt, int, x_vals, y_vals))
         })?;
 
         let nr = nbt.len() as i64;
-        let np = x.len() as i64;
+        let np = x_vals.len() as i64;
 
         // Evaluate only the first 4 header fields (C1, C2, L1, L2).
-        // N1 (NR) and N2 (NP) are computed from the table arrays, not from
-        // recipe field expressions, because the read path doesn't store them
-        // and the recipe may use arbitrary variable names (like NRP, NEP)
-        // that wouldn't exist in the data dictionary.
         let strict = write_opts.strict_datatypes;
         let header_fields = &fields[..4];
         let field_values = map_fields_from_datadic(header_fields, state, parse_opts)?;
-        let cont = ContRecord {
-            c1: endf_val_to_f64(&field_values[0]),
-            c2: endf_val_to_f64(&field_values[1]),
-            l1: endf_val_to_i64(&field_values[2], "L1", strict)?,
-            l2: endf_val_to_i64(&field_values[3], "L2", strict)?,
-            n1: nr,
-            n2: np,
-        };
+        let c1_str = format_endf_float(&field_values[0], write_opts);
+        let c2_str = format_endf_float(&field_values[1], write_opts);
+        let l1 = endf_val_to_i64(&field_values[2], "L1", strict)?;
+        let l2 = endf_val_to_i64(&field_values[3], "L2", strict)?;
         let ctrl = get_ctrl_from_state(state)?;
+        let w = write_opts.width;
 
         // Write header line.
-        let header_line = write_cont(&cont, &ctrl, write_opts);
+        let ctrl_str = write_ctrl(&ctrl);
+        let header_line = format!("{}{}{:>w$}{:>w$}{:>w$}{:>w$}{}",
+            c1_str, c2_str, l1, l2, nr, np, ctrl_str, w = w);
         state.push_line(header_line);
 
         // Write table body.
-        let tab1_body = Tab1Body { nbt, int, x, y };
-        let body_lines = write_tab1_body(&tab1_body, &ctrl, write_opts);
-        for line in body_lines {
+        // Interpolation table (integers).
+        let interleaved_int: Vec<f64> = nbt.iter().zip(int.iter())
+            .flat_map(|(&n, &i)| vec![n as f64, i as f64])
+            .collect();
+        let int_lines = write_endf_numbers(&interleaved_int, &ctrl, true, write_opts);
+        for line in int_lines {
+            state.push_line(line);
+        }
+        // X/Y data (preserved floats).
+        let interleaved_xy = interleave_endf_value_pairs(&x_vals, &y_vals);
+        let xy_lines = write_endf_values(&interleaved_xy, &ctrl, false, write_opts);
+        for line in xy_lines {
             state.push_line(line);
         }
     }
@@ -1041,6 +1118,7 @@ pub fn map_tab2(
     if is_read(state) {
         // Step 1: Read only the header line (as a CONT record).
         let line = state.current_line()?;
+        let cont_origs = extract_cont_originals(line, read_opts);
         let (cont, _ctrl) = read_cont(line, read_opts)?;
         state.advance();
 
@@ -1058,6 +1136,11 @@ pub fn map_tab2(
         let field_names = ["C1", "C2", "L1", "L2", "N2"];
         let header_field_refs: Vec<Expr> = header_fields.iter().map(|e| (*e).clone()).collect();
         map_fields_to_datadic(&header_field_refs, &header_values, &field_names, state, parse_opts)?;
+
+        // Post-process: apply preserved float originals for C1 and C2.
+        if read_opts.preserve_value_strings {
+            apply_preserved_originals(&[&fields[0], &fields[1]], &cont_origs, state);
+        }
 
         // Step 2: Read the table body as a separate action.
         if !state.should_proceed(true) {
@@ -1093,17 +1176,17 @@ pub fn map_tab2(
             .iter().map(|e| (*e).clone()).collect();
         let strict = write_opts.strict_datatypes;
         let field_values = map_fields_from_datadic(&write_fields, state, parse_opts)?;
-        let cont = ContRecord {
-            c1: endf_val_to_f64(&field_values[0]),
-            c2: endf_val_to_f64(&field_values[1]),
-            l1: endf_val_to_i64(&field_values[2], "L1", strict)?,
-            l2: endf_val_to_i64(&field_values[3], "L2", strict)?,
-            n1: nr,
-            n2: endf_val_to_i64(&field_values[4], "N2", strict)?,
-        };
+        let c1_str = format_endf_float(&field_values[0], write_opts);
+        let c2_str = format_endf_float(&field_values[1], write_opts);
+        let l1 = endf_val_to_i64(&field_values[2], "L1", strict)?;
+        let l2 = endf_val_to_i64(&field_values[3], "L2", strict)?;
+        let n2 = endf_val_to_i64(&field_values[4], "N2", strict)?;
         let ctrl = get_ctrl_from_state(state)?;
+        let w = write_opts.width;
+        let ctrl_str = write_ctrl(&ctrl);
 
-        let header_line = write_cont(&cont, &ctrl, write_opts);
+        let header_line = format!("{}{}{:>w$}{:>w$}{:>w$}{:>w$}{}",
+            c1_str, c2_str, l1, l2, nr, n2, ctrl_str, w = w);
         state.push_line(header_line);
 
         let tab2_body = Tab2Body { nbt, int };
@@ -1136,6 +1219,7 @@ pub fn map_list(
     if is_read(state) {
         // Step 1: Read only the header line (as a CONT record).
         let line = state.current_line()?;
+        let cont_origs = extract_cont_originals(line, read_opts);
         let (cont, _ctrl) = read_cont(line, read_opts)?;
         state.advance();
 
@@ -1151,25 +1235,32 @@ pub fn map_list(
         let field_names = ["C1", "C2", "L1", "L2", "N1", "N2"];
         map_fields_to_datadic(fields, &header_values, &field_names, state, parse_opts)?;
 
+        // Post-process: apply preserved float originals for C1 and C2.
+        if read_opts.preserve_value_strings {
+            apply_preserved_originals(&[&fields[0], &fields[1]], &cont_origs, state);
+        }
+
         // Step 2: Read the list body as a separate action.
         if !state.should_proceed(true) {
             return Ok(());
         }
 
         let npl = cont.n1 as usize;
+        let preserve = read_opts.preserve_value_strings;
         let line_refs: Vec<&str> = state.lines[state.ofs..].iter().map(|s| s.as_str()).collect();
-        let (vals, body_end) = read_endf_numbers(&line_refs, npl, 0, read_opts)?;
+        let (vals_with_origs, body_end) = read_endf_numbers(&line_refs, npl, 0, read_opts)?;
         state.ofs += body_end;
 
+        // Split into parallel vecs for the list body processing.
+        let vals: Vec<f64> = vals_with_origs.iter().map(|(v, _)| *v).collect();
+        let origs: Vec<Option<String>> = vals_with_origs.into_iter().map(|(_, o)| o).collect();
+
         // Process list body items inside the (optional) named section.
-        // Note: with_section guarantees the section is exited even when the
-        // inner body returns Err (e.g. UnconsumedListElements), so the
-        // scope path cannot leak on error.
         with_section(state, list_name, parse_opts, |state| {
             // Try fast bulk processing if all items are simple variables.
             let mut val_idx: usize = 0;
-            if !try_fast_list_body(&vals, body, &mut val_idx, state, parse_opts)? {
-                process_list_items_read(body, &vals, &mut val_idx, state, parse_opts)?;
+            if !try_fast_list_body_preserved(&vals, &origs, preserve, body, &mut val_idx, state, parse_opts)? {
+                process_list_items_read_preserved(body, &vals, &origs, preserve, &mut val_idx, state, parse_opts)?;
             }
 
             // Verify all values were consumed.
@@ -1184,38 +1275,39 @@ pub fn map_list(
         // Write mode: evaluate header, then build body values.
 
         // Build list body values first (we may need the count for N1).
-        let mut vals: Vec<f64> = Vec::new();
+        let mut body_vals: Vec<EndfValue> = Vec::new();
         with_section(state, list_name, parse_opts, |state| {
-            process_list_items_write(body, &mut vals, state, parse_opts)
+            process_list_items_write_preserved(body, &mut body_vals, state, parse_opts)
         })?;
 
         // Ensure NPL is available for header evaluation.
         {
             let scope = state.current_scope_mut();
             if !scope.contains_key("NPL") {
-                scope.insert("NPL", EndfValue::Int(vals.len() as i64));
+                scope.insert("NPL", EndfValue::Int(body_vals.len() as i64));
             }
         }
 
         let strict = write_opts.strict_datatypes;
         let field_values = map_fields_from_datadic(fields, state, parse_opts)?;
-        let cont = ContRecord {
-            c1: endf_val_to_f64(&field_values[0]),
-            c2: endf_val_to_f64(&field_values[1]),
-            l1: endf_val_to_i64(&field_values[2], "L1", strict)?,
-            l2: endf_val_to_i64(&field_values[3], "L2", strict)?,
-            n1: endf_val_to_i64(&field_values[4], "N1", strict)?,
-            n2: endf_val_to_i64(&field_values[5], "N2", strict)?,
-        };
+        let c1_str = format_endf_float(&field_values[0], write_opts);
+        let c2_str = format_endf_float(&field_values[1], write_opts);
+        let l1 = endf_val_to_i64(&field_values[2], "L1", strict)?;
+        let l2 = endf_val_to_i64(&field_values[3], "L2", strict)?;
+        let n1 = endf_val_to_i64(&field_values[4], "N1", strict)?;
+        let n2 = endf_val_to_i64(&field_values[5], "N2", strict)?;
         let ctrl = get_ctrl_from_state(state)?;
+        let w = write_opts.width;
+        let ctrl_str = write_ctrl(&ctrl);
 
         // Write header.
-        let header_line = write_cont(&cont, &ctrl, write_opts);
+        let header_line = format!("{}{}{:>w$}{:>w$}{:>w$}{:>w$}{}",
+            c1_str, c2_str, l1, l2, n1, n2, ctrl_str, w = w);
         state.push_line(header_line);
 
         // Write body values.
-        if !vals.is_empty() {
-            let body_lines = write_endf_numbers(&vals, &ctrl, false, write_opts);
+        if !body_vals.is_empty() {
+            let body_lines = write_endf_values(&body_vals, &ctrl, false, write_opts);
             for line in body_lines {
                 state.push_line(line);
             }
@@ -1299,6 +1391,7 @@ fn build_list_plan<'a>(items: &'a [ListItem], ops: &mut Vec<ListBodyOp<'a>>, abb
 
 /// Try to process a LIST body using the fast bulk path.
 /// Returns Ok(true) if handled, Ok(false) to fall back to slow path.
+#[allow(dead_code)]
 fn try_fast_list_body(
     vals: &[f64],
     body: &[ListItem],
@@ -1323,6 +1416,7 @@ fn try_fast_list_body(
 }
 
 /// Execute a flat LIST body plan.
+#[allow(dead_code)]
 fn execute_list_plan(
     ops: &[ListBodyOp],
     vals: &[f64],
@@ -1358,7 +1452,7 @@ fn execute_list_plan(
                     scope.insert(*name, EndfValue::new_dict());
                 }
                 let mut current = scope.get_mut(*name).unwrap();
-                for (depth, &idx) in indices[..indices.len()-1].iter().enumerate() {
+                for (_depth, &idx) in indices[..indices.len()-1].iter().enumerate() {
                     let key = EndfKey::Int(idx);
                     match current {
                         EndfValue::Dict(ref mut d) => {
@@ -1420,6 +1514,7 @@ fn execute_list_plan(
 }
 
 /// Process list body items in read mode, consuming values from `vals`.
+#[allow(dead_code)]
 fn process_list_items_read(
     items: &[ListItem],
     vals: &[f64],
@@ -1495,6 +1590,7 @@ fn process_list_items_read(
 }
 
 /// Process list body items in write mode, appending values to `vals`.
+#[allow(dead_code)]
 fn process_list_items_write(
     items: &[ListItem],
     vals: &mut Vec<f64>,
@@ -1534,6 +1630,285 @@ fn process_list_items_write(
                 for _ in 0..skip {
                     vals.push(0.0);
                 }
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Process list body items in write mode, collecting `EndfValue`s to preserve
+/// PreservedFloat variants for byte-exact roundtrip.
+fn process_list_items_write_preserved(
+    items: &[ListItem],
+    vals: &mut Vec<EndfValue>,
+    state: &mut InterpreterState,
+    parse_opts: &ParseOpts,
+) -> EndfResult<()> {
+    for item in items {
+        match item {
+            ListItem::Value(expr) => {
+                // Try to get the raw EndfValue (preserves PreservedFloat)
+                let val = match expr {
+                    Expr::Variable(v) | Expr::InconsistentVar(v) => {
+                        let scope_chain = state.scope_chain();
+                        match super::expressions::get_var_value(
+                            &v.name,
+                            &v.indices,
+                            &scope_chain,
+                            &state.loop_vars,
+                            &state.abbreviations,
+                            parse_opts,
+                        ) {
+                            Some(ev) => ev,
+                            None => {
+                                return Err(EndfError::VariableNotFound {
+                                    name: v.name.clone(),
+                                })
+                            }
+                        }
+                    }
+                    _ => {
+                        let scope_chain = state.scope_chain();
+                        let fval = eval_expr_known(
+                            expr,
+                            &scope_chain,
+                            &state.loop_vars,
+                            &state.abbreviations,
+                            parse_opts,
+                        )?;
+                        EndfValue::from_f64(fval)
+                    }
+                };
+                vals.push(val);
+            }
+            ListItem::Loop {
+                body: loop_body,
+                var,
+                start,
+                stop,
+            } => {
+                let (start_val, stop_val) = eval_loop_bounds(start, stop, state, parse_opts)?;
+                for i in start_val..=stop_val {
+                    state.loop_vars.insert(var.clone(), i);
+                    process_list_items_write_preserved(loop_body, vals, state, parse_opts)?;
+                }
+                state.loop_vars.remove(var);
+            }
+            ListItem::Padding => {
+                let current = vals.len();
+                let skip = (6 - current % 6) % 6;
+                for _ in 0..skip {
+                    vals.push(EndfValue::Float(0.0));
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Fast-path LIST body processing with preserved originals.
+fn try_fast_list_body_preserved(
+    vals: &[f64],
+    origs: &[Option<String>],
+    preserve: bool,
+    body: &[ListItem],
+    val_idx: &mut usize,
+    state: &mut InterpreterState,
+    parse_opts: &ParseOpts,
+) -> EndfResult<bool> {
+    if !is_simple_list_body(body, &state.abbreviations) {
+        return Ok(false);
+    }
+
+    let mut ops = Vec::new();
+    build_list_plan(body, &mut ops, &state.abbreviations);
+
+    execute_list_plan_preserved(&ops, vals, origs, preserve, val_idx, state, parse_opts)?;
+    Ok(true)
+}
+
+/// Execute a flat LIST body plan with preserved originals.
+fn execute_list_plan_preserved(
+    ops: &[ListBodyOp],
+    vals: &[f64],
+    origs: &[Option<String>],
+    preserve: bool,
+    val_idx: &mut usize,
+    state: &mut InterpreterState,
+    parse_opts: &ParseOpts,
+) -> EndfResult<()> {
+    let mut i = 0;
+    while i < ops.len() {
+        match &ops[i] {
+            ListBodyOp::Scalar(name) => {
+                let val = vals[*val_idx];
+                let ev = if preserve {
+                    if let Some(ref orig) = origs[*val_idx] {
+                        EndfValue::PreservedFloat(val, orig.clone())
+                    } else {
+                        EndfValue::Float(val)
+                    }
+                } else {
+                    EndfValue::Float(val)
+                };
+                let scope = state.current_scope_mut();
+                scope.insert(*name, ev);
+                *val_idx += 1;
+            }
+            ListBodyOp::Indexed(name, index_exprs) => {
+                let val = vals[*val_idx];
+                let ev = if preserve {
+                    if let Some(ref orig) = origs[*val_idx] {
+                        EndfValue::PreservedFloat(val, orig.clone())
+                    } else {
+                        EndfValue::Float(val)
+                    }
+                } else {
+                    EndfValue::Float(val)
+                };
+                // Evaluate indices using current scope.
+                let mut indices = Vec::with_capacity(index_exprs.len());
+                {
+                    let scope_chain = state.scope_chain();
+                    for idx_expr in *index_exprs {
+                        let idx = eval_index(idx_expr, &scope_chain, &state.loop_vars, &state.abbreviations, parse_opts)?;
+                        indices.push(idx);
+                    }
+                }
+                let scope = state.current_scope_mut();
+                if !scope.contains_key(*name) {
+                    scope.insert(*name, EndfValue::new_dict());
+                }
+                let mut current = scope.get_mut(*name).unwrap();
+                for (_depth, &idx) in indices[..indices.len()-1].iter().enumerate() {
+                    let key = EndfKey::Int(idx);
+                    match current {
+                        EndfValue::Dict(ref mut d) => {
+                            if !d.contains_key(&key) {
+                                d.insert(key.clone(), EndfValue::new_dict());
+                            }
+                            current = d.get_mut(&key).unwrap();
+                        }
+                        _ => {}
+                    }
+                }
+                let last_key = EndfKey::Int(*indices.last().unwrap());
+                match current {
+                    EndfValue::Dict(ref mut d) => {
+                        d.insert(last_key, ev);
+                    }
+                    _ => {}
+                }
+                *val_idx += 1;
+            }
+            ListBodyOp::Skip => {
+                *val_idx += 1;
+            }
+            ListBodyOp::LoopStart(var, start, stop) => {
+                let (sv, ev) = eval_loop_bounds(start, stop, state, parse_opts)?;
+                let body_start = i + 1;
+                let mut depth = 1;
+                let mut j = body_start;
+                while j < ops.len() && depth > 0 {
+                    match &ops[j] {
+                        ListBodyOp::LoopStart(_, _, _) => depth += 1,
+                        ListBodyOp::LoopEnd(_) => depth -= 1,
+                        _ => {}
+                    }
+                    if depth > 0 { j += 1; }
+                }
+                let body_end = j;
+
+                for iter_val in sv..=ev {
+                    state.loop_vars.insert((*var).to_string(), iter_val);
+                    execute_list_plan_preserved(&ops[body_start..body_end], vals, origs, preserve, val_idx, state, parse_opts)?;
+                }
+                state.loop_vars.remove(*var);
+                i = body_end;
+            }
+            ListBodyOp::LoopEnd(_) => {
+                return Ok(());
+            }
+            ListBodyOp::Padding => {
+                let skip = (6 - *val_idx % 6) % 6;
+                *val_idx += skip;
+            }
+        }
+        i += 1;
+    }
+    Ok(())
+}
+
+/// Process list body items in read mode with preserved originals.
+fn process_list_items_read_preserved(
+    items: &[ListItem],
+    vals: &[f64],
+    origs: &[Option<String>],
+    preserve: bool,
+    val_idx: &mut usize,
+    state: &mut InterpreterState,
+    parse_opts: &ParseOpts,
+) -> EndfResult<()> {
+    for item in items {
+        match item {
+            ListItem::Value(expr) => {
+                if *val_idx >= vals.len() {
+                    return Err(EndfError::MoreListElementsExpected {
+                        expected: *val_idx + 1,
+                        got: vals.len(),
+                    });
+                }
+                let fv = vals[*val_idx];
+                let ev = if preserve {
+                    if let Some(ref orig) = origs[*val_idx] {
+                        EndfValue::PreservedFloat(fv, orig.clone())
+                    } else {
+                        EndfValue::Float(fv)
+                    }
+                } else {
+                    EndfValue::Float(fv)
+                };
+                match expr {
+                    Expr::Variable(v) if v.indices.is_empty() => {
+                        eval_and_set_var(&v.name, &v.indices, ev, state, parse_opts)?;
+                    }
+                    Expr::Variable(v) => {
+                        eval_and_set_var(&v.name, &v.indices, ev, state, parse_opts)?;
+                    }
+                    Expr::InconsistentVar(v) => {
+                        eval_and_set_var(&v.name, &v.indices, ev, state, parse_opts)?;
+                    }
+                    Expr::Number(_) | Expr::DesiredNumber(_) => {
+                        // Constant -- validation only, skip.
+                    }
+                    _ => {
+                        map_fields_to_datadic(
+                            std::slice::from_ref(expr),
+                            &[fv],
+                            &["val"],
+                            state,
+                            parse_opts,
+                        )?;
+                    }
+                }
+                *val_idx += 1;
+            }
+            ListItem::Loop {
+                body: loop_body,
+                var,
+                start,
+                stop,
+            } => {
+                let (start_val, stop_val) = eval_loop_bounds(start, stop, state, parse_opts)?;
+                for i in start_val..=stop_val {
+                    state.loop_vars.insert(var.clone(), i);
+                    process_list_items_read_preserved(loop_body, vals, origs, preserve, val_idx, state, parse_opts)?;
+                }
+                state.loop_vars.remove(var);
+            }
+            ListItem::Padding => {
+                let skip = (6 - *val_idx % 6) % 6;
+                *val_idx += skip;
             }
         }
     }
@@ -1834,6 +2209,7 @@ fn store_int_array(
 }
 
 /// Store an f64 array in the current scope of the data dictionary.
+#[allow(dead_code)]
 fn store_float_array(
     name: &str,
     values: &[f64],
@@ -1844,6 +2220,103 @@ fn store_float_array(
     let scope = state.current_scope_mut();
     scope.insert(name, EndfValue::List(arr));
     Ok(())
+}
+
+/// Store an f64 array with optional preserved original strings.
+fn store_float_array_preserved(
+    name: &str,
+    values: &[f64],
+    originals: &[Option<String>],
+    state: &mut InterpreterState,
+    _parse_opts: &ParseOpts,
+) -> EndfResult<()> {
+    let arr: Vec<Option<EndfValue>> = values.iter().zip(originals.iter()).map(|(&v, orig)| {
+        Some(match orig {
+            Some(s) => EndfValue::PreservedFloat(v, s.clone()),
+            None => EndfValue::Float(v),
+        })
+    }).collect();
+    let scope = state.current_scope_mut();
+    scope.insert(name, EndfValue::List(arr));
+    Ok(())
+}
+
+/// Read an EndfValue array from the current scope, preserving PreservedFloat variants.
+fn read_endf_value_array(
+    name: &str,
+    state: &InterpreterState,
+    _parse_opts: &ParseOpts,
+) -> EndfResult<Vec<EndfValue>> {
+    let scope = state.current_scope();
+    match scope.get(name) {
+        Some(EndfValue::List(l)) => Ok(l
+            .iter()
+            .map(|v| {
+                v.as_ref().cloned().unwrap_or(EndfValue::Float(0.0))
+            })
+            .collect()),
+        Some(EndfValue::Dict(d)) => {
+            let mut entries: Vec<(i64, EndfValue)> = d
+                .iter()
+                .map(|(k, v)| {
+                    let idx = match k {
+                        EndfKey::Int(i) => *i,
+                        _ => 0,
+                    };
+                    (idx, v.clone())
+                })
+                .collect();
+            entries.sort_by_key(|&(idx, _)| idx);
+            Ok(entries.into_iter().map(|(_, v)| v).collect())
+        }
+        _ => Err(EndfError::VariableNotFound {
+            name: name.to_string(),
+        }),
+    }
+}
+
+/// Interleave two EndfValue arrays into a single flat Vec.
+fn interleave_endf_value_pairs(a: &[EndfValue], b: &[EndfValue]) -> Vec<EndfValue> {
+    let mut out = Vec::with_capacity(a.len() * 2);
+    for (av, bv) in a.iter().zip(b.iter()) {
+        out.push(av.clone());
+        out.push(bv.clone());
+    }
+    out
+}
+
+/// Write EndfValues packed 6-per-line, each line terminated by a control record.
+///
+/// When `to_int` is true the values are formatted as right-justified integers.
+/// For Float/PreservedFloat values, uses the preserved string when available.
+fn write_endf_values(
+    vals: &[EndfValue],
+    ctrl: &CtrlRecord,
+    to_int: bool,
+    opts: &WriteOpts,
+) -> Vec<String> {
+    let mut result_lines = Vec::new();
+    let w = opts.width;
+
+    for chunk in vals.chunks(6) {
+        let mut line = String::new();
+        for val in chunk {
+            if to_int {
+                let iv = val.as_float().unwrap_or(0.0) as i64;
+                line.push_str(&format!("{:>w$}", iv, w = w));
+            } else {
+                line.push_str(&format_endf_float(val, opts));
+            }
+        }
+        // Pad the last (or only) chunk to full data width.
+        let data_width = w * 6;
+        while line.len() < data_width {
+            line.push_str(&" ".repeat(w));
+        }
+        line.push_str(&write_ctrl(ctrl));
+        result_lines.push(line);
+    }
+    result_lines
 }
 
 /// Read an i64 array from the current scope of the data dictionary.
@@ -1885,6 +2358,7 @@ fn read_int_array(
 }
 
 /// Read an f64 array from the current scope of the data dictionary.
+#[allow(dead_code)]
 fn read_float_array(
     name: &str,
     state: &InterpreterState,

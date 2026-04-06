@@ -82,6 +82,13 @@ pub enum EndfValue {
     Int(i64),
     /// Floating-point value
     Float(f64),
+    /// Floating-point value that preserves the original ENDF field string.
+    /// Produced only when `ReadOpts::preserve_value_strings` is enabled.
+    /// The write path emits the original string verbatim (right-justified
+    /// to width) instead of reformatting the numeric value, achieving
+    /// byte-exact float roundtrip. Semantically equivalent to `Float` for
+    /// all arithmetic / comparison / extraction purposes.
+    PreservedFloat(f64, String),
     /// String value (TEXT records, variable names)
     Str(String),
     /// Ordered dictionary (sections, MF/MT containers, variable collections)
@@ -116,7 +123,8 @@ impl EndfValue {
     pub fn as_int(&self) -> Option<i64> {
         match self {
             EndfValue::Int(v) => Some(*v),
-            EndfValue::Float(v) if *v == (*v as i64) as f64 => Some(*v as i64),
+            EndfValue::Float(v) | EndfValue::PreservedFloat(v, _)
+                if *v == (*v as i64) as f64 => Some(*v as i64),
             _ => None,
         }
     }
@@ -124,7 +132,7 @@ impl EndfValue {
     /// Try to get this value as an f64.
     pub fn as_float(&self) -> Option<f64> {
         match self {
-            EndfValue::Float(v) => Some(*v),
+            EndfValue::Float(v) | EndfValue::PreservedFloat(v, _) => Some(*v),
             EndfValue::Int(v) => Some(*v as f64),
             _ => None,
         }
@@ -245,6 +253,7 @@ impl fmt::Display for EndfValue {
         match self {
             EndfValue::Int(v) => write!(f, "{}", v),
             EndfValue::Float(v) => write!(f, "{}", v),
+            EndfValue::PreservedFloat(_, ref orig) => write!(f, "{}", orig),
             EndfValue::Str(s) => write!(f, "\"{}\"", s),
             EndfValue::Dict(d) => write!(f, "{{dict with {} entries}}", d.len()),
             EndfValue::List(l) => write!(f, "[list with {} entries]", l.len()),

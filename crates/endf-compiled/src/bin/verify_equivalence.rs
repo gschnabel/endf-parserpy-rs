@@ -13,12 +13,16 @@ fn compare(a: &EndfValue, b: &EndfValue, path: &str, diffs: &mut Vec<String>, ma
         (EndfValue::Int(x), EndfValue::Int(y)) => {
             if x != y { diffs.push(format!("{}: Int {} != {}", path, x, y)); }
         }
-        (EndfValue::Float(x), EndfValue::Float(y)) => {
+        (EndfValue::Float(x), EndfValue::Float(y))
+        | (EndfValue::PreservedFloat(x, _), EndfValue::Float(y))
+        | (EndfValue::Float(x), EndfValue::PreservedFloat(y, _))
+        | (EndfValue::PreservedFloat(x, _), EndfValue::PreservedFloat(y, _)) => {
             if (x - y).abs() > 1e-10 + 1e-10 * y.abs() {
                 diffs.push(format!("{}: Float {} != {}", path, x, y));
             }
         }
-        (EndfValue::Int(x), EndfValue::Float(y)) | (EndfValue::Float(y), EndfValue::Int(x)) => {
+        (EndfValue::Int(x), EndfValue::Float(y)) | (EndfValue::Float(y), EndfValue::Int(x))
+        | (EndfValue::Int(x), EndfValue::PreservedFloat(y, _)) | (EndfValue::PreservedFloat(y, _), EndfValue::Int(x)) => {
             if (*x as f64 - y).abs() > 1e-10 + 1e-10 * y.abs() {
                 diffs.push(format!("{}: Num {} != {}", path, x, y));
             }
@@ -57,7 +61,7 @@ fn compare(a: &EndfValue, b: &EndfValue, path: &str, diffs: &mut Vec<String>, ma
 
 fn type_name(v: &EndfValue) -> &'static str {
     match v {
-        EndfValue::Int(_) => "Int", EndfValue::Float(_) => "Float",
+        EndfValue::Int(_) => "Int", EndfValue::Float(_) | EndfValue::PreservedFloat(_, _) => "Float",
         EndfValue::Str(_) => "Str", EndfValue::Dict(_) => "Dict",
         EndfValue::List(_) => "List",
     }

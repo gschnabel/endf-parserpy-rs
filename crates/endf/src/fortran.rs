@@ -272,9 +272,12 @@ pub fn f64_to_fortstr(val: f64, opts: &WriteOpts) -> String {
 /// Read `n` float values from fixed-width fields in a line.
 ///
 /// Each field is `opts.width` characters wide. Fields are extracted
-/// left-to-right and parsed via `fortstr_to_f64`.
-pub fn read_fort_floats(line: &str, n: usize, opts: &ReadOpts) -> EndfResult<Vec<f64>> {
+/// left-to-right and parsed via `fortstr_to_f64`. When
+/// `opts.preserve_value_strings` is true, each element carries the
+/// trimmed original field string alongside the parsed value.
+pub fn read_fort_floats(line: &str, n: usize, opts: &ReadOpts) -> EndfResult<Vec<(f64, Option<String>)>> {
     let width = opts.width;
+    let preserve = opts.preserve_value_strings;
     let mut vals = Vec::with_capacity(n);
     for i in 0..n {
         let start = i * width;
@@ -284,7 +287,9 @@ pub fn read_fort_floats(line: &str, n: usize, opts: &ReadOpts) -> EndfResult<Vec
         } else {
             ""
         };
-        vals.push(fortstr_to_f64(field, opts)?);
+        let value = fortstr_to_f64(field, opts)?;
+        let orig = if preserve { Some(field.trim().to_string()) } else { None };
+        vals.push((value, orig));
     }
     Ok(vals)
 }
@@ -621,7 +626,7 @@ mod tests {
         let opts = ReadOpts::default();
         let vals = read_fort_floats(&line, 6, &opts).unwrap();
         assert_eq!(vals.len(), 6);
-        for (i, v) in vals.iter().enumerate() {
+        for (i, (v, _orig)) in vals.iter().enumerate() {
             let expected = (i + 1) as f64;
             assert!(
                 (*v - expected).abs() < 1e-5,
@@ -638,7 +643,7 @@ mod tests {
         let line = "           ";
         let opts = ReadOpts::default();
         let vals = read_fort_floats(line, 1, &opts).unwrap();
-        assert_eq!(vals[0], 0.0);
+        assert_eq!(vals[0].0, 0.0);
     }
 
     #[test]
@@ -647,9 +652,9 @@ mod tests {
         let line = " 1.00000+0";
         let opts = ReadOpts::default();
         let vals = read_fort_floats(line, 3, &opts).unwrap();
-        assert!((vals[0] - 1.0).abs() < 1e-5);
-        assert_eq!(vals[1], 0.0);
-        assert_eq!(vals[2], 0.0);
+        assert!((vals[0].0 - 1.0).abs() < 1e-5);
+        assert_eq!(vals[1].0, 0.0);
+        assert_eq!(vals[2].0, 0.0);
     }
 
     #[test]
@@ -667,7 +672,7 @@ mod tests {
         let original = vec![1.23456e7, -3.14159, 0.0, 1.0e-30, 9.99999e99];
         let line = write_fort_floats(&original, &write_opts);
         let parsed = read_fort_floats(&line, original.len(), &read_opts).unwrap();
-        for (i, (orig, got)) in original.iter().zip(parsed.iter()).enumerate() {
+        for (i, (orig, (got, _))) in original.iter().zip(parsed.iter()).enumerate() {
             if *orig == 0.0 {
                 assert_eq!(*got, 0.0, "field {}", i);
             } else {

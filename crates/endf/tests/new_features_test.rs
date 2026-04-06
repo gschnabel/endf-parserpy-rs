@@ -19,7 +19,10 @@ fn test_serde_json_roundtrip_scalars() {
         let back: EndfValue = serde_json::from_str(&json).expect("deserialize");
         match (val, &back) {
             (EndfValue::Int(a), EndfValue::Int(b)) => assert_eq!(a, b),
-            (EndfValue::Float(a), EndfValue::Float(b)) => assert_eq!(a, b),
+            (EndfValue::Float(a), EndfValue::Float(b))
+            | (EndfValue::PreservedFloat(a, _), EndfValue::Float(b))
+            | (EndfValue::Float(a), EndfValue::PreservedFloat(b, _))
+            | (EndfValue::PreservedFloat(a, _), EndfValue::PreservedFloat(b, _)) => assert_eq!(a, b),
             (EndfValue::Str(a), EndfValue::Str(b)) => assert_eq!(a, b),
             _ => panic!("type mismatch after roundtrip"),
         }

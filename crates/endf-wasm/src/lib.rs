@@ -7,7 +7,7 @@ use endf::value::{EndfKey, EndfValue};
 fn endf_value_to_js(val: &EndfValue) -> JsValue {
     match val {
         EndfValue::Int(n) => JsValue::from_f64(*n as f64),
-        EndfValue::Float(f) => JsValue::from_f64(*f),
+        EndfValue::Float(f) | EndfValue::PreservedFloat(f, _) => JsValue::from_f64(*f),
         EndfValue::Str(s) => JsValue::from_str(s),
         EndfValue::Dict(map) => {
             let obj = js_sys::Object::new();

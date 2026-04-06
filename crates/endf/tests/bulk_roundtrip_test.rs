@@ -17,13 +17,17 @@ fn compare_values(a: &EndfValue, b: &EndfValue, path: &str, diffs: &mut Vec<Stri
                 diffs.push(format!("{}: int {} != {}", path, x, y));
             }
         }
-        (EndfValue::Float(x), EndfValue::Float(y)) => {
+        (EndfValue::Float(x), EndfValue::Float(y))
+        | (EndfValue::PreservedFloat(x, _), EndfValue::Float(y))
+        | (EndfValue::Float(x), EndfValue::PreservedFloat(y, _))
+        | (EndfValue::PreservedFloat(x, _), EndfValue::PreservedFloat(y, _)) => {
             if !floats_close(*x, *y) {
                 diffs.push(format!("{}: float {} != {}", path, x, y));
             }
         }
         // allow Int/Float cross-comparison (0 == 0.0 etc.)
-        (EndfValue::Int(x), EndfValue::Float(y)) | (EndfValue::Float(y), EndfValue::Int(x)) => {
+        (EndfValue::Int(x), EndfValue::Float(y)) | (EndfValue::Float(y), EndfValue::Int(x))
+        | (EndfValue::Int(x), EndfValue::PreservedFloat(y, _)) | (EndfValue::PreservedFloat(y, _), EndfValue::Int(x)) => {
             if !floats_close(*x as f64, *y) {
                 diffs.push(format!("{}: num {} != {}", path, x, y));
             }
@@ -79,7 +83,7 @@ fn vecs_close(a: &[f64], b: &[f64]) -> bool {
 fn type_label(v: &EndfValue) -> &'static str {
     match v {
         EndfValue::Int(_) => "Int",
-        EndfValue::Float(_) => "Float",
+        EndfValue::Float(_) | EndfValue::PreservedFloat(_, _) => "Float",
         EndfValue::Str(_) => "Str",
         EndfValue::Dict(_) => "Dict",
         EndfValue::List(_) => "List",

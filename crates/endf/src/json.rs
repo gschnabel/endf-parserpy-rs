@@ -16,7 +16,7 @@ use serde_json::{Value as JsonValue, Map as JsonMap, Number as JsonNumber};
 pub fn endf_to_json(val: &EndfValue) -> JsonValue {
     match val {
         EndfValue::Int(n) => JsonValue::Number(JsonNumber::from(*n)),
-        EndfValue::Float(f) => {
+        EndfValue::Float(f) | EndfValue::PreservedFloat(f, _) => {
             match JsonNumber::from_f64(*f) {
                 Some(n) => JsonValue::Number(n),
                 None => JsonValue::Null, // NaN/Inf

@@ -104,7 +104,8 @@ fn compare_values(a: &EndfValue, b: &EndfValue, path: &str, result: &mut Compare
         }
 
         // Allow Int/Float cross-comparison (common in ENDF: 0 vs 0.0)
-        (EndfValue::Int(va), EndfValue::Float(vb)) | (EndfValue::Float(vb), EndfValue::Int(va)) => {
+        (EndfValue::Int(va), EndfValue::Float(vb)) | (EndfValue::Float(vb), EndfValue::Int(va))
+        | (EndfValue::Int(va), EndfValue::PreservedFloat(vb, _)) | (EndfValue::PreservedFloat(vb, _), EndfValue::Int(va)) => {
             if !floats_close(*va as f64, *vb) {
                 result
                     .differences
@@ -112,7 +113,10 @@ fn compare_values(a: &EndfValue, b: &EndfValue, path: &str, result: &mut Compare
             }
         }
 
-        (EndfValue::Float(va), EndfValue::Float(vb)) => {
+        (EndfValue::Float(va), EndfValue::Float(vb))
+        | (EndfValue::PreservedFloat(va, _), EndfValue::Float(vb))
+        | (EndfValue::Float(va), EndfValue::PreservedFloat(vb, _))
+        | (EndfValue::PreservedFloat(va, _), EndfValue::PreservedFloat(vb, _)) => {
             if !floats_close(*va, *vb) {
                 result
                     .differences
@@ -198,7 +202,7 @@ fn compare_values(a: &EndfValue, b: &EndfValue, path: &str, result: &mut Compare
 fn variant_name(v: &EndfValue) -> &'static str {
     match v {
         EndfValue::Int(_) => "Int",
-        EndfValue::Float(_) => "Float",
+        EndfValue::Float(_) | EndfValue::PreservedFloat(_, _) => "Float",
         EndfValue::Str(_) => "Str",
         EndfValue::Dict(_) => "Dict",
         EndfValue::List(_) => "List",

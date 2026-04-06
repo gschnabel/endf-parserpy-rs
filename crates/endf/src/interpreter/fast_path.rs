@@ -400,7 +400,7 @@ fn read_tab1_from_strings(
     let body_lines_needed = ((2 * nr + 5) / 6) + ((2 * np + 5) / 6);
     let end = (ofs + 1 + body_lines_needed).min(lines.len());
     let line_refs: Vec<&str> = lines[ofs + 1..end].iter().map(|s| s.as_str()).collect();
-    let (body, body_end) = records::read_tab1_body(&line_refs, 0, nr, np, read_opts)?;
+    let (body, body_end, _, _) = records::read_tab1_body(&line_refs, 0, nr, np, read_opts)?;
     Ok((cont, body, ofs + 1 + body_end))
 }
 
@@ -418,7 +418,8 @@ fn read_list_from_strings(
     let body_lines_needed = (npl + 5) / 6;
     let end = (ofs + 1 + body_lines_needed).min(lines.len());
     let line_refs: Vec<&str> = lines[ofs + 1..end].iter().map(|s| s.as_str()).collect();
-    let (vals, body_end) = records::read_endf_numbers(&line_refs, npl, 0, read_opts)?;
+    let (vals_with_origs, body_end) = records::read_endf_numbers(&line_refs, npl, 0, read_opts)?;
+    let vals: Vec<f64> = vals_with_origs.into_iter().map(|(v, _)| v).collect();
     Ok((cont, vals, ofs + 1 + body_end))
 }
 

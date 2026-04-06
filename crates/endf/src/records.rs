@@ -120,6 +120,20 @@ pub fn read_cont(line: &str, opts: &ReadOpts) -> EndfResult<(ContRecord, CtrlRec
     Ok((ContRecord { c1, c2, l1, l2, n1, n2 }, ctrl))
 }
 
+/// Extract the original field strings for C1 and C2 from a CONT/HEAD line.
+///
+/// Only useful when `opts.preserve_value_strings` is true.
+pub fn extract_cont_originals(line: &str, opts: &ReadOpts) -> [Option<String>; 2] {
+    if !opts.preserve_value_strings {
+        return [None, None];
+    }
+    let w = opts.width;
+    let padded = format!("{:<80}", line);
+    let c1_orig = Some(padded[0..w].trim().to_string());
+    let c2_orig = Some(padded[w..2 * w].trim().to_string());
+    [c1_orig, c2_orig]
+}
+
 /// Write a CONT (or HEAD) record as a single line.
 pub fn write_cont(rec: &ContRecord, ctrl: &CtrlRecord, opts: &WriteOpts) -> String {
     let c1 = f64_to_fortstr(rec.c1, opts);
@@ -259,16 +273,16 @@ pub fn write_intg(
 
 /// Read `count` float values packed 6-per-line starting at line `ofs`.
 ///
-/// Returns the values and the new line offset. Callers that need integers
-/// (TAB1/TAB2 interpolation tables) cast the results with `as i64`; there
-/// is intentionally no `to_int` mode here because the Rust API keeps the
-/// canonical representation as `f64`.
+/// Returns the values (with optional original strings when
+/// `opts.preserve_value_strings` is true) and the new line offset.
+/// Callers that need integers (TAB1/TAB2 interpolation tables) cast
+/// the results with `as i64`.
 pub fn read_endf_numbers(
     lines: &[&str],
     count: usize,
     ofs: usize,
     opts: &ReadOpts,
-) -> EndfResult<(Vec<f64>, usize)> {
+) -> EndfResult<(Vec<(f64, Option<String>)>, usize)> {
     let mut vals = Vec::with_capacity(count);
     let mut current_ofs = ofs;
     let mut remaining = count;
@@ -340,30 +354,37 @@ fn interleave_pairs<T: Copy>(a: &[T], b: &[T], to_f64: impl Fn(T) -> f64) -> Vec
 // ---------------------------------------------------------------------------
 
 /// Read the body of a TAB1 record (interpolation table + x/y data).
+///
+/// Returns the body, the new line offset, and the original strings for
+/// the x and y arrays (when `opts.preserve_value_strings` is true).
 pub fn read_tab1_body(
     lines: &[&str],
     ofs: usize,
     nr: usize,
     np: usize,
     opts: &ReadOpts,
-) -> EndfResult<(Tab1Body, usize)> {
+) -> EndfResult<(Tab1Body, usize, Vec<Option<String>>, Vec<Option<String>>)> {
     // Read 2*NR interleaved integers (NBT, INT pairs).
     let (interp_vals, ofs2) = read_endf_numbers(lines, 2 * nr, ofs, opts)?;
     let mut nbt = Vec::with_capacity(nr);
     let mut int = Vec::with_capacity(nr);
     for i in 0..nr {
-        nbt.push(interp_vals[2 * i] as i64);
-        int.push(interp_vals[2 * i + 1] as i64);
+        nbt.push(interp_vals[2 * i].0 as i64);
+        int.push(interp_vals[2 * i + 1].0 as i64);
     }
     // Read 2*NP interleaved floats (X, Y pairs).
     let (xy_vals, ofs3) = read_endf_numbers(lines, 2 * np, ofs2, opts)?;
     let mut x = Vec::with_capacity(np);
     let mut y = Vec::with_capacity(np);
+    let mut x_origs = Vec::with_capacity(np);
+    let mut y_origs = Vec::with_capacity(np);
     for i in 0..np {
-        x.push(xy_vals[2 * i]);
-        y.push(xy_vals[2 * i + 1]);
+        x.push(xy_vals[2 * i].0);
+        y.push(xy_vals[2 * i + 1].0);
+        x_origs.push(xy_vals[2 * i].1.clone());
+        y_origs.push(xy_vals[2 * i + 1].1.clone());
     }
-    Ok((Tab1Body { nbt, int, x, y }, ofs3))
+    Ok((Tab1Body { nbt, int, x, y }, ofs3, x_origs, y_origs))
 }
 
 /// Write the body of a TAB1 record as multiple lines.
@@ -385,7 +406,7 @@ pub fn read_tab1(
     let (cont, ctrl) = read_cont(line, opts)?;
     let nr = cont.n1 as usize;
     let np = cont.n2 as usize;
-    let (body, new_ofs) = read_tab1_body(lines, ofs + 1, nr, np, opts)?;
+    let (body, new_ofs, _x_origs, _y_origs) = read_tab1_body(lines, ofs + 1, nr, np, opts)?;
     Ok((cont, body, ctrl, new_ofs))
 }
 
@@ -404,8 +425,8 @@ pub fn read_tab2_body(
     let mut nbt = Vec::with_capacity(nr);
     let mut int = Vec::with_capacity(nr);
     for i in 0..nr {
-        nbt.push(interp_vals[2 * i] as i64);
-        int.push(interp_vals[2 * i + 1] as i64);
+        nbt.push(interp_vals[2 * i].0 as i64);
+        int.push(interp_vals[2 * i + 1].0 as i64);
     }
     Ok((Tab2Body { nbt, int }, ofs2))
 }
@@ -445,7 +466,8 @@ pub fn read_list(
     if npl == 0 {
         return Ok((cont, Vec::new(), ctrl, ofs + 1));
     }
-    let (vals, new_ofs) = read_endf_numbers(lines, npl, ofs + 1, opts)?;
+    let (vals_with_origs, new_ofs) = read_endf_numbers(lines, npl, ofs + 1, opts)?;
+    let vals: Vec<f64> = vals_with_origs.into_iter().map(|(v, _)| v).collect();
     Ok((cont, vals, ctrl, new_ofs))
 }
 
@@ -689,7 +711,7 @@ mod tests {
         let (parsed, new_ofs) = read_endf_numbers(&line_refs, 14, 0, &ropts).unwrap();
         assert_eq!(new_ofs, 3);
         assert_eq!(parsed.len(), 14);
-        for (i, (orig, got)) in vals.iter().zip(parsed.iter()).enumerate() {
+        for (i, (orig, (got, _))) in vals.iter().zip(parsed.iter()).enumerate() {
             assert!(
                 (orig - got).abs() < 1e-4,
                 "field {}: orig={}, got={}",
@@ -714,7 +736,7 @@ mod tests {
         assert_eq!(lines.len(), 2);
         let line_refs: Vec<&str> = lines.iter().map(|s| s.as_str()).collect();
         let (parsed, _) = read_endf_numbers(&line_refs, 7, 0, &ropts).unwrap();
-        for (orig, got) in vals.iter().zip(parsed.iter()) {
+        for (orig, (got, _)) in vals.iter().zip(parsed.iter()) {
             assert_eq!(*orig, *got);
         }
     }
