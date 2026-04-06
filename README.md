@@ -15,7 +15,8 @@ in Rust for speed and safety.
   parser with statically generated Rust code for each MF/MT combination
 - **Python bindings** -- drop-in replacement for endf-parserpy with identical
   data structures (nested dicts), via PyO3
-- **CLI tool** -- `endf-tool` for converting between ENDF and JSON formats
+- **CLI tool** -- `endf-tool` for converting, validating, comparing, searching,
+  and editing ENDF files ([CLI reference](docs/cli.md))
 - **Roundtrip support** -- parse an ENDF file, modify values, and write it
   back to valid ENDF-6 format (data values are preserved; number formatting
   may differ from the original)
@@ -128,15 +129,29 @@ std::fs::write("modified.endf", output)?;
 ### CLI
 
 ```bash
-# ENDF to JSON
-endf_tool endf2json input.endf output.json --pretty
+# Convert ENDF to JSON
+endf-tool convert input.endf output.json --to json --indent 2
 
-# JSON to ENDF
-endf_tool json2endf output.json roundtrip.endf
+# Convert JSON back to ENDF
+endf-tool convert output.json roundtrip.endf --to endf
 
-# Parallel parsing
-endf_tool endf2json input.endf output.json --threads 0
+# Validate files
+endf-tool validate data/*.endf
+
+# Compare two files
+endf-tool compare original.endf modified.endf
+
+# Inspect a variable
+endf-tool show 1/451/ZA input.endf
+
+# Search across files
+endf-tool match data/*.endf -q "/1/451/ZA > 92000"
+
+# Replace a variable
+endf-tool replace 1/451/ZA source.endf dest.endf
 ```
+
+See the full [CLI reference](docs/cli.md) for all commands and options.
 
 ## Relationship to endf-parserpy
 
@@ -190,6 +205,7 @@ python3 -m http.server 8080
 
 ## Documentation
 
+- [CLI Reference](docs/cli.md)
 - [Python API](docs/python-api.md)
 - [Rust API](docs/rust-api.md)
 
