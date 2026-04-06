@@ -1047,7 +1047,7 @@ impl CodeGen {
         ));
         self.indent += 1;
         self.line(&format!(
-            "{}.insert(\"{}\", EndfValue::new_dict());",
+            "{}.insert(\"{}\", make_container(parse_opts));",
             target, name
         ));
         self.indent -= 1;
@@ -1067,22 +1067,21 @@ impl CodeGen {
         let mut current = format!("{}.get_mut(\"{}\").unwrap()", target, name);
         for (depth, idx_expr) in indices[..indices.len() - 1].iter().enumerate() {
             let idx = self.expr_to_rust(idx_expr);
-            let key_expr = format!("EndfKey::Int({} as i64)", idx);
             self.line(&format!(
-                "if !{}.contains_key({}.clone()) {{",
-                current, key_expr
+                "if !contains_indexed(&{}, {} as i64) {{",
+                current, idx
             ));
             self.indent += 1;
             self.line(&format!(
-                "{}.insert({}.clone(), EndfValue::new_dict());",
-                current, key_expr
+                "insert_indexed(&mut {}, {} as i64, make_container(parse_opts));",
+                current, idx
             ));
             self.indent -= 1;
             self.line("}");
             let nav_var = format!("_nav_{}", depth);
             self.line(&format!(
-                "let {} = {}.get_mut({}).unwrap();",
-                nav_var, current, key_expr
+                "let {} = get_indexed_mut(&mut {}, {} as i64).unwrap();",
+                nav_var, current, idx
             ));
             current = nav_var;
         }
@@ -1090,7 +1089,7 @@ impl CodeGen {
         // Insert value at the last index.
         let last_idx = self.expr_to_rust(indices.last().unwrap());
         self.line(&format!(
-            "{}.insert(EndfKey::Int({} as i64), {});",
+            "insert_indexed(&mut {}, {} as i64, {});",
             current, last_idx, val_expr
         ));
     }
@@ -1117,22 +1116,21 @@ impl CodeGen {
         // Intermediate levels: ensure-exists + descend.
         for (depth, idx_expr) in indices[..indices.len() - 1].iter().enumerate() {
             let idx = self.expr_to_rust(idx_expr);
-            let key_expr = format!("EndfKey::Int({} as i64)", idx);
             self.line(&format!(
-                "if !{}.contains_key({}.clone()) {{ {}.insert({}.clone(), EndfValue::new_dict()); }}",
-                current, key_expr, current, key_expr
+                "if !contains_indexed(&{}, {} as i64) {{ insert_indexed(&mut {}, {} as i64, make_container(parse_opts)); }}",
+                current, idx, current, idx
             ));
             let nav_var = format!("_nav_{}", depth);
             self.line(&format!(
-                "let {} = {}.get_mut({}).unwrap();",
-                nav_var, current, key_expr
+                "let {} = get_indexed_mut(&mut {}, {} as i64).unwrap();",
+                nav_var, current, idx
             ));
             current = nav_var;
         }
 
         let last_idx = self.expr_to_rust(indices.last().unwrap());
         self.line(&format!(
-            "{}.insert(EndfKey::Int({} as i64), {});",
+            "insert_indexed(&mut {}, {} as i64, {});",
             current, last_idx, val_expr
         ));
     }
@@ -1144,7 +1142,7 @@ impl CodeGen {
         for idx in indices {
             let idx_rust = self.expr_to_rust(idx);
             expr = format!(
-                "{}.and_then(|d| d.get(EndfKey::Int({} as i64)))",
+                "{}.and_then(|d| get_indexed(d, {} as i64))",
                 expr, idx_rust
             );
         }
@@ -1381,7 +1379,7 @@ impl CodeGen {
                         self.indent += 1;
                         for var_name in &indexed_vars {
                             self.line(&format!(
-                                "if !{}.contains_key(\"{}\") {{ {}.insert(\"{}\", EndfValue::new_dict()); }}",
+                                "if !{}.contains_key(\"{}\") {{ {}.insert(\"{}\", make_container(parse_opts)); }}",
                                 target, var_name, target, var_name
                             ));
                         }
