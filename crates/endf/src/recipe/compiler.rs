@@ -1026,6 +1026,26 @@ impl CodeGen {
                         cont_field, v.name
                     ));
                 } else {
+                    // Validate against prior value if the variable was already set.
+                    self.line(&format!(
+                        "if let Some(_prev) = result.get(\"{}\").and_then(|v| v.as_float()) {{",
+                        v.name
+                    ));
+                    self.indent += 1;
+                    self.line(&format!(
+                        "if !values_match(_prev, {}, parse_opts) && !parse_opts.ignore_varspec_mismatch {{",
+                        field_val_expr
+                    ));
+                    self.indent += 1;
+                    self.line(&format!(
+                        "return Err(EndfError::InconsistentVariableAssignment {{ name: \"{}\".to_string() }});",
+                        v.name
+                    ));
+                    self.indent -= 1;
+                    self.line("}");
+                    self.indent -= 1;
+                    self.line("}");
+                    // Store the (possibly new) value.
                     if is_int {
                         self.declare_or_assign_i64(&v.name, &format!("cont.{}", cont_field));
                         self.line(&format!(
