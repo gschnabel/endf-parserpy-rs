@@ -176,6 +176,69 @@ fn get_endf_value_vec<'a>(data: &'a EndfValue, key: &str) -> Vec<&'a EndfValue> 
     }
 }
 
+/// Create an empty container for indexed variables, respecting array_type.
+/// Dict mode creates an EndfValue::Dict; List mode creates an EndfValue::List.
+#[inline]
+fn make_container(parse_opts: &ParseOpts) -> EndfValue {
+    match parse_opts.array_type {
+        endf::options::ArrayType::Dict => EndfValue::new_dict(),
+        endf::options::ArrayType::List => EndfValue::new_list(),
+    }
+}
+
+/// Insert a value into an indexed container. Auto-detects Dict vs List.
+/// For Dict: inserts with EndfKey::Int(idx). For List: grows the list to
+/// accommodate `idx` (used as a direct positional index, no offset) and
+/// sets `list[idx] = Some(value)`.
+fn insert_indexed(container: &mut EndfValue, idx: i64, value: EndfValue) {
+    match container {
+        EndfValue::Dict(ref mut d) => {
+            d.insert(EndfKey::Int(idx), value);
+        }
+        EndfValue::List(ref mut l) => {
+            let uidx = idx as usize;
+            while l.len() <= uidx { l.push(None); }
+            l[uidx] = Some(value);
+        }
+        _ => {}
+    }
+}
+
+/// Check if an indexed container has a value at `idx`. Auto-detects.
+fn contains_indexed(container: &EndfValue, idx: i64) -> bool {
+    match container {
+        EndfValue::Dict(d) => d.contains_key(&EndfKey::Int(idx)),
+        EndfValue::List(l) => {
+            let uidx = idx as usize;
+            uidx < l.len() && l[uidx].is_some()
+        }
+        _ => false,
+    }
+}
+
+/// Get a mutable reference into an indexed container. Auto-detects.
+fn get_indexed_mut(container: &mut EndfValue, idx: i64) -> Option<&mut EndfValue> {
+    match container {
+        EndfValue::Dict(ref mut d) => d.get_mut(&EndfKey::Int(idx)),
+        EndfValue::List(ref mut l) => {
+            let uidx = idx as usize;
+            l.get_mut(uidx).and_then(|opt| opt.as_mut())
+        }
+        _ => None,
+    }
+}
+
+/// Read from an indexed container (auto-detects Dict vs List).
+/// Used on the write side where the container type tells us which
+/// array_type mode was used at parse time.
+fn get_indexed(container: &EndfValue, idx: i64) -> Option<&EndfValue> {
+    match container {
+        EndfValue::Dict(d) => d.get(&EndfKey::Int(idx)),
+        EndfValue::List(l) => l.get(idx as usize).and_then(|opt| opt.as_ref()),
+        _ => None,
+    }
+}
+
 "#
     .to_string()
 }
