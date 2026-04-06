@@ -152,6 +152,111 @@ pub fn write_cont(rec: &ContRecord, ctrl: &CtrlRecord, opts: &WriteOpts) -> Stri
     )
 }
 
+/// Write a CONT (or HEAD) record, using preserved original strings for
+/// the float fields (C1, C2) when the corresponding `EndfValue` is
+/// `PreservedFloat`. Integer fields (L1-N2) are always reformatted.
+///
+/// `c1_val` and `c2_val` are the raw `EndfValue`s from the data dictionary
+/// for the two float fields. If either is `PreservedFloat`, its original
+/// string is emitted verbatim (right-justified to width).
+pub fn write_cont_preserved(
+    c1_val: &crate::value::EndfValue,
+    c2_val: &crate::value::EndfValue,
+    l1: i64,
+    l2: i64,
+    n1: i64,
+    n2: i64,
+    ctrl: &CtrlRecord,
+    opts: &WriteOpts,
+) -> String {
+    let c1 = format_endf_value_float(c1_val, opts);
+    let c2 = format_endf_value_float(c2_val, opts);
+    let w = opts.width;
+    format!(
+        "{}{}{:>w$}{:>w$}{:>w$}{:>w$}{}",
+        c1,
+        c2,
+        l1,
+        l2,
+        n1,
+        n2,
+        write_ctrl(ctrl),
+        w = w
+    )
+}
+
+/// Write an `EndfValue` list packed 6-per-line, using preserved original
+/// strings for `PreservedFloat` elements. For `Float` and `Int` elements,
+/// falls back to standard formatting.
+///
+/// `to_int`: when true, format all elements as right-justified integers
+/// (used for NBT/INT interpolation tables).
+pub fn write_endf_values(
+    vals: &[&crate::value::EndfValue],
+    ctrl: &CtrlRecord,
+    to_int: bool,
+    opts: &WriteOpts,
+) -> Vec<String> {
+    let mut result_lines = Vec::new();
+    let w = opts.width;
+    for chunk in vals.chunks(6) {
+        let mut line = String::new();
+        for val in chunk {
+            if to_int {
+                let iv = val.as_int().unwrap_or(val.as_float().map(|f| f as i64).unwrap_or(0));
+                line.push_str(&format!("{:>w$}", iv, w = w));
+            } else {
+                line.push_str(&format_endf_value_float(val, opts));
+            }
+        }
+        // Pad the last chunk to full data width.
+        let data_width = w * 6;
+        while line.len() < data_width {
+            line.push_str(&" ".repeat(w));
+        }
+        line.push_str(&write_ctrl(ctrl));
+        result_lines.push(line);
+    }
+    result_lines
+}
+
+/// Write a TAB1 body using preserved original strings for the x/y float
+/// values. Interpolation data (NBT/INT) is always formatted as integers.
+pub fn write_tab1_body_preserved(
+    nbt: &[i64],
+    int: &[i64],
+    x_vals: &[&crate::value::EndfValue],
+    y_vals: &[&crate::value::EndfValue],
+    ctrl: &CtrlRecord,
+    opts: &WriteOpts,
+) -> Vec<String> {
+    // NBT/INT: interleave as integers and write normally.
+    let interleaved_int = interleave_pairs(nbt, int, |v| v as f64);
+    let mut lines = write_endf_numbers(&interleaved_int, ctrl, true, opts);
+    // X/Y: interleave and write with preservation.
+    let mut interleaved_xy: Vec<&crate::value::EndfValue> = Vec::with_capacity(x_vals.len() * 2);
+    for (xv, yv) in x_vals.iter().zip(y_vals.iter()) {
+        interleaved_xy.push(xv);
+        interleaved_xy.push(yv);
+    }
+    lines.extend(write_endf_values(&interleaved_xy, ctrl, false, opts));
+    lines
+}
+
+/// Format a single float-typed `EndfValue` to a fixed-width string.
+/// If the value is `PreservedFloat`, emit the original string verbatim
+/// (right-justified to `opts.width`); otherwise format via `f64_to_fortstr`.
+fn format_endf_value_float(val: &crate::value::EndfValue, opts: &WriteOpts) -> String {
+    use crate::value::EndfValue;
+    match val {
+        EndfValue::PreservedFloat(v, ref orig) => {
+            let ef = crate::endf_float::EndfFloat::new(*v, Some(orig.clone()));
+            crate::fortran::endf_float_to_fortstr(&ef, opts)
+        }
+        _ => f64_to_fortstr(val.as_float().unwrap_or(0.0), opts),
+    }
+}
+
 /// Read a HEAD record (identical layout to CONT).
 pub fn read_head(line: &str, opts: &ReadOpts) -> EndfResult<(ContRecord, CtrlRecord)> {
     read_cont(line, opts)

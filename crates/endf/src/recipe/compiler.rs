@@ -63,6 +63,7 @@ fn generate_header() -> String {
 #![allow(unused_variables, unused_mut, unused_assignments)]
 
 use endf::records::{self, read_cont, read_tab1, read_tab1_body, read_tab2, read_tab2_body, read_list, read_intg, read_endf_numbers};
+use endf::records::{extract_cont_originals, write_cont_preserved, write_tab1_body_preserved, write_endf_values};
 use endf::records::{write_cont, write_text, write_dir, write_intg, write_tab1_body, write_tab2_body, write_send, ContRecord, TextRecord, DirRecord, IntgRecord, Tab1Body, Tab2Body, CtrlRecord};
 use endf::fortran::{fortstr_to_f64, read_fort_int, f64_to_fortstr};
 use endf::value::{EndfKey, EndfValue};
@@ -133,6 +134,45 @@ fn get_ctrl(data: &EndfValue) -> CtrlRecord {
         mat: get_int(data, "MAT") as i32,
         mf: get_int(data, "MF") as i32,
         mt: get_int(data, "MT") as i32,
+    }
+}
+
+/// Like f64_to_endf_value but returns PreservedFloat when original is available.
+#[inline]
+fn f64_to_endf_value_preserved(v: f64, orig: Option<String>) -> EndfValue {
+    match orig {
+        Some(s) => EndfValue::PreservedFloat(v, s),
+        None => f64_to_endf_value(v),
+    }
+}
+
+/// Like list_from_f64 but produces PreservedFloat where originals are available.
+fn list_from_f64_preserved(vals: &[f64], origs: &[Option<String>]) -> EndfValue {
+    EndfValue::List(
+        vals.iter()
+            .zip(origs.iter())
+            .map(|(&v, orig)| {
+                Some(match orig {
+                    Some(s) => EndfValue::PreservedFloat(v, s.clone()),
+                    None => EndfValue::Float(v),
+                })
+            })
+            .collect(),
+    )
+}
+
+/// Read a float from data dict, returning the raw EndfValue for write preservation.
+fn get_endf_value_or_zero(data: &EndfValue, key: &str) -> EndfValue {
+    data.get(key).cloned().unwrap_or(EndfValue::Float(0.0))
+}
+
+/// Read a float vec from data dict as raw EndfValues for write preservation.
+fn get_endf_value_vec<'a>(data: &'a EndfValue, key: &str) -> Vec<&'a EndfValue> {
+    match data.get(key) {
+        Some(EndfValue::List(l)) => l.iter()
+            .filter_map(|v| v.as_ref())
+            .collect(),
+        _ => Vec::new(),
     }
 }
 
@@ -708,7 +748,9 @@ impl CodeGen {
         self.line("// HEAD/CONT record");
         self.line("{");
         self.indent += 1;
-        self.line("let (cont, _ctrl) = read_cont(lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?, read_opts)?;");
+        self.line("let _line_ref = lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?;");
+        self.line("let (cont, _ctrl) = read_cont(_line_ref, read_opts)?;");
+        self.line("let _cont_origs = extract_cont_originals(_line_ref, read_opts);");
         self.line("ofs += 1;");
 
         let cont_fields = ["c1", "c2", "l1", "l2", "n1", "n2"];
@@ -808,6 +850,13 @@ impl CodeGen {
     }
 
     fn emit_cont_field_assignment(&mut self, expr: &Expr, cont_field: &str, is_int: bool) {
+        // Determine the originals expression for float fields (c1 -> index 0, c2 -> index 1)
+        let orig_expr = match cont_field {
+            "c1" => Some("_cont_origs[0].clone()"),
+            "c2" => Some("_cont_origs[1].clone()"),
+            _ => None,
+        };
+
         match expr {
             Expr::Number(n) => {
                 // Constant validation: optionally check at runtime
@@ -848,9 +897,10 @@ impl CodeGen {
                     } else {
                         self.declare_or_assign_f64(&v.name, &format!("cont.{}", cont_field));
                         self.line(&format!(
-                            "result.insert(\"{}\", f64_to_endf_value({}));",
+                            "result.insert(\"{}\", f64_to_endf_value_preserved({}, {}));",
                             v.name,
-                            Self::var_name(&v.name)
+                            Self::var_name(&v.name),
+                            orig_expr.unwrap_or("None")
                         ));
                     }
                 }
@@ -872,19 +922,20 @@ impl CodeGen {
                     } else {
                         self.declare_or_assign_f64(&v.name, &format!("cont.{}", cont_field));
                         self.line(&format!(
-                            "result.insert(\"{}\", f64_to_endf_value({}));",
+                            "result.insert(\"{}\", f64_to_endf_value_preserved({}, {}));",
                             v.name,
-                            Self::var_name(&v.name)
+                            Self::var_name(&v.name),
+                            orig_expr.unwrap_or("None")
                         ));
                     }
                 }
             }
             Expr::Variable(v) => {
                 // Indexed variable
-                self.emit_indexed_var_store(v, cont_field, is_int, "result");
+                self.emit_indexed_var_store(v, cont_field, is_int, "result", orig_expr);
             }
             Expr::InconsistentVar(v) => {
-                self.emit_indexed_var_store(v, cont_field, is_int, "result");
+                self.emit_indexed_var_store(v, cont_field, is_int, "result", orig_expr);
             }
             _ => {
                 // Complex expression — should only be reached from Pass 1
@@ -905,11 +956,12 @@ impl CodeGen {
         cont_field: &str,
         is_int: bool,
         target: &str,
+        orig_expr: Option<&str>,
     ) {
         let val_expr = if is_int {
             format!("EndfValue::Int(cont.{} as i64)", cont_field)
         } else {
-            format!("f64_to_endf_value(cont.{})", cont_field)
+            format!("f64_to_endf_value_preserved(cont.{}, {})", cont_field, orig_expr.unwrap_or("None"))
         };
         self.emit_nested_insert(target, &v.name, &v.indices, &val_expr);
     }
@@ -1049,11 +1101,11 @@ impl CodeGen {
         self.line("{");
         self.indent += 1;
 
-        self.line("let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();");
-        self.line(
-            "let (cont, body, _ctrl, consumed) = read_tab1(&line_refs, 0, read_opts)?;",
-        );
-        self.line("ofs += consumed;");
+        // Read header line separately to capture originals
+        self.line("let _line_ref = lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?;");
+        self.line("let (cont, _ctrl) = read_cont(_line_ref, read_opts)?;");
+        self.line("let _cont_origs = extract_cont_originals(_line_ref, read_opts);");
+        self.line("ofs += 1;");
         self.blank();
 
         // Map the first 4 header fields (C1, C2, L1, L2).
@@ -1068,17 +1120,26 @@ impl CodeGen {
 
         self.blank();
 
-        // Store table data
+        // Read body with originals
+        self.line("let _nr = cont.n1 as usize;");
+        self.line("let _np = cont.n2 as usize;");
+        self.line("let _body_lines: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();");
+        self.line("let (_body, _body_consumed, _x_origs, _y_origs) = read_tab1_body(&_body_lines, 0, _nr, _np, read_opts)?;");
+        self.line("ofs += _body_consumed;");
+
+        self.blank();
+
+        // Store table data with preserved originals
         if let Some(ref tn) = table_name {
             self.line("let mut tab_section = EndfValue::new_dict();");
-            self.line("tab_section.insert(\"NBT\", list_from_i64(&body.nbt));");
-            self.line("tab_section.insert(\"INT\", list_from_i64(&body.int));");
+            self.line("tab_section.insert(\"NBT\", list_from_i64(&_body.nbt));");
+            self.line("tab_section.insert(\"INT\", list_from_i64(&_body.int));");
             self.line(&format!(
-                "tab_section.insert(\"{}\", list_from_f64(&body.x));",
+                "tab_section.insert(\"{}\", list_from_f64_preserved(&_body.x, &_x_origs));",
                 x_var.name
             ));
             self.line(&format!(
-                "tab_section.insert(\"{}\", list_from_f64(&body.y));",
+                "tab_section.insert(\"{}\", list_from_f64_preserved(&_body.y, &_y_origs));",
                 y_var.name
             ));
             if tn.indices.is_empty() {
@@ -1090,14 +1151,14 @@ impl CodeGen {
                 self.emit_nested_insert("result", &tn.name, &tn.indices, "tab_section");
             }
         } else {
-            self.line("result.insert(\"NBT\", list_from_i64(&body.nbt));");
-            self.line("result.insert(\"INT\", list_from_i64(&body.int));");
+            self.line("result.insert(\"NBT\", list_from_i64(&_body.nbt));");
+            self.line("result.insert(\"INT\", list_from_i64(&_body.int));");
             self.line(&format!(
-                "result.insert(\"{}\", list_from_f64(&body.x));",
+                "result.insert(\"{}\", list_from_f64_preserved(&_body.x, &_x_origs));",
                 x_var.name
             ));
             self.line(&format!(
-                "result.insert(\"{}\", list_from_f64(&body.y));",
+                "result.insert(\"{}\", list_from_f64_preserved(&_body.y, &_y_origs));",
                 y_var.name
             ));
         }
@@ -1118,11 +1179,15 @@ impl CodeGen {
         self.line("{");
         self.indent += 1;
 
-        self.line("let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();");
-        self.line(
-            "let (cont, body, _ctrl, consumed) = read_tab2(&line_refs, 0, read_opts)?;",
-        );
-        self.line("ofs += consumed;");
+        // Read header line separately to capture originals
+        self.line("let _line_ref = lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?;");
+        self.line("let (cont, _ctrl) = read_cont(_line_ref, read_opts)?;");
+        self.line("let _cont_origs = extract_cont_originals(_line_ref, read_opts);");
+        self.line("ofs += 1;");
+        self.line("let _nr = cont.n1 as usize;");
+        self.line("let _body_lines: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();");
+        self.line("let (body, _body_end) = read_tab2_body(&_body_lines, 0, _nr, read_opts)?;");
+        self.line("ofs += _body_end;");
         self.blank();
 
         // Map header fields C1, C2, L1, L2 (fields 0-3) and N2 (field 5).
@@ -1170,11 +1235,17 @@ impl CodeGen {
         self.line("{");
         self.indent += 1;
 
-        self.line("let line_refs: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();");
-        self.line(
-            "let (cont, vals, _ctrl, consumed) = read_list(&line_refs, 0, read_opts)?;",
-        );
-        self.line("ofs += consumed;");
+        // Read header line separately to capture originals
+        self.line("let _line_ref = lines.get(ofs).ok_or(EndfError::UnexpectedEndOfInput { line: ofs })?;");
+        self.line("let _line_ref_str: &str = _line_ref.as_str();");
+        self.line("let (cont, _ctrl) = read_cont(_line_ref_str, read_opts)?;");
+        self.line("let _cont_origs = extract_cont_originals(_line_ref_str, read_opts);");
+        self.line("ofs += 1;");
+        self.line("let _npl = cont.n1 as usize;");
+        self.line("let _body_lines: Vec<&str> = lines[ofs..].iter().map(|s| s.as_str()).collect();");
+        self.line("let (_vals_with_origs, _body_end) = if _npl > 0 { read_endf_numbers(&_body_lines, _npl, 0, read_opts)? } else { (Vec::new(), 0) };");
+        self.line("ofs += _body_end;");
+        self.line("let vals: Vec<f64> = _vals_with_origs.iter().map(|(v, _)| *v).collect();");
         self.blank();
 
         // Map header fields
@@ -1306,8 +1377,9 @@ impl CodeGen {
                     self.line("vi += 1;");
                 } else {
                     self.line("let _val = vals[vi];");
+                    self.line("let _orig = _vals_with_origs[vi].1.clone();");
                     self.line(&format!(
-                        "{}.insert(\"{}\", EndfValue::Float(_val));",
+                        "{}.insert(\"{}\", f64_to_endf_value_preserved(_val, _orig));",
                         target, v.name
                     ));
                     self.declare_or_assign_f64(&v.name, "_val");
@@ -1317,7 +1389,8 @@ impl CodeGen {
             Expr::Variable(v) => {
                 // Indexed: container already pre-created.
                 self.line("let _val = vals[vi];");
-                self.emit_nested_insert_precreated(target, &v.name, &v.indices, "EndfValue::Float(_val)");
+                self.line("let _orig = _vals_with_origs[vi].1.clone();");
+                self.emit_nested_insert_precreated(target, &v.name, &v.indices, "f64_to_endf_value_preserved(_val, _orig)");
                 self.line("vi += 1;");
             }
             Expr::Number(n) => {
@@ -1330,8 +1403,9 @@ impl CodeGen {
                     self.line("vi += 1;");
                 } else {
                     self.line("let _val = vals[vi];");
+                    self.line("let _orig = _vals_with_origs[vi].1.clone();");
                     self.line(&format!(
-                        "{}.insert(\"{}\", EndfValue::Float(_val));",
+                        "{}.insert(\"{}\", f64_to_endf_value_preserved(_val, _orig));",
                         target, v.name
                     ));
                     self.declare_or_assign_f64(&v.name, "_val");
@@ -1340,7 +1414,8 @@ impl CodeGen {
             }
             Expr::InconsistentVar(v) if !v.indices.is_empty() => {
                 self.line("let _val = vals[vi];");
-                self.emit_nested_insert_precreated(target, &v.name, &v.indices, "EndfValue::Float(_val)");
+                self.line("let _orig = _vals_with_origs[vi].1.clone();");
+                self.emit_nested_insert_precreated(target, &v.name, &v.indices, "f64_to_endf_value_preserved(_val, _orig)");
                 self.line("vi += 1;");
             }
             _ => {
@@ -2262,17 +2337,41 @@ impl WriteCodeGen {
         }
     }
 
+    /// Generate a Rust expression that retrieves a field as an EndfValue (preserving PreservedFloat).
+    /// For simple scalar variable references, returns `get_endf_value_or_zero(scope, "NAME")`.
+    /// For everything else, wraps the f64 expression in `EndfValue::Float(...)`.
+    fn expr_to_endf_value_rust(&self, expr: &Expr, scope: &str) -> String {
+        match expr {
+            Expr::Variable(v) if v.indices.is_empty() && !self.is_abbreviation(&v.name)
+                && !self.loop_vars.iter().any(|lv| lv.eq_ignore_ascii_case(&v.name))
+                && !matches!(v.name.to_lowercase().as_str(), "mat" | "mf" | "mt") =>
+            {
+                format!("get_endf_value_or_zero({}, \"{}\")", scope, v.name)
+            }
+            Expr::InconsistentVar(v) if v.indices.is_empty() && !self.is_abbreviation(&v.name)
+                && !self.loop_vars.iter().any(|lv| lv.eq_ignore_ascii_case(&v.name))
+                && !matches!(v.name.to_lowercase().as_str(), "mat" | "mf" | "mt") =>
+            {
+                format!("get_endf_value_or_zero({}, \"{}\")", scope, v.name)
+            }
+            _ => {
+                let f64_expr = self.expr_to_rust(expr, scope);
+                format!("EndfValue::Float({})", f64_expr)
+            }
+        }
+    }
+
     fn emit_write_cont(&mut self, fields: &[Expr; 6], scope: &str) {
         self.line("// Write HEAD/CONT");
-        let c1 = self.expr_to_rust(&fields[0], scope);
-        let c2 = self.expr_to_rust(&fields[1], scope);
+        let c1_ev = self.expr_to_endf_value_rust(&fields[0], scope);
+        let c2_ev = self.expr_to_endf_value_rust(&fields[1], scope);
         let l1 = self.expr_to_rust(&fields[2], scope);
         let l2 = self.expr_to_rust(&fields[3], scope);
         let n1 = self.expr_to_rust(&fields[4], scope);
         let n2 = self.expr_to_rust(&fields[5], scope);
         self.line(&format!(
-            "lines.push(write_cont(&ContRecord {{ c1: {}, c2: {}, l1: {} as i64, l2: {} as i64, n1: {} as i64, n2: {} as i64 }}, &ctrl, write_opts));",
-            c1, c2, l1, l2, n1, n2
+            "lines.push(write_cont_preserved(&{}, &{}, {} as i64, {} as i64, {} as i64, {} as i64, &ctrl, write_opts));",
+            c1_ev, c2_ev, l1, l2, n1, n2
         ));
     }
 
@@ -2297,22 +2396,21 @@ impl WriteCodeGen {
         self.line(&format!("let _tab_scope = &{};", body_scope));
         self.line(&format!("let _nbt = get_int_vec(_tab_scope, \"NBT\");"));
         self.line(&format!("let _int = get_int_vec(_tab_scope, \"INT\");"));
-        self.line(&format!("let _x = get_float_vec(_tab_scope, \"{}\");", x_var.name));
-        self.line(&format!("let _y = get_float_vec(_tab_scope, \"{}\");", y_var.name));
+        self.line(&format!("let _x_vals = get_endf_value_vec(_tab_scope, \"{}\");", x_var.name));
+        self.line(&format!("let _y_vals = get_endf_value_vec(_tab_scope, \"{}\");", y_var.name));
         self.line("let _nr = _nbt.len() as i64;");
-        self.line("let _np = _x.len() as i64;");
+        self.line("let _np = _x_vals.len() as i64;");
 
         // Header: C1, C2, L1, L2 from fields, N1=NR, N2=NP
-        let c1 = self.expr_to_rust(&fields[0], scope);
-        let c2 = self.expr_to_rust(&fields[1], scope);
+        let c1_ev = self.expr_to_endf_value_rust(&fields[0], scope);
+        let c2_ev = self.expr_to_endf_value_rust(&fields[1], scope);
         let l1 = self.expr_to_rust(&fields[2], scope);
         let l2 = self.expr_to_rust(&fields[3], scope);
         self.line(&format!(
-            "lines.push(write_cont(&ContRecord {{ c1: {}, c2: {}, l1: {} as i64, l2: {} as i64, n1: _nr, n2: _np }}, &ctrl, write_opts));",
-            c1, c2, l1, l2
+            "lines.push(write_cont_preserved(&{}, &{}, {} as i64, {} as i64, _nr, _np, &ctrl, write_opts));",
+            c1_ev, c2_ev, l1, l2
         ));
-        self.line("let _body = Tab1Body { nbt: _nbt, int: _int, x: _x, y: _y };");
-        self.line("lines.extend(write_tab1_body(&_body, &ctrl, write_opts));");
+        self.line("lines.extend(write_tab1_body_preserved(&_nbt, &_int, &_x_vals, &_y_vals, &ctrl, write_opts));")
     }
 
     fn emit_write_tab2(&mut self, fields: &[Expr; 6], table_name: &Option<ExtVarName>, scope: &str) {
@@ -2337,14 +2435,14 @@ impl WriteCodeGen {
         self.line("let _int = get_int_vec(_tab_scope, \"INT\");");
         self.line("let _nr = _nbt.len() as i64;");
 
-        let c1 = self.expr_to_rust(&fields[0], scope);
-        let c2 = self.expr_to_rust(&fields[1], scope);
+        let c1_ev = self.expr_to_endf_value_rust(&fields[0], scope);
+        let c2_ev = self.expr_to_endf_value_rust(&fields[1], scope);
         let l1 = self.expr_to_rust(&fields[2], scope);
         let l2 = self.expr_to_rust(&fields[3], scope);
         let n2 = self.expr_to_rust(&fields[5], scope);
         self.line(&format!(
-            "lines.push(write_cont(&ContRecord {{ c1: {}, c2: {}, l1: {} as i64, l2: {} as i64, n1: _nr, n2: {} as i64 }}, &ctrl, write_opts));",
-            c1, c2, l1, l2, n2
+            "lines.push(write_cont_preserved(&{}, &{}, {} as i64, {} as i64, _nr, {} as i64, &ctrl, write_opts));",
+            c1_ev, c2_ev, l1, l2, n2
         ));
         self.line("let _body = Tab2Body { nbt: _nbt, int: _int };");
         self.line("lines.extend(write_tab2_body(&_body, &ctrl, write_opts));");
@@ -2367,22 +2465,23 @@ impl WriteCodeGen {
             scope.to_string()
         };
 
-        // Collect list body values
-        self.line("let mut _vals: Vec<f64> = Vec::new();");
+        // Collect list body values as EndfValues for preservation
+        self.line("let mut _ev_vals: Vec<EndfValue> = Vec::new();");
         self.line(&format!("let _list_scope = &{};", body_scope));
         self.emit_write_list_body(body, "_list_scope", scope);
 
-        let npl = "_vals.len() as i64";
-        let c1 = self.expr_to_rust(&fields[0], scope);
-        let c2 = self.expr_to_rust(&fields[1], scope);
+        let npl = "_ev_vals.len() as i64";
+        let c1_ev = self.expr_to_endf_value_rust(&fields[0], scope);
+        let c2_ev = self.expr_to_endf_value_rust(&fields[1], scope);
         let l1 = self.expr_to_rust(&fields[2], scope);
         let l2 = self.expr_to_rust(&fields[3], scope);
         let n2 = self.expr_to_rust(&fields[5], scope);
         self.line(&format!(
-            "lines.push(write_cont(&ContRecord {{ c1: {}, c2: {}, l1: {} as i64, l2: {} as i64, n1: {}, n2: {} as i64 }}, &ctrl, write_opts));",
-            c1, c2, l1, l2, npl, n2
+            "lines.push(write_cont_preserved(&{}, &{}, {} as i64, {} as i64, {}, {} as i64, &ctrl, write_opts));",
+            c1_ev, c2_ev, l1, l2, npl, n2
         ));
-        self.line("lines.extend(records::write_endf_numbers(&_vals, &ctrl, false, write_opts));");
+        self.line("let _ev_refs: Vec<&EndfValue> = _ev_vals.iter().collect();");
+        self.line("lines.extend(write_endf_values(&_ev_refs, &ctrl, false, write_opts));");
     }
 
     fn emit_write_list_body(&mut self, body: &[ListItem], list_scope: &str, data_scope: &str) {
@@ -2393,20 +2492,20 @@ impl WriteCodeGen {
                         Expr::Variable(v) | Expr::InconsistentVar(v) => {
                             if v.indices.is_empty() {
                                 self.line(&format!(
-                                    "_vals.push(get_float({}, \"{}\"));",
+                                    "_ev_vals.push(get_endf_value_or_zero({}, \"{}\"));",
                                     list_scope, v.name
                                 ));
                             } else {
                                 let val_expr = self.expr_to_rust(expr, list_scope);
-                                self.line(&format!("_vals.push({});", val_expr));
+                                self.line(&format!("_ev_vals.push(EndfValue::Float({}));", val_expr));
                             }
                         }
                         Expr::Number(n) => {
-                            self.line(&format!("_vals.push({}_f64);", n));
+                            self.line(&format!("_ev_vals.push(EndfValue::Float({}_f64));", n));
                         }
                         _ => {
                             let val = self.expr_to_rust(expr, data_scope);
-                            self.line(&format!("_vals.push({});", val));
+                            self.line(&format!("_ev_vals.push(EndfValue::Float({}));", val));
                         }
                     }
                 }
@@ -2425,7 +2524,7 @@ impl WriteCodeGen {
                     self.line("}");
                 }
                 ListItem::Padding => {
-                    self.line("while _vals.len() % 6 != 0 { _vals.push(0.0); }");
+                    self.line("while _ev_vals.len() % 6 != 0 { _ev_vals.push(EndfValue::Float(0.0)); }");
                 }
             }
         }
