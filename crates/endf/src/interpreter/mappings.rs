@@ -538,20 +538,96 @@ fn map_fields_from_datadic(
     exprs: &[Expr],
     state: &InterpreterState,
     parse_opts: &ParseOpts,
-) -> EndfResult<Vec<f64>> {
+) -> EndfResult<Vec<EndfValue>> {
     let scope_chain = state.scope_chain();
     let mut values = Vec::with_capacity(exprs.len());
     for expr in exprs {
-        let val = eval_expr_known(
-            expr,
-            &scope_chain,
-            &state.loop_vars,
-            &state.abbreviations,
-            parse_opts,
-        )?;
+        let val = match expr {
+            // Simple variable reference: look up the raw EndfValue from the
+            // data dictionary to preserve the Int/Float distinction needed
+            // by strict_datatypes.
+            Expr::Variable(v) | Expr::InconsistentVar(v) => {
+                match super::expressions::get_var_value(
+                    &v.name,
+                    &v.indices,
+                    &scope_chain,
+                    &state.loop_vars,
+                    &state.abbreviations,
+                    parse_opts,
+                ) {
+                    Some(ev) => ev,
+                    None => {
+                        return Err(EndfError::VariableNotFound {
+                            name: v.name.clone(),
+                        })
+                    }
+                }
+            }
+            // Everything else (constants, arithmetic): evaluate to f64
+            // and wrap. EndfValue::from_f64 maps integer-valued f64 to
+            // Int, so computed integer results like `NR*2+1` stay Int.
+            _ => {
+                let fval = eval_expr_known(
+                    expr,
+                    &scope_chain,
+                    &state.loop_vars,
+                    &state.abbreviations,
+                    parse_opts,
+                )?;
+                EndfValue::from_f64(fval)
+            }
+        };
         values.push(val);
     }
     Ok(values)
+}
+
+// ---------------------------------------------------------------------------
+// Helpers: type-checked field conversion for write (strict_datatypes)
+// ---------------------------------------------------------------------------
+
+/// Extract a float value from an EndfValue for a float field. Both Int and
+/// Float are accepted unconditionally (integers are losslessly widened).
+#[inline]
+fn endf_val_to_f64(val: &EndfValue) -> f64 {
+    val.as_float().unwrap_or(0.0)
+}
+
+/// Extract an integer value from an EndfValue for an integer field, subject
+/// to `strict_datatypes`:
+///
+/// * **lenient** (`strict = false`, default): accept `Int` directly;
+///   accept `Float` iff the value is exactly integer-valued; error otherwise.
+/// * **strict** (`strict = true`): accept only `Int`; any `Float` is an
+///   error — even integer-valued ones like `5.0`.
+///
+/// This mirrors the Python reference's `strict_datatypes` kwarg.
+fn endf_val_to_i64(
+    val: &EndfValue,
+    field_name: &str,
+    strict: bool,
+) -> EndfResult<i64> {
+    match val {
+        EndfValue::Int(n) => Ok(*n),
+        EndfValue::Float(f) => {
+            if strict {
+                Err(EndfError::StrictFloatInIntField {
+                    field: field_name.into(),
+                    value: *f,
+                })
+            } else if f.is_finite() && *f == (*f as i64) as f64 {
+                Ok(*f as i64)
+            } else {
+                Err(EndfError::NonIntegerField {
+                    field: field_name.into(),
+                    value: *f,
+                })
+            }
+        }
+        _ => Err(EndfError::VariableNotFound {
+            name: field_name.into(),
+        }),
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -640,18 +716,20 @@ fn remaining_lines_for_list<'a>(state: &'a InterpreterState, read_opts: &ReadOpt
 /// the data dictionary. The caller supplies:
 ///
 /// * `read_line`  — parse the current line into exactly N field values,
-/// * `build_line` — rebuild the line from N field values plus the ctrl record.
+/// * `build_line` — rebuild the line from N `EndfValue`s plus the ctrl
+///   record. Returns `EndfResult<String>` so that int-field type checks
+///   (strict_datatypes) can propagate errors.
 ///
 /// The helper handles the direction switch, the line advance/push, and the
-/// `[f64; N]` ↔ `Vec<f64>` shuttling so that callers can concentrate on the
-/// record-specific field layout.
+/// `[EndfValue; N]` ↔ `Vec<EndfValue>` shuttling so that callers can
+/// concentrate on the record-specific field layout.
 fn map_symmetric_record<const N: usize>(
     fields: &[Expr; N],
     field_names: &[&str; N],
     state: &mut InterpreterState,
     parse_opts: &ParseOpts,
     read_line: impl FnOnce(&str) -> EndfResult<[f64; N]>,
-    build_line: impl FnOnce([f64; N], &CtrlRecord) -> String,
+    build_line: impl FnOnce([EndfValue; N], &CtrlRecord) -> EndfResult<String>,
 ) -> EndfResult<()> {
     if is_read(state) {
         let line = state.current_line()?;
@@ -661,11 +739,11 @@ fn map_symmetric_record<const N: usize>(
     } else {
         let values_vec = map_fields_from_datadic(fields, state, parse_opts)?;
         // map_fields_from_datadic returns exactly `fields.len() == N` values.
-        let values: [f64; N] = values_vec
+        let values: [EndfValue; N] = values_vec
             .try_into()
             .expect("map_fields_from_datadic returns one value per field");
         let ctrl = get_ctrl_from_state(state)?;
-        let line = build_line(values, &ctrl);
+        let line = build_line(values, &ctrl)?;
         state.push_line(line);
     }
     Ok(())
@@ -700,15 +778,16 @@ pub fn map_head_or_cont(
             ])
         },
         |v, ctrl| {
+            let strict = write_opts.strict_datatypes;
             let rec = ContRecord {
-                c1: v[0],
-                c2: v[1],
-                l1: v[2] as i64,
-                l2: v[3] as i64,
-                n1: v[4] as i64,
-                n2: v[5] as i64,
+                c1: endf_val_to_f64(&v[0]),
+                c2: endf_val_to_f64(&v[1]),
+                l1: endf_val_to_i64(&v[2], "L1", strict)?,
+                l2: endf_val_to_i64(&v[3], "L2", strict)?,
+                n1: endf_val_to_i64(&v[4], "N1", strict)?,
+                n2: endf_val_to_i64(&v[5], "N2", strict)?,
             };
-            write_cont(&rec, ctrl, write_opts)
+            Ok(write_cont(&rec, ctrl, write_opts))
         },
     )
 }
@@ -914,13 +993,14 @@ pub fn map_tab1(
         // recipe field expressions, because the read path doesn't store them
         // and the recipe may use arbitrary variable names (like NRP, NEP)
         // that wouldn't exist in the data dictionary.
+        let strict = write_opts.strict_datatypes;
         let header_fields = &fields[..4];
         let field_values = map_fields_from_datadic(header_fields, state, parse_opts)?;
         let cont = ContRecord {
-            c1: field_values[0],
-            c2: field_values[1],
-            l1: field_values[2] as i64,
-            l2: field_values[3] as i64,
+            c1: endf_val_to_f64(&field_values[0]),
+            c2: endf_val_to_f64(&field_values[1]),
+            l1: endf_val_to_i64(&field_values[2], "L1", strict)?,
+            l2: endf_val_to_i64(&field_values[3], "L2", strict)?,
             n1: nr,
             n2: np,
         };
@@ -1011,14 +1091,15 @@ pub fn map_tab2(
         // NR is computed from nbt.len() instead.
         let write_fields: Vec<Expr> = [&fields[0], &fields[1], &fields[2], &fields[3], &fields[5]]
             .iter().map(|e| (*e).clone()).collect();
+        let strict = write_opts.strict_datatypes;
         let field_values = map_fields_from_datadic(&write_fields, state, parse_opts)?;
         let cont = ContRecord {
-            c1: field_values[0],
-            c2: field_values[1],
-            l1: field_values[2] as i64,
-            l2: field_values[3] as i64,
+            c1: endf_val_to_f64(&field_values[0]),
+            c2: endf_val_to_f64(&field_values[1]),
+            l1: endf_val_to_i64(&field_values[2], "L1", strict)?,
+            l2: endf_val_to_i64(&field_values[3], "L2", strict)?,
             n1: nr,
-            n2: field_values[4] as i64,
+            n2: endf_val_to_i64(&field_values[4], "N2", strict)?,
         };
         let ctrl = get_ctrl_from_state(state)?;
 
@@ -1116,14 +1197,15 @@ pub fn map_list(
             }
         }
 
+        let strict = write_opts.strict_datatypes;
         let field_values = map_fields_from_datadic(fields, state, parse_opts)?;
         let cont = ContRecord {
-            c1: field_values[0],
-            c2: field_values[1],
-            l1: field_values[2] as i64,
-            l2: field_values[3] as i64,
-            n1: field_values[4] as i64,
-            n2: field_values[5] as i64,
+            c1: endf_val_to_f64(&field_values[0]),
+            c2: endf_val_to_f64(&field_values[1]),
+            l1: endf_val_to_i64(&field_values[2], "L1", strict)?,
+            l2: endf_val_to_i64(&field_values[3], "L2", strict)?,
+            n1: endf_val_to_i64(&field_values[4], "N1", strict)?,
+            n2: endf_val_to_i64(&field_values[5], "N2", strict)?,
         };
         let ctrl = get_ctrl_from_state(state)?;
 
@@ -1482,13 +1564,14 @@ pub fn map_dir(
             Ok([rec.l1 as f64, rec.l2 as f64, rec.n1 as f64, rec.n2 as f64])
         },
         |v, ctrl| {
+            let strict = write_opts.strict_datatypes;
             let rec = DirRecord {
-                l1: v[0] as i64,
-                l2: v[1] as i64,
-                n1: v[2] as i64,
-                n2: v[3] as i64,
+                l1: endf_val_to_i64(&v[0], "L1", strict)?,
+                l2: endf_val_to_i64(&v[1], "L2", strict)?,
+                n1: endf_val_to_i64(&v[2], "N1", strict)?,
+                n2: endf_val_to_i64(&v[3], "N2", strict)?,
             };
-            write_dir(&rec, ctrl, write_opts)
+            Ok(write_dir(&rec, ctrl, write_opts))
         },
     )
 }
@@ -1554,22 +1637,33 @@ pub fn map_intg(
             )?;
         }
     } else {
-        // Evaluate II, JJ and get KIJ with a single scope_chain.
+        // Evaluate II, JJ with type-checked int conversion.
+        let strict = write_opts.strict_datatypes;
         let scope_chain = state.scope_chain();
-        let ii = eval_expr_known(
-            &fields[0],
-            &scope_chain,
-            &state.loop_vars,
-            &state.abbreviations,
-            parse_opts,
-        )? as i64;
-        let jj = eval_expr_known(
-            &fields[1],
-            &scope_chain,
-            &state.loop_vars,
-            &state.abbreviations,
-            parse_opts,
-        )? as i64;
+        let ii_val = match &fields[0] {
+            Expr::Variable(v) | Expr::InconsistentVar(v) => {
+                super::expressions::get_var_value(
+                    &v.name, &v.indices, &scope_chain,
+                    &state.loop_vars, &state.abbreviations, parse_opts,
+                ).unwrap_or(EndfValue::Int(0))
+            }
+            _ => EndfValue::from_f64(eval_expr_known(
+                &fields[0], &scope_chain, &state.loop_vars, &state.abbreviations, parse_opts,
+            )?),
+        };
+        let jj_val = match &fields[1] {
+            Expr::Variable(v) | Expr::InconsistentVar(v) => {
+                super::expressions::get_var_value(
+                    &v.name, &v.indices, &scope_chain,
+                    &state.loop_vars, &state.abbreviations, parse_opts,
+                ).unwrap_or(EndfValue::Int(0))
+            }
+            _ => EndfValue::from_f64(eval_expr_known(
+                &fields[1], &scope_chain, &state.loop_vars, &state.abbreviations, parse_opts,
+            )?),
+        };
+        let ii = endf_val_to_i64(&ii_val, "II", strict)?;
+        let jj = endf_val_to_i64(&jj_val, "JJ", strict)?;
 
         // Get KIJ array from datadic.
         let kij = if let Expr::Variable(ref var) = fields[2] {

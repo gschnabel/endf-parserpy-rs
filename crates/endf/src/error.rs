@@ -59,6 +59,10 @@ pub enum EndfError {
     LoopVariableError { name: String },
     #[error("stop: {message}")]
     Stop { message: String },
+    #[error("non-integer float {value} in integer field '{field}'")]
+    NonIntegerField { field: String, value: f64 },
+    #[error("float value {value} in integer field '{field}' (strict_datatypes mode)")]
+    StrictFloatInIntField { field: String, value: f64 },
     #[error("file already exists: {path}")]
     FileExists { path: std::path::PathBuf },
     #[error("I/O error: {0}")]
