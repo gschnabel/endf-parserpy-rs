@@ -80,7 +80,7 @@ defaults match the Python `endf-parserpy` package conventions.
 | Keyword | Type | Default | Description |
 |---------|------|---------|-------------|
 | `accept_spaces` | `bool` | `True` | Strip spaces inside number fields. |
-| `preserve_value_strings` | `bool` | `False` | Reserved for future lossless roundtrip support. |
+| `preserve_value_strings` | `bool` | `False` | Preserve each float's original ENDF field string and emit it verbatim on write, for byte-exact float roundtrip. |
 | `ignore_blank_lines` | `bool` | `False` | Skip blank lines in the input. |
 | `ignore_send_records` | `bool` | `False` | Don't validate section-end records. |
 | `ignore_missing_tpid` | `bool` | `False` | Allow files without a tape-header record. |

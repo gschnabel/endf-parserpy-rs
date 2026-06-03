@@ -7,7 +7,6 @@ use endf::value::{EndfKey, EndfValue};
 use endf::records;
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::Path;
 
 fn compare(a: &EndfValue, b: &EndfValue, path: &str, diffs: &mut Vec<String>, max: usize) {
     if diffs.len() >= max { return; }

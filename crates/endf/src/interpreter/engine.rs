@@ -463,13 +463,6 @@ mod tests {
         (engine, recipe)
     }
 
-    /// Build a standard-width ENDF line (66 data chars + 9 ctrl chars).
-    fn make_line(data: &str, mat: i32, mf: i32, mt: i32) -> String {
-        let padded_data = format!("{:<66}", data);
-        let ctrl = format!("{:>4}{:>2}{:>3}", mat, mf, mt);
-        format!("{}{}", padded_data, ctrl)
-    }
-
     #[test]
     fn test_engine_processes_comment() {
         let (engine, recipe) = make_engine_with_recipe("# this is a comment\n");

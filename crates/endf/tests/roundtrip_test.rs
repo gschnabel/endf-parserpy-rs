@@ -42,52 +42,6 @@ fn floats_close(a: f64, b: f64) -> bool {
     false
 }
 
-fn compare_float_vecs(a: &[f64], b: &[f64], path: &str, label: &str, result: &mut CompareResult) {
-    if a.len() != b.len() {
-        result.differences.push(format!(
-            "{}.{}: length mismatch ({} vs {})",
-            path,
-            label,
-            a.len(),
-            b.len()
-        ));
-        return;
-    }
-    for (i, (va, vb)) in a.iter().zip(b.iter()).enumerate() {
-        if !floats_close(*va, *vb) {
-            result.differences.push(format!(
-                "{}.{}[{}]: {} vs {}",
-                path, label, i, va, vb
-            ));
-            // Only report first few per array to avoid flooding output
-            if result.differences.len() > 50 {
-                return;
-            }
-        }
-    }
-}
-
-fn compare_int_vecs(a: &[i64], b: &[i64], path: &str, label: &str, result: &mut CompareResult) {
-    if a.len() != b.len() {
-        result.differences.push(format!(
-            "{}.{}: length mismatch ({} vs {})",
-            path,
-            label,
-            a.len(),
-            b.len()
-        ));
-        return;
-    }
-    for (i, (va, vb)) in a.iter().zip(b.iter()).enumerate() {
-        if va != vb {
-            result.differences.push(format!(
-                "{}.{}[{}]: {} vs {}",
-                path, label, i, va, vb
-            ));
-        }
-    }
-}
-
 fn compare_values(a: &EndfValue, b: &EndfValue, path: &str, result: &mut CompareResult) {
     // Early exit if we have too many differences
     if result.differences.len() > 100 {

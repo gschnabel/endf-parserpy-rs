@@ -1,6 +1,5 @@
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
-use std::path::Path;
 
 use endf::options::{ReadOpts, ParseOpts, WriteOpts};
 use endf::sections::split_sections;
@@ -90,7 +89,7 @@ impl CompiledParser {
                     *mf, *mt, section_lines, &self.read_opts, &self.parse_opts
                 ) {
                     Ok(data) => { mf_dict.insert(EndfKey::Int(*mt as i64), data); }
-                    Err(e) => {
+                    Err(_) => {
                         // Store raw on error
                         let raw = EndfValue::Str(section_lines.join("\n"));
                         mf_dict.insert(EndfKey::Int(*mt as i64), raw);

@@ -1,6 +1,6 @@
 use endf::parser::EndfParser;
 use endf::value::{EndfValue, EndfKey};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 

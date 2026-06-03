@@ -2,7 +2,7 @@
 //! Run with: cargo test --test targeted_roundtrip_test --release -- --nocapture
 
 use endf::parser::EndfParser;
-use endf::value::{EndfValue, EndfKey};
+use endf::value::EndfValue;
 use std::path::Path;
 
 const ENDF_DIR: &str = "/path/to/endf/library";

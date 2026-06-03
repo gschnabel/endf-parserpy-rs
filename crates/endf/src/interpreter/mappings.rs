@@ -727,44 +727,6 @@ fn find_int_in_scope(scope_chain: &[&EndfValue], name: &str) -> Option<i64> {
 }
 
 // ---------------------------------------------------------------------------
-// Helper: get remaining lines as &str slice for multi-line reading
-// ---------------------------------------------------------------------------
-
-/// Build remaining lines for a TAB1 record: read the header to determine
-/// how many body lines are needed, then allocate just enough.
-fn remaining_lines_for_tab1<'a>(state: &'a InterpreterState, read_opts: &ReadOpts) -> EndfResult<Vec<&'a str>> {
-    // Read header to get NR and NP
-    let (cont, _ctrl) = read_cont(&state.lines[state.ofs], read_opts)?;
-    let nr = cont.n1 as usize;
-    let np = cont.n2 as usize;
-    // 1 header + ceil(2*NR/6) + ceil(2*NP/6) body lines
-    let body_lines = ((2 * nr + 5) / 6) + ((2 * np + 5) / 6);
-    let total = 1 + body_lines;
-    let end = (state.ofs + total).min(state.lines.len());
-    Ok(state.lines[state.ofs..end].iter().map(|s| s.as_str()).collect())
-}
-
-/// Build remaining lines for a TAB2 record.
-fn remaining_lines_for_tab2<'a>(state: &'a InterpreterState, read_opts: &ReadOpts) -> EndfResult<Vec<&'a str>> {
-    let (cont, _ctrl) = read_cont(&state.lines[state.ofs], read_opts)?;
-    let nr = cont.n1 as usize;
-    let body_lines = (2 * nr + 5) / 6;
-    let total = 1 + body_lines;
-    let end = (state.ofs + total).min(state.lines.len());
-    Ok(state.lines[state.ofs..end].iter().map(|s| s.as_str()).collect())
-}
-
-/// Build remaining lines for a LIST record.
-fn remaining_lines_for_list<'a>(state: &'a InterpreterState, read_opts: &ReadOpts) -> EndfResult<Vec<&'a str>> {
-    let (cont, _ctrl) = read_cont(&state.lines[state.ofs], read_opts)?;
-    let npl = cont.n1 as usize;
-    let body_lines = if npl == 0 { 0 } else { (npl + 5) / 6 };
-    let total = 1 + body_lines;
-    let end = (state.ofs + total).min(state.lines.len());
-    Ok(state.lines[state.ofs..end].iter().map(|s| s.as_str()).collect())
-}
-
-// ---------------------------------------------------------------------------
 // Symmetric single-line record mapping
 // ---------------------------------------------------------------------------
 
@@ -1331,7 +1293,7 @@ enum ListBodyOp<'a> {
     /// Start a loop: push loop var, iterate start..=stop
     LoopStart(&'a str, &'a Expr, &'a Expr),
     /// End of loop body: pop loop var
-    LoopEnd(&'a str),
+    LoopEnd,
     /// Advance vi to next 6-element boundary
     Padding,
 }
@@ -1380,7 +1342,7 @@ fn build_list_plan<'a>(items: &'a [ListItem], ops: &mut Vec<ListBodyOp<'a>>, abb
             ListItem::Loop { body, var, start, stop } => {
                 ops.push(ListBodyOp::LoopStart(var, start, stop));
                 build_list_plan(body, ops, abbreviations);
-                ops.push(ListBodyOp::LoopEnd(var));
+                ops.push(ListBodyOp::LoopEnd);
             }
             ListItem::Padding => {
                 ops.push(ListBodyOp::Padding);
@@ -1485,7 +1447,7 @@ fn execute_list_plan(
                 while j < ops.len() && depth > 0 {
                     match &ops[j] {
                         ListBodyOp::LoopStart(_, _, _) => depth += 1,
-                        ListBodyOp::LoopEnd(_) => depth -= 1,
+                        ListBodyOp::LoopEnd => depth -= 1,
                         _ => {}
                     }
                     if depth > 0 { j += 1; }
@@ -1499,7 +1461,7 @@ fn execute_list_plan(
                 state.loop_vars.remove(*var);
                 i = body_end; // skip past LoopEnd
             }
-            ListBodyOp::LoopEnd(_) => {
+            ListBodyOp::LoopEnd => {
                 // Handled by LoopStart
                 return Ok(());
             }
@@ -1812,7 +1774,7 @@ fn execute_list_plan_preserved(
                 while j < ops.len() && depth > 0 {
                     match &ops[j] {
                         ListBodyOp::LoopStart(_, _, _) => depth += 1,
-                        ListBodyOp::LoopEnd(_) => depth -= 1,
+                        ListBodyOp::LoopEnd => depth -= 1,
                         _ => {}
                     }
                     if depth > 0 { j += 1; }
@@ -1826,7 +1788,7 @@ fn execute_list_plan_preserved(
                 state.loop_vars.remove(*var);
                 i = body_end;
             }
-            ListBodyOp::LoopEnd(_) => {
+            ListBodyOp::LoopEnd => {
                 return Ok(());
             }
             ListBodyOp::Padding => {

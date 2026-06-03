@@ -97,7 +97,7 @@ let parser = EndfParser::builder()
 | Method | Default | Description |
 |--------|---------|-------------|
 | `accept_spaces(bool)` | `true` | Remove internal spaces from number fields (e.g., `"1.5 +02"` → `"1.5+02"`). |
-| `preserve_value_strings(bool)` | `false` | Reserved for future EndfFloat integration. |
+| `preserve_value_strings(bool)` | `false` | Preserve each float's original ENDF field string and emit it verbatim on write, for byte-exact float roundtrip. Parsed floats become `EndfValue::PreservedFloat`. |
 | `ignore_blank_lines(bool)` | `false` | Skip blank lines instead of erroring. |
 | `ignore_send_records(bool)` | `false` | Don't validate SEND/FEND/MEND/TEND records. |
 | `ignore_missing_tpid(bool)` | `false` | Allow files without a tape-header (TPID) record. |
@@ -299,8 +299,9 @@ assert!(table.is_tab1());
 **Module:** `endf::endf_float`
 
 A float that optionally preserves its original ENDF field string for
-lossless roundtrip. Infrastructure for future `preserve_value_strings`
-support.
+lossless roundtrip. Backs the `preserve_value_strings` option; when that
+option is enabled, parsed floats are returned as `EndfValue::PreservedFloat`
+carrying the original string, which the writer emits verbatim.
 
 ```rust
 let ef = EndfFloat::new(1.23456e7, Some("1.23456+7".to_string()));
@@ -594,6 +595,12 @@ functions for all ENDF-6 recipes. Instead of interpreting the recipe AST at
 runtime, the recipe-to-Rust compiler translates each recipe into a dedicated
 Rust function at build time, eliminating interpreter dispatch overhead.
 
+The generated code has feature parity with the interpreter: it emits the same
+record-consistency validation (`InconsistentVar`, `Number`/`DesiredNumber`
+fields, complex-expression and LIST-body checks, abbreviation expansion) and
+honours the same options, including `array_type`, `strict_datatypes`, and
+`preserve_value_strings`.
+
 ### When to Use
 
 | Use case | Recommended |
@@ -630,7 +637,7 @@ let section_map = split_sections(&lines, &read_opts)?;
 // Parse each section with the compiled parser
 for (mf, mt_map) in &section_map {
     for (mt, section_lines) in mt_map {
-        let data = endf_parser_compiled::parse_section(
+        let data = endf_compiled::parse_section(
             *mf, *mt, section_lines, &read_opts, &parse_opts
         )?;
         // data is an EndfValue::Dict, same structure as the interpreter
@@ -647,7 +654,7 @@ use endf::value::EndfValue;
 let write_opts = WriteOpts::default();
 
 // data is an EndfValue::Dict from a prior parse
-let lines: Vec<String> = endf_parser_compiled::write_section(
+let lines: Vec<String> = endf_compiled::write_section(
     3, 1, &data, &write_opts
 )?;
 
@@ -695,7 +702,7 @@ let mut mat = 0i32;
 for (mf, mt_map) in &sections {
     for (mt, section_lines) in mt_map {
         // Read with compiled parser
-        let data = endf_parser_compiled::parse_section(
+        let data = endf_compiled::parse_section(
             *mf, *mt, section_lines, &read_opts, &parse_opts
         )?;
 
@@ -707,7 +714,7 @@ for (mf, mt_map) in &sections {
         // Modify data here if needed...
 
         // Write back with compiled parser
-        let written = endf_parser_compiled::write_section(
+        let written = endf_compiled::write_section(
             *mf, *mt, &data, &write_opts
         )?;
         output_lines.extend(written);
@@ -726,8 +733,8 @@ std::fs::write("output.endf", output_lines.join("\n"))?;
 The compiled parser source is generated from the recipe catalogue:
 
 ```bash
-cd rust-test
-cargo run --bin compile_recipes -p endf > crates/endf-compiled/src/lib.rs
+# from the repository root
+cargo run --release --bin compile_recipes -p endf > crates/endf-compiled/src/lib.rs
 cargo build --release -p endf-compiled
 ```
 
@@ -739,12 +746,20 @@ recipe in the ENDF-6 catalogue, plus dispatch functions `parse_section` and
 
 The compiled parser produces the same `EndfValue` data structure as the
 interpreter. Data parsed by the compiled parser can be written by the
-interpreter and vice versa. This has been validated on the entire ENDF/B-VIII.1
-library (96,367 sections, 558 files):
+interpreter and vice versa.
 
-- **Compiled read → Compiled write → Compiled re-read**: 95,809/95,809 match
-- **Compiled read → Compiled write → Interpreter read**: 96,367/96,367 match
-- **Interpreter read vs Compiled read**: 96,367/96,367 match
+**Interpreter read vs Compiled read** has been validated across all 14
+ENDF/B-VIII.1 sublibraries (n, p, g, photo, e, decay, nfpy, sfpy, tsl, std,
+d, t, he3, he4 — 4,666 files): **58,077 / 58,077 sections match, 0 differing.**
+The only sections not compared are MF26 (electro-atomic), whose recipe is
+deliberately unimplemented (`stop`) and therefore parsed as raw text by both
+backends.
+
+Write-roundtrip equivalence has been validated on the ENDF/B-VIII.1 neutron
+sublibrary:
+
+- **Compiled read → Compiled write → Compiled re-read**: all sections match
+- **Compiled read → Compiled write → Interpreter read**: all sections match
 
 ### Write Mode Details
 

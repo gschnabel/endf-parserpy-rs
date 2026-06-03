@@ -76,10 +76,6 @@ fn floats_close(a: f64, b: f64) -> bool {
     diff <= 1e-10 + 1e-10 * b.abs()
 }
 
-fn vecs_close(a: &[f64], b: &[f64]) -> bool {
-    a.len() == b.len() && a.iter().zip(b).all(|(x, y)| floats_close(*x, *y))
-}
-
 fn type_label(v: &EndfValue) -> &'static str {
     match v {
         EndfValue::Int(_) => "Int",
@@ -209,12 +205,6 @@ fn debug_diff_details() {
 #[test]
 #[ignore]
 fn debug_mt151_reparse() {
-    use endf::interpreter::engine::Engine;
-    use endf::recipe::catalogue::RecipeCatalogue;
-    use endf::options::{ParseOpts, ReadOpts, WriteOpts};
-    use endf::interpreter::state::InterpreterState;
-    use endf::records;
-
     let parser_nofail = EndfParser::builder()
         .ignore_number_mismatch(true)
         .ignore_zero_mismatch(true)
