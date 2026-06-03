@@ -662,26 +662,105 @@ fn format_endf_float(val: &EndfValue, opts: &WriteOpts) -> String {
 /// For each expression that maps to a simple variable, check if the
 /// corresponding original string is available and if so, replace the
 /// stored `Float(v)` or `Int(v)` with `PreservedFloat(v, orig)`.
+///
+/// Handles both scalar variables and indexed variables (e.g. a per-energy
+/// `E[i]` written as the C2 field of a LIST/TAB2 header inside a loop), so
+/// that the original ENDF field string is preserved in every record type.
 fn apply_preserved_originals(
     field_exprs: &[&Expr],
     originals: &[Option<String>],
     state: &mut InterpreterState,
+    parse_opts: &ParseOpts,
 ) {
     for (i, expr) in field_exprs.iter().enumerate() {
-        if let Some(ref orig) = originals[i] {
-            if let Some(var) = get_simple_variable(expr) {
-                if var.indices.is_empty() {
-                    let scope = state.current_scope_mut();
-                    if let Some(existing) = scope.get(&*var.name) {
-                        if let Some(fv) = existing.as_float() {
-                            scope.insert(
-                                var.name.as_str(),
-                                EndfValue::PreservedFloat(fv, orig.clone()),
-                            );
-                        }
+        let orig = match &originals[i] {
+            Some(o) => o,
+            None => continue,
+        };
+        let var = match get_simple_variable(expr) {
+            Some(v) => v,
+            None => continue,
+        };
+        if var.indices.is_empty() {
+            // Scalar variable: replace directly in the current scope.
+            let scope = state.current_scope_mut();
+            if let Some(existing) = scope.get(&*var.name) {
+                if let Some(fv) = existing.as_float() {
+                    scope.insert(var.name.as_str(), EndfValue::PreservedFloat(fv, orig.clone()));
+                }
+            }
+        } else {
+            // Indexed variable: evaluate the indices, then navigate into the
+            // stored container and replace the leaf value.
+            let scope_chain = state.scope_chain();
+            let mut indices = Vec::with_capacity(var.indices.len());
+            let mut ok = true;
+            for idx_expr in &var.indices {
+                match eval_index(
+                    idx_expr,
+                    &scope_chain,
+                    &state.loop_vars,
+                    &state.abbreviations,
+                    parse_opts,
+                ) {
+                    Ok(idx) => indices.push(idx),
+                    Err(_) => {
+                        ok = false;
+                        break;
                     }
                 }
             }
+            if !ok {
+                continue;
+            }
+            let scope = state.current_scope_mut();
+            if let Some(container) = scope.get_mut(&*var.name) {
+                replace_indexed_with_preserved(container, &indices, orig);
+            }
+        }
+    }
+}
+
+/// Navigate `container` along `indices` (mirroring the Dict/List indexing used
+/// when the value was stored) and, if the leaf is a numeric value, replace it
+/// with a `PreservedFloat` carrying the original field string.
+fn replace_indexed_with_preserved(container: &mut EndfValue, indices: &[i64], orig: &str) {
+    let mut current = container;
+    let n = indices.len();
+    for (j, &idx) in indices.iter().enumerate() {
+        let is_last = j == n - 1;
+        match current {
+            EndfValue::Dict(d) => {
+                let key = EndfKey::Int(idx);
+                match d.get_mut(&key) {
+                    Some(v) => {
+                        if is_last {
+                            if let Some(fv) = v.as_float() {
+                                *v = EndfValue::PreservedFloat(fv, orig.to_string());
+                            }
+                            return;
+                        }
+                        current = v;
+                    }
+                    None => return,
+                }
+            }
+            EndfValue::List(l) => {
+                let uidx = idx as usize;
+                match l.get_mut(uidx).and_then(|slot| slot.as_mut()) {
+                    Some(v) => {
+                        if is_last {
+                            if let Some(fv) = v.as_float() {
+                                *v = EndfValue::PreservedFloat(fv, orig.to_string());
+                            }
+                            return;
+                        }
+                        current = v;
+                    }
+                    None => return,
+                }
+            }
+            _ => return,
         }
     }
 }
@@ -797,7 +876,7 @@ pub fn map_head_or_cont(
 
         // Post-process: apply preserved float originals for C1 and C2.
         if read_opts.preserve_value_strings {
-            apply_preserved_originals(&[&fields[0], &fields[1]], &cont_origs, state);
+            apply_preserved_originals(&[&fields[0], &fields[1]], &cont_origs, state, parse_opts);
         }
     } else {
         let values_vec = map_fields_from_datadic(fields, state, parse_opts)?;
@@ -983,7 +1062,7 @@ pub fn map_tab1(
 
         // Post-process: apply preserved float originals for C1 and C2.
         if read_opts.preserve_value_strings {
-            apply_preserved_originals(&[&fields[0], &fields[1]], &cont_origs, state);
+            apply_preserved_originals(&[&fields[0], &fields[1]], &cont_origs, state, parse_opts);
         }
 
         // Step 2: Read the table body as a separate action.
@@ -1101,7 +1180,7 @@ pub fn map_tab2(
 
         // Post-process: apply preserved float originals for C1 and C2.
         if read_opts.preserve_value_strings {
-            apply_preserved_originals(&[&fields[0], &fields[1]], &cont_origs, state);
+            apply_preserved_originals(&[&fields[0], &fields[1]], &cont_origs, state, parse_opts);
         }
 
         // Step 2: Read the table body as a separate action.
@@ -1199,7 +1278,7 @@ pub fn map_list(
 
         // Post-process: apply preserved float originals for C1 and C2.
         if read_opts.preserve_value_strings {
-            apply_preserved_originals(&[&fields[0], &fields[1]], &cont_origs, state);
+            apply_preserved_originals(&[&fields[0], &fields[1]], &cont_origs, state, parse_opts);
         }
 
         // Step 2: Read the list body as a separate action.
