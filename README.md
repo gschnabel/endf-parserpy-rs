@@ -193,7 +193,8 @@ The recipe-driven approach used in this project is described in:
 The interpreter also compiles to WebAssembly, enabling client-side ENDF
 parsing in the browser. A small demo app lets you upload an ENDF file,
 explore the parsed data as a collapsible tree, edit values, and save the
-result back to ENDF format — all without a server.
+result back to ENDF format. All parsing and writing happens in the browser's
+WebAssembly sandbox — no data ever leaves the machine.
 
 ```bash
 # requires wasm-pack: cargo install wasm-pack
@@ -202,6 +203,28 @@ wasm-pack build --target web --release
 python3 -m http.server 8080
 # open http://localhost:8080/www/
 ```
+
+The local web server above is only needed because the `--target web` build
+loads the `.wasm` via `fetch()` and ES-module `import`, which browsers block
+on the `file://` protocol — it is **not** a network dependency (it serves
+local files over `localhost`).
+
+### Fully offline single-file build
+
+To produce a single self-contained `.html` that runs by **double-clicking**
+it (no server, no network, works from `file://`), build the `no-modules`
+target and inline everything with the bundled script:
+
+```bash
+cd crates/endf-wasm
+wasm-pack build --target no-modules --release --out-dir pkg-nomod
+python3 build_standalone.py
+# produces www/endf-explorer-offline.html (~0.9 MB, wasm base64-embedded)
+```
+
+The resulting file embeds the WebAssembly binary as base64 and instantiates
+it from bytes (`WebAssembly.instantiate`) instead of fetching it, so it makes
+no network requests whatsoever — ideal for offline demos.
 
 ## Documentation
 

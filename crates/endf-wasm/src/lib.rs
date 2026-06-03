@@ -37,6 +37,10 @@ fn endf_value_to_js(val: &EndfValue) -> JsValue {
 #[wasm_bindgen]
 pub struct WasmEndfParser {
     inner: EndfParser,
+    /// The most recently parsed tree, retained with original field strings
+    /// (parsing always enables `preserve_value_strings`). Used on write to
+    /// restore verbatim formatting for values the user did not change.
+    preserved: Option<EndfValue>,
 }
 
 #[wasm_bindgen]
@@ -55,29 +59,53 @@ impl WasmEndfParser {
             .ignore_send_records(true)
             .ignore_missing_tpid(true)
             .ignore_blank_lines(true)
+            .preserve_value_strings(true)
             .build()
             .map_err(|e| JsError::new(&e.to_string()))?;
-        Ok(WasmEndfParser { inner })
+        Ok(WasmEndfParser { inner, preserved: None })
     }
 
     /// Parse ENDF text and return a JavaScript object.
     ///
     /// The returned object has the structure: { mf: { mt: { field: value, ... } } }
-    pub fn parse(&self, input: &str) -> Result<JsValue, JsError> {
+    pub fn parse(&mut self, input: &str) -> Result<JsValue, JsError> {
         let data = self.inner.parse(input)
             .map_err(|e| JsError::new(&e.to_string()))?;
-        Ok(endf_value_to_js(&data))
+        let js = endf_value_to_js(&data);
+        // Retain the parsed tree (with verbatim field strings) for write-time
+        // preservation of unchanged values.
+        self.preserved = Some(data);
+        Ok(js)
     }
 
     /// Write a JavaScript object back to ENDF text.
     ///
     /// `opts` is an optional JS object with boolean fields:
-    /// `keep_E`, `abuse_signpos`, `skip_intzero`, `prefer_noexp`
+    /// `keep_E`, `abuse_signpos`, `skip_intzero`, `prefer_noexp`,
+    /// `preserve_value_strings`
     pub fn write(&self, data: JsValue, opts: JsValue) -> Result<String, JsError> {
-        let endf_data = js_to_endf_value(data)
+        let mut endf_data = js_to_endf_value(data)
             .map_err(|e| JsError::new(&e.to_string()))?;
 
-        if opts.is_object() && !opts.is_null() && !opts.is_undefined() {
+        let has_opts = opts.is_object() && !opts.is_null() && !opts.is_undefined();
+
+        // If requested, restore the original verbatim field string for every
+        // numeric value the user left unchanged, so untouched parts of the
+        // file are written byte-for-byte as they were read.
+        let preserve = has_opts
+            && js_sys::Reflect::get(&opts, &"preserve_value_strings".into())
+                .ok().and_then(|v| v.as_bool()).unwrap_or(false);
+        // When requested, restore the original verbatim field string for every
+        // value the user did not change. PreservedFloat values are then written
+        // verbatim regardless of the formatting options below, so those options
+        // only affect non-preserved fields (recipe constants and edited values).
+        if preserve {
+            if let Some(ref orig) = self.preserved {
+                endf_data = merge_preserved(&endf_data, orig);
+            }
+        }
+
+        if has_opts {
             let mut builder = EndfParser::builder();
             // Copy parse/read settings from self
             builder = builder.endf_format("endf6")
@@ -166,4 +194,56 @@ fn js_to_endf_value(val: JsValue) -> Result<EndfValue, String> {
         return Ok(dict);
     }
     Err("unsupported JS type".to_string())
+}
+
+/// Merge an edited value tree with the originally-parsed tree. For any numeric
+/// leaf the user left unchanged, the original `PreservedFloat` (with its
+/// verbatim ENDF field string) is restored so it is written exactly as read.
+/// Changed values keep the edited value and are reformatted on write.
+fn merge_preserved(edited: &EndfValue, orig: &EndfValue) -> EndfValue {
+    match (edited, orig) {
+        (EndfValue::Dict(de), EndfValue::Dict(d_orig)) => {
+            let mut out = EndfValue::new_dict();
+            for (k, ve) in de {
+                match d_orig.get(k) {
+                    Some(vo) => out.insert(k.clone(), merge_preserved(ve, vo)),
+                    None => out.insert(k.clone(), ve.clone()),
+                }
+            }
+            out
+        }
+        (EndfValue::List(le), EndfValue::List(lo)) => {
+            let items = le
+                .iter()
+                .enumerate()
+                .map(|(i, ie)| match (ie, lo.get(i)) {
+                    (Some(ve), Some(Some(vo))) => Some(merge_preserved(ve, vo)),
+                    (Some(ve), _) => Some(ve.clone()),
+                    (None, _) => None,
+                })
+                .collect();
+            EndfValue::List(items)
+        }
+        // Numeric leaf: if the value is unchanged, keep the ORIGINAL's exact
+        // representation (verbatim `PreservedFloat` string, or `Float` vs `Int`
+        // type). This is needed because the JS round-trip collapses every
+        // integer-valued float (e.g. `0.000000+0`) to a JS integer; without
+        // this the writer would reformat it as `0`. Changed values fall
+        // through to the edited value and are reformatted on write.
+        _ => {
+            match (numeric_value(edited), numeric_value(orig)) {
+                (Some(e), Some(o)) if e == o => orig.clone(),
+                _ => edited.clone(),
+            }
+        }
+    }
+}
+
+/// The numeric value of an `Int`/`Float`/`PreservedFloat`, else `None`.
+fn numeric_value(v: &EndfValue) -> Option<f64> {
+    match v {
+        EndfValue::Int(n) => Some(*n as f64),
+        EndfValue::Float(f) | EndfValue::PreservedFloat(f, _) => Some(*f),
+        _ => None,
+    }
 }

@@ -38,7 +38,7 @@
                  color: #888; font-size: 0.7rem; }
   .tree-key-name { color: #881391; font-weight: 600; }
   .tree-val-num { color: #1a1aa6; }
-  .tree-val-str { color: #067d06; }
+  .tree-val-str { color: #067d06; white-space: pre; }
   .tree-val-type { color: #888; font-style: italic; }
   .collapsed > .tree-node { display: none; }
   .tree-leaf { padding-left: 1.5rem; }
@@ -69,11 +69,13 @@
   </div>
   <div class="controls" id="writeOpts" style="font-size: 0.85rem;">
     <span style="font-weight: 600;">Output options:</span>
-    <label><input type="checkbox" id="opt_abuse_signpos" checked>
+    <label><input type="checkbox" id="opt_preserve" checked>
+      Preserve original formatting for unchanged values (byte-exact)</label>
+    <label><input type="checkbox" id="opt_abuse_signpos">
       Use sign position for extra precision</label>
-    <label><input type="checkbox" id="opt_skip_intzero" checked>
+    <label><input type="checkbox" id="opt_skip_intzero">
       Omit leading zero (0.12 &rarr; .12)</label>
-    <label><input type="checkbox" id="opt_prefer_noexp" checked>
+    <label><input type="checkbox" id="opt_prefer_noexp">
       Prefer fixed-point notation</label>
     <label><input type="checkbox" id="opt_keep_E">
       Keep E in exponent (1.5E+7 vs 1.5+7)</label>
@@ -142,6 +144,8 @@ function startEdit(span, path) {
 
   const parent = span.parentElement;
   const valSpan = parent.querySelector('.editable');
+  // Preserve an existing "modified" highlight from a previous edit.
+  const wasModified = valSpan.classList.contains('modified');
   valSpan.replaceWith(input);
   input.focus();
   input.select();
@@ -158,10 +162,13 @@ function startEdit(span, path) {
     } else {
       newVal = raw;
     }
-    setValue(parsedData, path, newVal);
+    // Only mark as modified if the value actually changed in this edit
+    // (or was already modified by an earlier edit).
+    const changed = newVal !== currentVal;
+    if (changed) setValue(parsedData, path, newVal);
 
     const newSpan = document.createElement('span');
-    newSpan.className = 'editable modified';
+    newSpan.className = (changed || wasModified) ? 'editable modified' : 'editable';
     newSpan.innerHTML = renderValueSpan(newVal);
     newSpan.addEventListener('click', (e) => { e.stopPropagation(); startEdit(newSpan, path); });
     input.replaceWith(newSpan);
@@ -287,6 +294,7 @@ async function main() {
     status.className = '';
     try {
       const opts = {
+        preserve_value_strings: document.getElementById('opt_preserve').checked,
         abuse_signpos: document.getElementById('opt_abuse_signpos').checked,
         skip_intzero: document.getElementById('opt_skip_intzero').checked,
         prefer_noexp: document.getElementById('opt_prefer_noexp').checked,
